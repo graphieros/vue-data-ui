@@ -294,6 +294,8 @@ const model = createModel([
     CHECKBOX('style.chart.lines.path.useSerieColor', { def: false }),
     COLOR('style.chart.lines.path.stroke', { def: '#FFFFFF' }),
 
+    CHECKBOX('style.chart.lines.dot.show', { def: true }),
+    CHECKBOX('style.chart.lines.dot.showOnHover', { def: true }),
     NUMBER('style.chart.lines.dot.hideAboveMaxSerieLength', {
         def: 62,
         min: 0,

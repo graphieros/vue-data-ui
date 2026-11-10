@@ -16,6 +16,8 @@ import {
     ref,
     computed,
     onMounted,
+    onBeforeUnmount,
+    shallowRef,
     nextTick,
     watch,
     defineAsyncComponent,
@@ -33,23 +35,18 @@ import {
     createUid,
     dataLabel,
     downloadCsv,
-    error,
     isFunction,
-    objectIsEmpty,
     palette,
-    themePalettes,
     treeShake,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading';
 import { useChartExport } from '../useChartExport';
-import { useNestedProp } from '../useNestedProp';
+import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import { useResponsive } from '../useResponsive';
-import { useThemeCheck } from '../useThemeCheck';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
@@ -76,7 +73,6 @@ const BaseDraggableDialog = defineAsyncComponent(
 );
 
 const { vue_ui_flow: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -104,15 +100,20 @@ const tooltipContent = ref('');
 const chartLegend = ref(null);
 const chartTitle = ref(null);
 const source = ref(null);
-const responsiveObserver = ref(null);
-const observedEl = ref(null);
+const responsiveObserver = shallowRef(null);
+let resizeFrame = null;
+let scheduleResize = null;
+let disposed = false;
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
-const tooltip = ref(null);
 
-const activeTooltipIndex = ref(null); // a11y
-const activeTooltipNodeId = ref(null); // a11y
+const activeTooltipIndex = computed(() =>
+    selectedNodeId.value == null
+        ? null
+        : (a11yNodeIndexMap.value.get(selectedNodeId.value) ?? null),
+);
+const activeTooltipNodeId = computed(() => selectedNodeId.value);
 const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
 const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
@@ -184,7 +185,7 @@ const skeletonConfig = computed(() => {
     });
 });
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
+const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
@@ -202,50 +203,46 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     }),
 });
 
-const debug = computed(() => FINAL_CONFIG.value.debug);
-
+function stopResize() {
+    scheduleResize = null;
+    responsiveObserver.value?.disconnect();
+    responsiveObserver.value = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+}
 function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiFlow',
-            type: 'dataset',
-            debug: debug.value,
-        });
-        manualLoading.value = true;
+    stopResize();
+    if (!FINAL_CONFIG.value.responsive) {
+        WIDTH.value = cfgChart.value.width;
+        HEIGHT.value = cfgChart.value.height;
+        return;
     }
-
-    // v3
-    if (!objectIsEmpty(props.dataset)) {
-        manualLoading.value = FINAL_CONFIG.value.loading;
-    }
-
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+    const parent = flowChart.value?.parentNode;
+    if (!parent) return;
+    const resize = () => {
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            resizeFrame = null;
+            if (disposed) return;
             const { width, height } = useResponsive({
                 chart: flowChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
                 legend: cfgChart.value.legend.show ? chartLegend.value : null,
                 source: source.value,
             });
-
-            requestAnimationFrame(() => {
-                WIDTH.value = width;
-                HEIGHT.value = height;
-            });
+            WIDTH.value = width;
+            HEIGHT.value = height;
         });
-
-        if (responsiveObserver.value) {
-            if (observedEl.value) {
-                responsiveObserver.value.unobserve(observedEl.value);
-            }
-            responsiveObserver.value.disconnect();
-        }
-
-        responsiveObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = flowChart.value.parentNode;
-        responsiveObserver.value.observe(observedEl.value);
-    }
+    };
+    scheduleResize = resize;
+    responsiveObserver.value = new ResizeObserver(resize);
+    responsiveObserver.value.observe(parent);
+    resize();
 }
+onBeforeUnmount(() => {
+    disposed = true;
+    stopResize();
+});
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
@@ -255,43 +252,11 @@ const { svgRef } = useChartAccessibility({
 });
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    let final = mergedConfig;
-
-    const theme = mergedConfig.theme;
-
-    if (theme) {
-        if (!isThemeValid.value(mergedConfig)) {
-            warnInvalidTheme(mergedConfig);
-            final = mergedConfig;
-        } else {
-            const fused = useNestedProp({
-                userConfig: themes[theme] || props.config,
-                defaultConfig: mergedConfig,
-            });
-
-            final = {
-                ...useNestedProp({
-                    userConfig: props.config,
-                    defaultConfig: fused,
-                }),
-                customPalette: mergedConfig.customPalette.length
-                    ? mergedConfig.customPalette
-                    : themePalettes[theme] || palette,
-            };
-        }
-    } else {
-        final = mergedConfig;
-    }
-
-    final.nodeCategories = props.config.nodeCategories || {};
-    final.nodeCategoryColors = props.config.nodeCategoryColors || {};
-
-    return final;
+    return {
+        ...resolveChartConfigWithPalette(props.config, DEFAULT_CONFIG, themes),
+        nodeCategories: props.config.nodeCategories || {},
+        nodeCategoryColors: props.config.nodeCategoryColors || {},
+    };
 }
 
 const WIDTH = ref(cfgChart.value.width);
@@ -326,21 +291,10 @@ watch(
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
         titleStep.value += 1;
 
         // Reset mutable config
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-    },
-    { deep: true },
-);
-
-watch(
-    () => props.dataset,
-    (_) => {
-        if (Array.isArray(_) && _.length > 0) {
-            manualLoading.value = false;
-        }
     },
     { deep: true },
 );
@@ -358,6 +312,20 @@ const hasOptionsNoTitle = computed(() => {
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
+
+function formatValue(value, context) {
+    return applyDataLabel(
+        cfgLabels.value.formatter,
+        value,
+        dataLabel({
+            p: cfgLabels.value.prefix,
+            v: value,
+            s: cfgLabels.value.suffix,
+            r: cfgLabels.value.rounding,
+        }),
+        context,
+    );
+}
 
 const nodeWidth = computed(() => {
     return cfgNodes.value.width;
@@ -380,87 +348,110 @@ watch(
     { immediate: true },
 );
 
-const sanitizedDataset = computed(() => {
-    if (!FINAL_DATASET.value || !FINAL_DATASET.value.length) return [];
-    return FINAL_DATASET.value.map((dp, i) => {
-        return [
-            dp[0],
-            dp[1],
-            checkNaN(dp[2]),
-            dp[3]
-                ? convertColorToHex(dp[3])
-                : customPalette.value[i] ||
-                  customPalette.value[i % customPalette.value.length] ||
-                  palette[i] ||
-                  palette[i % palette.length],
-        ];
-    });
-});
+function getNodeCategory(name) {
+    const categories = FINAL_CONFIG.value.nodeCategories;
+    return Object.hasOwn(categories, name) ? categories[name] : undefined;
+}
+function getCategoryColor(category) {
+    const colors = FINAL_CONFIG.value.nodeCategoryColors;
+    return Object.hasOwn(colors, category) ? colors[category] : undefined;
+}
 
-function computeSankeyCoordinates(ds) {
-    const nodes = {};
-    const levels = {};
-
-    function addNode(name, level) {
-        if (!nodes[name]) {
-            nodes[name] = {
-                level: null,
+const sanitizedDataset = computed(() =>
+    (FINAL_DATASET.value || []).map(([source, target, value, color]) => [
+        source,
+        target,
+        typeof value === 'number' && Number.isFinite(value)
+            ? Math.max(0, value)
+            : 0,
+        color ? convertColorToHex(color) : null,
+    ]),
+);
+function encodeStableId(value) {
+    return Array.from(String(value), (character) =>
+        character.codePointAt(0).toString(16),
+    ).join('_');
+}
+const graph = computed(() => {
+    const nodes = new Map();
+    const colors = new Map();
+    function addNode(name) {
+        if (!nodes.has(name))
+            nodes.set(name, {
+                name,
+                level: 0,
                 inflow: 0,
                 outflow: 0,
                 children: [],
+                parents: [],
                 color: null,
-                uid: createUid(),
-            };
-        }
-        if (nodes[name].level === null) nodes[name].level = level;
-        if (!levels[level]) levels[level] = [];
-        if (!levels[level].includes(name)) levels[level].push(name);
+            });
+        return nodes.get(name);
     }
-
-    ds.forEach(([s, t, v]) => {
-        const srcLevel = nodes[s]?.level ?? 0;
-        const tgtLevel = srcLevel + 1;
-        addNode(s, srcLevel);
-        addNode(t, tgtLevel);
-        nodes[s].children.push({ target: t, value: v });
-        nodes[s].outflow += v;
-        nodes[t].inflow += v;
-    });
-
-    const sources = new Set(ds.map(([s]) => s));
-    const targetsSet = new Set(ds.map(([, t]) => t));
-    const rootNodes = Array.from(sources).filter((s) => !targetsSet.has(s));
-
-    const rootColors = {};
-    rootNodes.forEach((n, i) => {
-        rootColors[n] = customPalette.value[i] || palette[i % palette.length];
-    });
-
-    const customColorMap = {};
-    ds.forEach(([s, t, _v, c]) => {
-        if (c) {
-            customColorMap[s] = c;
-            customColorMap[t] = c;
+    const occurrences = new Map();
+    sanitizedDataset.value.forEach(([source, target, value, color]) => {
+        const src = addNode(source),
+            tgt = addNode(target);
+        const key = JSON.stringify([source, target]);
+        const occurrence = occurrences.get(key) || 0;
+        occurrences.set(key, occurrence + 1);
+        src.children.push({
+            target,
+            value,
+            id: `flow_link_${uid.value}_${encodeStableId(key)}_${occurrence}`,
+        });
+        tgt.parents.push({ source, value });
+        src.outflow += value;
+        tgt.inflow += value;
+        if (color) {
+            colors.set(source, color);
+            colors.set(target, color);
         }
     });
-
-    Object.keys(nodes).forEach((name, idx) => {
-        const category = FINAL_CONFIG.value.nodeCategories?.[name];
-        const categoryColor = category
-            ? FINAL_CONFIG.value.nodeCategoryColors?.[category]
-            : null;
-
-        nodes[name].color =
-            customColorMap[name] ||
-            categoryColor ||
-            (rootNodes.includes(name) ? rootColors[name] : null) ||
-            palette[idx % palette.length];
-    });
-
-    Object.keys(nodes).forEach((k) => {
-        nodes[k].value = Math.max(nodes[k].inflow, nodes[k].outflow);
-    });
-
+    const roots = [...nodes.values()].filter((node) => !node.parents.length);
+    const indegree = new Map(
+        [...nodes].map(([name, node]) => [name, node.parents.length]),
+    );
+    const queue = roots.map((node) => node.name);
+    for (let cursor = 0; cursor < queue.length; cursor++) {
+        const node = nodes.get(queue[cursor]);
+        for (const { target } of node.children) {
+            const child = nodes.get(target);
+            child.level = Math.max(child.level, node.level + 1);
+            indegree.set(target, indegree.get(target) - 1);
+            if (!indegree.get(target)) queue.push(target);
+        }
+    }
+    // Nodes blocked by a cycle share a column; backward links use straight paths.
+    for (const [name, count] of indegree)
+        if (count > 0) nodes.get(name).level = 0;
+    const rootColors = new Map(
+        roots.map((node, i) => [
+            node.name,
+            customPalette.value[i] || palette[i % palette.length],
+        ]),
+    );
+    const levels = Object.create(null);
+    let index = 0;
+    for (const [name, node] of nodes) {
+        const category = getNodeCategory(name);
+        node.color =
+            colors.get(name) ||
+            (category ? getCategoryColor(category) : null) ||
+            rootColors.get(name) ||
+            palette[index % palette.length];
+        index++;
+        node.value = Math.max(node.inflow, node.outflow);
+        (levels[node.level] ||= []).push(name);
+    }
+    return {
+        nodes,
+        levels,
+        totalRootFlow: roots.reduce((sum, node) => sum + node.outflow, 0),
+    };
+});
+function computeSankeyCoordinates() {
+    const { nodes, levels } = graph.value;
     const p = padding.value;
     const innerW = innerSize.value.width;
     const innerH = innerSize.value.height;
@@ -485,7 +476,7 @@ function computeSankeyCoordinates(ds) {
         const effectiveMin = Math.min(minHeightCfg, n ? H / n : 0);
 
         let reserved = 0;
-        let remain = names.map((nm) => nodes[nm].value || 0);
+        let remain = names.map((nm) => nodes.get(nm).value || 0);
         let remSum = remain.reduce((a, v) => a + v, 0);
 
         for (let iter = 0; iter < 12; iter += 1) {
@@ -511,7 +502,7 @@ function computeSankeyCoordinates(ds) {
     const perLevelScales = levelKeys.map(levelAllowedScale);
     const globalScale = perLevelScales.length ? Math.min(...perLevelScales) : 0;
 
-    const nodeCoordinates = {};
+    const nodeCoordinates = Object.create(null);
     levelKeys.forEach((levelIndex) => {
         const names = levels[levelIndex];
         const n = names.length;
@@ -520,7 +511,7 @@ function computeSankeyCoordinates(ds) {
         const effectiveMin = Math.min(minHeightCfg, n ? H / n : 0);
 
         const heights = names.map((nm) =>
-            Math.max(effectiveMin, (nodes[nm].value || 0) * globalScale),
+            Math.max(effectiveMin, (nodes.get(nm).value || 0) * globalScale),
         );
 
         const used = heights.reduce((a, h) => a + h, 0) + gaps;
@@ -537,9 +528,9 @@ function computeSankeyCoordinates(ds) {
                 absoluteY: y,
                 height: h,
                 i,
-                color: nodes[name].color,
-                value: nodes[name].value,
-                id: createUid(),
+                color: nodes.get(name).color,
+                value: nodes.get(name).value,
+                id: `flow_node_${uid.value}_${encodeStableId(name)}`,
             };
 
             yCursor += h;
@@ -550,9 +541,9 @@ function computeSankeyCoordinates(ds) {
     const links = [];
     const yOffset = p.top;
 
-    const tgtOffsets = {};
-    const tgtAccum = {};
-    Object.keys(nodes).forEach((n) => {
+    const tgtOffsets = Object.create(null);
+    const tgtAccum = Object.create(null);
+    [...nodes.keys()].forEach((n) => {
         tgtOffsets[n] = nodeCoordinates[n]?.y ?? 0;
         tgtAccum[n] = 0;
     });
@@ -566,15 +557,15 @@ function computeSankeyCoordinates(ds) {
     levelKeys.forEach((levelIndex) => {
         const names = levels[levelIndex];
         names.forEach((name) => {
-            const srcNode = nodes[name];
+            const srcNode = nodes.get(name);
             const srcCoord = nodeCoordinates[name];
             if (!srcNode.children || !srcNode.children.length) return;
 
             let srcInnerY = srcCoord.y;
 
-            srcNode.children.forEach(({ target, value }) => {
+            srcNode.children.forEach(({ target, value, id }) => {
                 const tgtCoord = nodeCoordinates[target];
-                const targetNode = nodes[target];
+                const targetNode = nodes.get(target);
 
                 const srcFrac =
                     srcNode.outflow > 0 ? value / srcNode.outflow : 0;
@@ -630,13 +621,13 @@ function computeSankeyCoordinates(ds) {
                 }
 
                 links.push({
-                    id: createUid(),
+                    id,
                     source: name,
                     target,
                     path: pathStr,
                     value,
                     sourceColor: srcNode.color,
-                    targetColor: nodes[target].color,
+                    targetColor: nodes.get(target).color,
                 });
 
                 srcInnerY = sY2 - yOffset;
@@ -649,7 +640,7 @@ function computeSankeyCoordinates(ds) {
 }
 
 const mutableDataset = computed(() => {
-    const d = computeSankeyCoordinates(FINAL_DATASET.value);
+    const d = computeSankeyCoordinates();
 
     return {
         nodes: Object.keys(d.nodeCoordinates).map((key, i) => {
@@ -662,69 +653,91 @@ const mutableDataset = computed(() => {
     };
 });
 
-const chartWidth = computed(() => WIDTH.value);
-const chartHeight = computed(() => HEIGHT.value);
-
 const padding = computed(() => cfgChart.value.padding);
 
 const innerSize = computed(() => {
     return {
         width: Math.max(
             0,
-            chartWidth.value - 40 - padding.value.right - padding.value.left,
+            WIDTH.value - 40 - padding.value.right - padding.value.left,
         ),
         height: Math.max(
             0,
-            chartHeight.value - padding.value.top - padding.value.bottom,
+            HEIGHT.value - padding.value.top - padding.value.bottom,
         ),
     };
 });
 
 const drawingArea = computed(() => ({
-    width: chartWidth.value,
-    height: chartHeight.value,
+    width: WIDTH.value,
+    height: HEIGHT.value,
 }));
 
-function findConnectedNodes(startNode) {
-    const nodes = {};
-    const reverseNodes = {};
-    const result = new Set();
-
-    sanitizedDataset.value.forEach(([source, target, value]) => {
-        if (!nodes[source]) {
-            nodes[source] = [];
-        }
-        if (!reverseNodes[target]) {
-            reverseNodes[target] = [];
-        }
-        nodes[source].push(target);
-        reverseNodes[target].push(source);
-    });
-
-    if (nodes[startNode]) {
-        nodes[startNode].forEach((child) => result.add(child));
-    }
-
-    if (reverseNodes[startNode]) {
-        reverseNodes[startNode].forEach((parent) => result.add(parent));
-    }
-
-    return Array.from(result).concat(startNode);
+function findConnectedNodes(name) {
+    const node = graph.value.nodes.get(name);
+    return node
+        ? [
+              ...new Set([
+                  ...node.children.map((item) => item.target),
+                  ...node.parents.map((item) => item.source),
+                  name,
+              ]),
+          ]
+        : [];
 }
+const nodeSummaries = computed(() => {
+    const colors = new Map(
+        [...graph.value.nodes].map(([name, node]) => [name, node.color]),
+    );
+    return new Map(
+        [...graph.value.nodes].map(([name, node]) => [
+            name,
+            {
+                name,
+                inflow: node.inflow,
+                outflow: node.outflow,
+                from: node.parents.map((item) => ({
+                    ...item,
+                    color: colors.get(item.source),
+                })),
+                to: node.children.map(({ target, value }) => ({
+                    target,
+                    value,
+                    color: colors.get(target),
+                })),
+                percentOfTotal:
+                    graph.value.totalRootFlow > 0
+                        ? (node.value / graph.value.totalRootFlow) * 100
+                        : 0,
+                color: colors.get(name) || '#000000',
+            },
+        ]),
+    );
+});
 
-const selectedNodes = ref(null);
-const selectedSource = ref(null);
+const selectedCategory = ref(null);
+const selectedNodes = computed(() => {
+    if (selectedCategory.value != null)
+        return mutableDataset.value.nodes
+            .filter(
+                (node) => getNodeCategory(node.name) === selectedCategory.value,
+            )
+            .map((node) => node.name);
+    const node = mutableDataset.value.nodes.find(
+        (node) => node.id === selectedNodeId.value,
+    );
+    return node ? findConnectedNodes(node.name) : null;
+});
 const dataTooltipSlot = ref(null);
 const useCustomFormat = ref(false);
 const selectedNodeId = ref(null);
 
 function clearNodeSelection() {
     selectedNodeId.value = null;
-    selectedNodes.value = null;
-    selectedSource.value = null;
+    selectedCategory.value = null;
     isTooltip.value = false;
-    activeTooltipIndex.value = null;
-    activeTooltipNodeId.value = null;
+
+    tooltipTriggerMode.value = 'pointer';
 }
 
 function updateTooltipA11yPosition(nodeId) {
@@ -738,63 +751,23 @@ function updateTooltipA11yPosition(nodeId) {
     };
 }
 
-function selectNode(node, index, triggerMode = 'pointer', flatIndex = null) {
-    segregated.value = [];
-    selectedNodes.value = findConnectedNodes(node.name);
-    selectedSource.value = node.name;
+function selectNode(
+    node,
+    index,
+    triggerMode = 'pointer',
+    flatIndex = null,
+    notify = true,
+) {
+    if (!node) return;
+    selectedCategory.value = null;
     selectedNodeId.value = node.id;
 
     tooltipTriggerMode.value = triggerMode;
-    activeTooltipIndex.value = flatIndex;
-    activeTooltipNodeId.value = node.id;
 
-    const nodeName = node.name;
-    const dataset = sanitizedDataset.value;
+    const datapoint = nodeSummaries.value.get(node.name);
+    if (!datapoint) return;
 
-    let inflow = 0;
-    let outflow = 0;
-    let from = [];
-    let to = [];
-
-    const sources = new Set(dataset.map(([s]) => s));
-    const targets = new Set(dataset.map(([, t]) => t));
-    const rootNodes = Array.from(sources).filter((src) => !targets.has(src));
-
-    const totalRootFlow = dataset
-        .filter(([source]) => rootNodes.includes(source))
-        .reduce((sum, [_s, _t, value]) => sum + value, 0);
-
-    const nodeColorMap = {};
-    mutableDataset.value.nodes.forEach((n) => {
-        nodeColorMap[n.name] = n.color;
-    });
-
-    dataset.forEach(([source, target, value]) => {
-        if (target === nodeName) {
-            inflow += value;
-            from.push({ source, value, color: nodeColorMap[source] });
-        }
-        if (source === nodeName) {
-            outflow += value;
-            to.push({ target, value, color: nodeColorMap[target] });
-        }
-    });
-
-    const nodeTotalFlow = Math.max(inflow, outflow);
-    const percentOfTotal =
-        totalRootFlow > 0 ? (nodeTotalFlow / totalRootFlow) * 100 : 0;
-
-    const datapoint = {
-        name: nodeName,
-        inflow,
-        outflow,
-        from,
-        to,
-        percentOfTotal,
-        color: nodeColorMap[nodeName] || '#000000',
-    };
-
-    if (FINAL_CONFIG.value.events.datapointEnter) {
+    if (notify && FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({
             datapoint,
             seriesIndex: index,
@@ -846,16 +819,7 @@ function selectNode(node, index, triggerMode = 'pointer', flatIndex = null) {
             datapoint.from.forEach((item) => {
                 html += `<div><span style="color:${item.color}">⏹←</span> ${
                     item.source
-                }: ${applyDataLabel(
-                    cfgLabels.value.formatter,
-                    item.value,
-                    dataLabel({
-                        p: cfgLabels.value.prefix,
-                        v: item.value,
-                        s: cfgLabels.value.suffix,
-                        r: cfgLabels.value.rounding,
-                    }),
-                )}</div>`;
+                }: ${formatValue(item.value)}</div>`;
             });
         }
 
@@ -864,16 +828,7 @@ function selectNode(node, index, triggerMode = 'pointer', flatIndex = null) {
             datapoint.to.forEach((item) => {
                 html += `<div><span style="color:${item.color}">⏹→</span> ${
                     item.target
-                }: ${applyDataLabel(
-                    cfgLabels.value.formatter,
-                    item.value,
-                    dataLabel({
-                        p: cfgLabels.value.prefix,
-                        v: item.value,
-                        s: cfgLabels.value.suffix,
-                        r: cfgLabels.value.rounding,
-                    }),
-                )}</div>`;
+                }: ${formatValue(item.value)}</div>`;
             });
         }
 
@@ -897,10 +852,7 @@ function unselectNode(index) {
     }
     if (tooltipTriggerMode.value === 'keyboard' && activeTooltipNodeId.value)
         return;
-    selectedNodeId.value = null;
-    selectedNodes.value = null;
-    selectedSource.value = null;
-    isTooltip.value = false;
+    clearNodeSelection();
 }
 
 function clickNode(index) {
@@ -998,11 +950,7 @@ const dataTable = computed(() => {
         breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
     };
 
-    const colNames = [
-        FINAL_CONFIG.value.table.columnNames.source,
-        FINAL_CONFIG.value.table.columnNames.target,
-        FINAL_CONFIG.value.table.columnNames.value,
-    ];
+    const colNames = head;
 
     return {
         colNames,
@@ -1014,7 +962,12 @@ const dataTable = computed(() => {
 
 const a11yTable = computed(() => {
     const headers = dataTable.value?.colNames ?? [];
-    const rows = dataTable.value?.body ?? [];
+    const rows =
+        dataTable.value?.body.map((row) => [
+            row[0].name,
+            row[1].name,
+            row[2],
+        ]) ?? [];
     return { headers, rows };
 });
 
@@ -1093,34 +1046,30 @@ function toggleTooltip() {
 }
 
 const legendSet = computed(() => {
-    const cats = new Set(
-        mutableDataset.value.nodes.map(
-            (n) =>
-                FINAL_CONFIG.value.nodeCategories[n.name] ||
-                '__uncategorized__',
-        ),
-    );
-
-    return Array.from(cats)
-        .map((cat) => {
-            return {
-                name: cat,
-                color: FINAL_CONFIG.value.nodeCategoryColors[cat] || palette[0],
-                shape: 'square',
-                count: mutableDataset.value.nodes.filter(
-                    (n) =>
-                        (FINAL_CONFIG.value.nodeCategories[n.name] ||
-                            '__uncategorized__') === cat,
-                ).length,
-            };
-        })
+    const counts = new Map();
+    for (const node of mutableDataset.value.nodes) {
+        const category = getNodeCategory(node.name) || '__uncategorized__';
+        counts.set(category, (counts.get(category) || 0) + 1);
+    }
+    return [...counts]
+        .map(([name, count]) => ({
+            name,
+            count,
+            color: getCategoryColor(name) || palette[0],
+            shape: 'square',
+        }))
         .map((cat, i) => {
-            const isSegregated = segregated.value.includes(i);
+            const isSegregated = selectedCategory.value === cat.name;
             return {
                 ...cat,
                 segregate: () => drillCategory({ legend: cat, i }),
                 isSegregated,
-                opacity: segregated.value.length ? (isSegregated ? 1 : 0.5) : 1,
+                opacity:
+                    selectedCategory.value != null
+                        ? isSegregated
+                            ? 1
+                            : 0.5
+                        : 1,
                 display: `${cat.name} (${cat.count})`,
             };
         });
@@ -1130,29 +1079,11 @@ const legendSetFiltered = computed(() =>
     legendSet.value.filter((l) => l.name !== '__uncategorized__'),
 );
 
-const segregated = ref([]);
-
-function drillCategory({ legend, i }) {
-    const cat = legend.name;
-
-    if (
-        selectedNodes.value?.every(
-            (n) => FINAL_CONFIG.value.nodeCategories[n] === cat,
-        )
-    ) {
-        selectedNodes.value = null;
-        selectedSource.value = null;
-        segregated.value = [];
-        return;
-    }
-
-    segregated.value = [i];
-
-    selectedNodes.value = mutableDataset.value.nodes
-        .filter((n) => FINAL_CONFIG.value.nodeCategories[n.name] === cat)
-        .map((n) => n.name);
-
-    selectedSource.value = null;
+function drillCategory({ legend }) {
+    const category = legend.name;
+    const clear = selectedCategory.value === category;
+    clearNodeSelection();
+    selectedCategory.value = clear ? null : category;
 }
 
 const legendConfig = computed(() => ({
@@ -1273,8 +1204,8 @@ function findClosestNodeInColumn(columnIndex, centerY) {
 }
 
 function onSvgFocus() {
-    activeTooltipIndex.value = null;
-    activeTooltipNodeId.value = null;
+    clearNodeSelection();
+
     isFocus.value = true;
 }
 
@@ -1387,6 +1318,31 @@ function onSvgKeydown(event) {
     selectNode(nextNode, nextIndex, 'keyboard', nextIndex);
 }
 
+watch(
+    [
+        () => FINAL_CONFIG.value.responsive,
+        () => cfgChart.value.width,
+        () => cfgChart.value.height,
+    ],
+    prepareChart,
+    { flush: 'post' },
+);
+watch(cfgChart, () => scheduleResize?.(), { flush: 'post' });
+watch(mutableDataset, ({ nodes }) => {
+    if (selectedCategory.value != null) {
+        if (!selectedNodes.value.length) clearNodeSelection();
+        return;
+    }
+    if (selectedNodeId.value == null) return;
+    const index = nodes.findIndex((node) => node.id === selectedNodeId.value);
+    if (index < 0) {
+        clearNodeSelection();
+        return;
+    }
+    const flatIndex = a11yNodeIndexMap.value.get(nodes[index].id);
+    selectNode(nodes[index], index, tooltipTriggerMode.value, flatIndex, false);
+});
+
 defineExpose({
     getData,
     getImage,
@@ -1427,7 +1383,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -1623,13 +1579,7 @@ defineExpose({
                                   selectedNodes.includes(path.target)
                                     ? 1
                                     : 0.3
-                                : selectedSource
-                                  ? [path.target, path.source].includes(
-                                        selectedSource,
-                                    )
-                                      ? 1
-                                      : 0.3
-                                  : cfgLinks.opacity
+                                : cfgLinks.opacity
                         }
                     `"
                 />
@@ -1659,16 +1609,7 @@ defineExpose({
                                 ? '2px solid currentColor'
                                 : undefined,
                     }"
-                    :aria-label="`${node.name}: ${applyDataLabel(
-                        cfgLabels.formatter,
-                        node.value,
-                        dataLabel({
-                            p: cfgLabels.prefix,
-                            v: node.value,
-                            s: cfgLabels.suffix,
-                            r: cfgLabels.rounding,
-                        }),
-                    )}`"
+                    :aria-label="`${node.name}: ${formatValue(node.value)}`"
                     @mouseenter="
                         selectNode(
                             node,
@@ -1731,17 +1672,10 @@ defineExpose({
                             :style="`pointer-events: none; opacity:${selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0) : 1}`"
                         >
                             {{
-                                applyDataLabel(
-                                    cfgLabels.formatter,
-                                    node.value,
-                                    dataLabel({
-                                        p: cfgLabels.prefix,
-                                        v: node.value,
-                                        s: cfgLabels.suffix,
-                                        r: cfgLabels.rounding,
-                                    }),
-                                    { datapoint: node, seriesIndex: i },
-                                )
+                                formatValue(node.value, {
+                                    datapoint: node,
+                                    seriesIndex: i,
+                                })
                             }}
                         </text>
                     </template>
@@ -1810,7 +1744,7 @@ defineExpose({
                         <template #item="{ legend, index }">
                             <div
                                 @click="legend.segregate()"
-                                :style="`opacity:${segregated.length ? (segregated.includes(index) ? 1 : 0.5) : 1}`"
+                                :style="{ opacity: legend.opacity }"
                                 v-if="!loading"
                             >
                                 {{ legend.display }}
@@ -1827,7 +1761,6 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip
-            ref="tooltip"
             :teleportTo="cfgChart.tooltip.teleportTo"
             :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="cfgChart.tooltip.backgroundColor"

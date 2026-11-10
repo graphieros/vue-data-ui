@@ -36,7 +36,6 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    functionReturnsString,
     getLineCountFromString,
     hasDeepProperty,
     isFunction,
@@ -105,14 +104,7 @@ const props = defineProps({
     },
 });
 
-const isDataset = computed({
-    get() {
-        return !!props.dataset && props.dataset.length;
-    },
-    set(bool) {
-        return bool;
-    },
-});
+const isDataset = computed(() => !!props.dataset?.length);
 
 const uid = ref(createUid());
 const isTooltip = ref(false);
@@ -126,13 +118,11 @@ const source = ref(null);
 const noTitle = ref(null);
 const titleStep = ref(0);
 const legendStep = ref(0);
-const G = ref(null);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
-const parentLabels = ref(null);
 const childLabels = ref(null);
 const segregated = ref([]);
-const sorts = ref({ none: 0, asc: 1, desc: 2 });
+const sorts = { none: 0, asc: 1, desc: 2 };
 const sortIndex = ref(0);
 const dataLabelFontMetricsRevision = ref(0);
 let dataLabelMeasureCanvas = null;
@@ -284,29 +274,17 @@ function prepareConfig() {
     } else {
         finalConfig = mergedConfig;
     }
-    if (
-        props.config &&
-        hasDeepProperty(props.config, 'events.datapointEnter')
-    ) {
-        finalConfig.events.datapointEnter = props.config.events.datapointEnter;
-    } else {
-        finalConfig.events.datapointEnter = null;
-    }
-    if (
-        props.config &&
-        hasDeepProperty(props.config, 'events.datapointLeave')
-    ) {
-        finalConfig.events.datapointLeave = props.config.events.datapointLeave;
-    } else {
-        finalConfig.events.datapointLeave = null;
-    }
-    if (
-        props.config &&
-        hasDeepProperty(props.config, 'events.datapointClick')
-    ) {
-        finalConfig.events.datapointClick = props.config.events.datapointClick;
-    } else {
-        finalConfig.events.datapointClick = null;
+    for (const event of [
+        'datapointEnter',
+        'datapointLeave',
+        'datapointClick',
+    ]) {
+        finalConfig.events[event] = hasDeepProperty(
+            props.config,
+            `events.${event}`,
+        )
+            ? props.config.events[event]
+            : null;
     }
     return finalConfig;
 }
@@ -348,7 +326,7 @@ watch(
         titleStep.value += 1;
         legendStep.value += 1;
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        sortIndex.value = sorts.value[cfgBars.value.sort] ?? 0;
+        sortIndex.value = sorts[cfgBars.value.sort] ?? 0;
         mutableConfig.value.showTooltip = cfgTooltip.value.show;
         WIDTH.value = cfgChart.value.width;
         HEIGHT.value = cfgChart.value.height;
@@ -385,7 +363,6 @@ const breakpoint = computed(() => {
 });
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
-const remainingHeight = ref(0);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
 
@@ -397,7 +374,6 @@ function prepareChart() {
             type: 'dataset',
             debug: debug.value,
         });
-        isDataset.value = false;
         manualLoading.value = true;
     }
 
@@ -413,7 +389,6 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value,
             });
-            remainingHeight.value = height / 3;
             requestAnimationFrame(async () => {
                 HEIGHT.value = height;
                 WIDTH.value = width;
@@ -547,20 +522,15 @@ const immutableDataset = computed(() => {
                                       parentSign,
                                       id: `vertical_child_${i}_${j}_${uid.value}`,
                                       childIndex: j,
+                                      isFirstChild: j === 0,
+                                      isLastChild:
+                                          j === serie.children.length - 1,
                                       color:
                                           convertColorToHex(c.color) ||
                                           convertColorToHex(serie.color) ||
                                           customPalette.value[i] ||
                                           palette[i] ||
                                           palette[i % palette.length],
-                                  };
-                              })
-                              .map((c, j) => {
-                                  return {
-                                      ...c,
-                                      isFirstChild: j === 0,
-                                      isLastChild:
-                                          j === serie.children.length - 1,
                                   };
                               }),
             };
@@ -579,38 +549,17 @@ const mutableDataset = computed(() => {
     );
 });
 
-const bars = computed(() => {
-    return mutableDataset.value.flatMap((serie) => {
-        if (!serie.hasChildren) {
-            return serie;
-        } else {
-            return serie.children;
-        }
-    });
-});
+function flattenBars(dataset) {
+    return dataset.flatMap((serie) =>
+        serie.hasChildren ? serie.children : serie,
+    );
+}
 
-// Used on childLabels to keep consistent spacing that is not touched by serie segregation
-const immutableBars = computed(() => {
-    return immutableDataset.value.flatMap((serie) => {
-        if (!serie.hasChildren) {
-            return serie;
-        } else {
-            return serie.children;
-        }
-    });
-});
+const bars = computed(() => flattenBars(mutableDataset.value));
 
-const barCount = computed(() => {
-    return mutableDataset.value
-        .flatMap((serie) => {
-            if (serie.children && serie.children.length > 0) {
-                return serie.children.length;
-            } else {
-                return 1;
-            }
-        })
-        .reduce((a, b) => a + b, 0);
-});
+// Measure all names so hiding a series does not change the label column width.
+const immutableBars = computed(() => flattenBars(immutableDataset.value));
+const barCount = computed(() => bars.value.length);
 
 const legendConfig = computed(() => {
     return {
@@ -733,17 +682,9 @@ function measureDataLabelText(text) {
 }
 
 function getMaximumVisibleValue() {
-    const values = mutableDataset.value.flatMap((serie) => {
-        if (serie.children && serie.children.length) {
-            return serie.children.map((child) => Math.abs(child.value));
-        }
-
-        return Math.abs(serie.value);
-    });
-
-    if (!values.length) return 0;
-
-    return Math.max(...values);
+    return bars.value.length
+        ? Math.max(...bars.value.map((bar) => Math.abs(bar.value)))
+        : 0;
 }
 
 const dataLabelReservations = computed(() => {
@@ -1004,20 +945,10 @@ function calcProportionToTotal(val, formatted = false, rounding = 0) {
 }
 
 const hasNegative = computed(() => {
-    return bars.value.map((b) => b.sign).includes(-1);
+    return bars.value.some((b) => b.sign === -1);
 });
 
-const max = computed(() => {
-    return Math.max(
-        ...mutableDataset.value.flatMap((serie) => {
-            if (serie.children && serie.children.length) {
-                return Math.max(...serie.children.map((c) => c.value));
-            } else {
-                return serie.value;
-            }
-        }),
-    );
-});
+const max = computed(() => Math.max(...bars.value.map((bar) => bar.value)));
 
 function calcBarWidth(val) {
     const ratio = val / max.value;
@@ -1030,35 +961,65 @@ function calcDataLabelX(val) {
     return calcBarWidth(val) + drawingArea.value.left;
 }
 
-function getParentData(serie, index) {
-    const parent = mutableDataset.value.find((el) => el.id === serie.parentId);
-
-    const barStart =
+function getBarY(index) {
+    return (
         drawingArea.value.top +
         (BAR_GAP.value + barHeight.value) * index +
-        parentLabelOffsets.value[index] * parentLabelBlockHeight.value;
+        parentLabelOffsets.value[index] * parentLabelBlockHeight.value
+    );
+}
 
-    const parentLabelStart = barStart - parentLabelBlockHeight.value;
+const barLayouts = computed(() =>
+    bars.value.map((serie, index) => {
+        const width = calcBarWidth(serie.value);
+        const drawableWidth = width <= 0 ? 0.0001 : width;
+        return {
+            x: checkNaN(
+                hasNegative.value
+                    ? drawingArea.value.left +
+                          drawingArea.value.width / 2 -
+                          (serie.sign === 1 ? 0 : drawableWidth)
+                    : drawingArea.value.left,
+            ),
+            y: getBarY(index),
+            width: checkNaN(drawableWidth),
+            height: barHeight.value <= 0 ? 0.0001 : barHeight.value,
+        };
+    }),
+);
 
-    const textY = parentLabelStart + cfgBars.value.parentLabels.fontSize;
+const parentLabelData = computed(() => {
+    const parents = new Map(
+        mutableDataset.value.map((serie) => [serie.id, serie]),
+    );
+    return bars.value.map((serie, index) => {
+        if (!serie.isChild) return null;
+        const parent = parents.get(serie.parentId);
+        return {
+            y:
+                getBarY(index) -
+                parentLabelBlockHeight.value +
+                cfgBars.value.parentLabels.fontSize,
+            name: parent.name,
+            value: [undefined, NaN, null].includes(parent.value)
+                ? ''
+                : parent.sign === 1
+                  ? parent.value
+                  : -parent.value,
+            percentageToTotal: isNaN(parent.value / total.value)
+                ? ''
+                : calcProportionToTotal(
+                      parent.value,
+                      true,
+                      cfgBars.value.dataLabels.percentage.roundingPercentage,
+                  ),
+            sign: parent.sign,
+        };
+    });
+});
 
-    return {
-        y: textY,
-        name: parent.name,
-        value: [undefined, NaN, null].includes(parent.value)
-            ? ''
-            : parent.sign === 1
-              ? parent.value
-              : -parent.value,
-        percentageToTotal: isNaN(parent.value / total.value)
-            ? ''
-            : calcProportionToTotal(
-                  parent.value,
-                  true,
-                  cfgBars.value.dataLabels.percentage.roundingPercentage,
-              ),
-        sign: parent.sign,
-    };
+function getParentData(serie, index) {
+    return parentLabelData.value[index];
 }
 
 /**
@@ -1107,6 +1068,7 @@ function useTooltip(bar, seriesIndex, triggerMode = 'pointer') {
 
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({
+            datapoint: bar,
             datpoint: bar,
             seriesIndex,
         });
@@ -1130,23 +1092,17 @@ function useTooltip(bar, seriesIndex, triggerMode = 'pointer') {
 
     const customFormat = cfgTooltip.value.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                datapoint: bar,
-                series: immutableDataset.value,
-                config: FINAL_CONFIG.value,
-                seriesIndex,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            datapoint: bar,
-            series: immutableDataset.value,
-            config: FINAL_CONFIG.value,
-            seriesIndex,
-        });
+    const customContent = isFunction(customFormat)
+        ? customFormat({
+              datapoint: bar,
+              series: immutableDataset.value,
+              config: FINAL_CONFIG.value,
+              seriesIndex,
+          })
+        : null;
+
+    if (typeof customContent === 'string') {
+        tooltipContent.value = customContent;
     } else {
         html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${
             cfgTooltip.value.borderColor
@@ -1265,33 +1221,20 @@ const table = computed(() => {
                 childPercentageToParent: '',
                 childPercentageToTotal: '',
             };
-        } else {
-            if (bar.isFirstChild) {
-                return {
-                    color: bar.color,
-                    parentName: bar.parentName,
-                    parentValue: bar.parentValue,
-                    percentageToTotal: bar.parentValue / total.value,
-                    childName: bar.name,
-                    childValue: bar.sign === 1 ? bar.value : -bar.value,
-                    childPercentageToParent:
-                        Math.abs(bar.value) / Math.abs(bar.parentValue),
-                    childPercentageToTotal: Math.abs(bar.value) / total.value,
-                };
-            } else {
-                return {
-                    color: '',
-                    parentName: '',
-                    parentValue: '',
-                    percentageToTotal: '',
-                    childName: bar.name,
-                    childValue: bar.sign === 1 ? bar.value : -bar.value,
-                    childPercentageToParent:
-                        Math.abs(bar.value) / Math.abs(bar.parentValue),
-                    childPercentageToTotal: Math.abs(bar.value) / total.value,
-                };
-            }
         }
+        return {
+            color: bar.isFirstChild ? bar.color : '',
+            parentName: bar.isFirstChild ? bar.parentName : '',
+            parentValue: bar.isFirstChild ? bar.parentValue : '',
+            percentageToTotal: bar.isFirstChild
+                ? bar.parentValue / total.value
+                : '',
+            childName: bar.name,
+            childValue: bar.sign === 1 ? bar.value : -bar.value,
+            childPercentageToParent:
+                Math.abs(bar.value) / Math.abs(bar.parentValue),
+            childPercentageToTotal: Math.abs(bar.value) / total.value,
+        };
     });
 
     return { head, body };
@@ -1329,17 +1272,9 @@ function generateCsv(callback = null) {
         [''],
     ];
     const head = table.value.head;
-    const body = table.value.body.map((tr) => {
-        return [
-            tr.parentName,
-            tr.parentValue,
-            tr.percentageToTotal,
-            tr.childName,
-            tr.childValue,
-            tr.childPercentageToParent,
-            tr.childPercentageToTotal,
-        ];
-    });
+    const body = table.value.body.map((row) =>
+        tableColumns.map((column) => row[column.key]),
+    );
 
     const tableXls = title.concat([head]).concat(body);
     const csvContent = createCsvContent(tableXls);
@@ -1374,7 +1309,7 @@ onMounted(() => {
         });
     }
 
-    sortIndex.value = sorts.value[cfgBars.value.sort] ?? 0;
+    sortIndex.value = sorts[cfgBars.value.sort] ?? 0;
 });
 
 function incrementSort() {
@@ -1608,12 +1543,10 @@ function onSvgKeydown(event) {
 
 function setKeyboardTooltipPositionFromBar(bar) {
     if (!bar) return;
-    let svgX = drawingArea.value.right;
-    let svgY =
-        drawingArea.value.top +
-        (BAR_GAP.value + barHeight.value) * bar.absoluteIndex +
-        parentLabelOffsets.value[bar.absoluteIndex] *
-            parentLabelBlockHeight.value;
+    const index = bars.value.findIndex((entry) => entry.id === bar.id);
+    if (index < 0) return;
+    const svgX = drawingArea.value.right;
+    const svgY = barLayouts.value[index].y;
     if (!Number.isFinite(svgX) || !Number.isFinite(svgY)) {
         return;
     }
@@ -1633,8 +1566,8 @@ const a11yTable = computed(() => {
                     : dataLabel({
                           v: row.parentValue,
                           r: cfgBars.value.dataLabels.value.roundingValue,
-                          p: cfgBars.value.dataLabels.prefix,
-                          s: cfgBars.value.dataLabels.suffix,
+                          p: cfgBars.value.dataLabels.value.prefix,
+                          s: cfgBars.value.dataLabels.value.suffix,
                       }),
                 row.percentageToTotal === ''
                     ? ''
@@ -1650,8 +1583,8 @@ const a11yTable = computed(() => {
                     : dataLabel({
                           v: row.childValue,
                           r: cfgBars.value.dataLabels.value.roundingValue,
-                          p: cfgBars.value.dataLabels.prefix,
-                          s: cfgBars.value.dataLabels.suffix,
+                          p: cfgBars.value.dataLabels.value.prefix,
+                          s: cfgBars.value.dataLabels.value.suffix,
                       }),
                 row.childPercentageToParent === ''
                     ? ''
@@ -1713,7 +1646,7 @@ defineExpose({
         </p>
 
         <A11yDataTable
-            v-if="a11yTable.body.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable.body.length"
             :uid="uid"
             :head="a11yTable.head"
             :body="a11yTable.body"
@@ -1917,7 +1850,7 @@ defineExpose({
                 @blur="onSvgBlur"
                 @keydown="onSvgKeydown"
             >
-                <g ref="G" class="vue-data-ui-g">
+                <g class="vue-data-ui-g">
                     <PackageVersion />
                     <slot
                         name="svg-underlayer"
@@ -1986,12 +1919,7 @@ defineExpose({
                             <!-- BAR GUTTERS -->
                             <rect
                                 :x="0"
-                                :y="
-                                    drawingArea.top +
-                                    (BAR_GAP + barHeight) * i +
-                                    parentLabelOffsets[i] *
-                                        parentLabelBlockHeight
-                                "
+                                :y="getBarY(i)"
                                 :width="WIDTH"
                                 :height="barHeight <= 0 ? 0.0001 : barHeight"
                                 :fill="cfgBars.rowColor"
@@ -2011,33 +1939,7 @@ defineExpose({
                         <!-- UNDERLAYER -->
                         <rect
                             data-cy="datapoint-underlayer"
-                            :x="
-                                checkNaN(
-                                    hasNegative
-                                        ? drawingArea.left +
-                                              drawingArea.width / 2 -
-                                              (serie.sign === 1
-                                                  ? 0
-                                                  : calcBarWidth(serie.value) <=
-                                                      0
-                                                    ? 0.0001
-                                                    : calcBarWidth(serie.value))
-                                        : drawingArea.left,
-                                )
-                            "
-                            :y="
-                                drawingArea.top +
-                                (BAR_GAP + barHeight) * i +
-                                parentLabelOffsets[i] * parentLabelBlockHeight
-                            "
-                            :width="
-                                checkNaN(
-                                    calcBarWidth(serie.value) <= 0
-                                        ? 0.0001
-                                        : calcBarWidth(serie.value),
-                                )
-                            "
-                            :height="barHeight <= 0 ? 0.0001 : barHeight"
+                            v-bind="barLayouts[i]"
                             :fill="cfgBars.underlayerColor"
                             :rx="cfgBars.borderRadius"
                             :class="{
@@ -2050,33 +1952,7 @@ defineExpose({
                         <!-- BARS -->
                         <rect
                             data-cy="datapoint-bar"
-                            :x="
-                                checkNaN(
-                                    hasNegative
-                                        ? drawingArea.left +
-                                              drawingArea.width / 2 -
-                                              (serie.sign === 1
-                                                  ? 0
-                                                  : calcBarWidth(serie.value) <=
-                                                      0
-                                                    ? 0.0001
-                                                    : calcBarWidth(serie.value))
-                                        : drawingArea.left,
-                                )
-                            "
-                            :y="
-                                drawingArea.top +
-                                (BAR_GAP + barHeight) * i +
-                                parentLabelOffsets[i] * parentLabelBlockHeight
-                            "
-                            :width="
-                                checkNaN(
-                                    calcBarWidth(serie.value) <= 0
-                                        ? 0.0001
-                                        : calcBarWidth(serie.value),
-                                )
-                            "
-                            :height="barHeight <= 0 ? 0.0001 : barHeight"
+                            v-bind="barLayouts[i]"
                             :fill="
                                 cfgBars.useGradient
                                     ? `url(#vertical_bar_gradient_${uid}_${i})`
@@ -2096,33 +1972,7 @@ defineExpose({
                         />
                         <rect
                             v-if="$slots.pattern"
-                            :x="
-                                checkNaN(
-                                    hasNegative
-                                        ? drawingArea.left +
-                                              drawingArea.width / 2 -
-                                              (serie.sign === 1
-                                                  ? 0
-                                                  : calcBarWidth(serie.value) <=
-                                                      0
-                                                    ? 0.0001
-                                                    : calcBarWidth(serie.value))
-                                        : drawingArea.left,
-                                )
-                            "
-                            :y="
-                                drawingArea.top +
-                                (BAR_GAP + barHeight) * i +
-                                parentLabelOffsets[i] * parentLabelBlockHeight
-                            "
-                            :width="
-                                checkNaN(
-                                    calcBarWidth(serie.value) <= 0
-                                        ? 0.0001
-                                        : calcBarWidth(serie.value),
-                                )
-                            "
-                            :height="barHeight <= 0 ? 0.0001 : barHeight"
+                            v-bind="barLayouts[i]"
                             :fill="`url(#pattern_${uid}_${serie.absoluteIndex})`"
                             :rx="cfgBars.borderRadius"
                             :stroke="cfgBars.useStroke ? serie.color : 'none'"
@@ -2148,7 +1998,7 @@ defineExpose({
                             :class="{
                                 'vue-data-ui-transition': transitionEnabled,
                             }"
-                            :d="`M${WIDTH}, ${barHeight + BAR_GAP / 2 + drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight} ${cfgLayout.separators.fullWidth ? 0 : drawingArea.left}, ${barHeight + BAR_GAP / 2 + drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight}`"
+                            :d="`M${WIDTH}, ${barHeight + BAR_GAP / 2 + getBarY(i)} ${cfgLayout.separators.fullWidth ? 0 : drawingArea.left}, ${barHeight + BAR_GAP / 2 + getBarY(i)}`"
                         />
 
                         <path
@@ -2164,7 +2014,7 @@ defineExpose({
                     </g>
 
                     <!-- PARENT NAMES -->
-                    <g ref="parentLabels">
+                    <g>
                         <g
                             v-for="(serie, i) in bars"
                             :key="`pn_${serie.id}`"

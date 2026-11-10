@@ -119,13 +119,18 @@ const props = defineProps({
 const uid = ref(createUid());
 const segregated = ref([]);
 const hoveredIndex = ref(null);
-const hoveredDatapoint = ref(null);
-const isFixed = ref(false);
-const fixedDatapoint = ref(null);
+const fixedAbsoluteIndex = ref(null);
+const fixedDatapointIndex = computed(() =>
+    fixedAbsoluteIndex.value == null
+        ? null
+        : fixedAbsoluteIndex.value - slicer.value.start,
+);
+const fixedDatapoint = computed(
+    () => drawableDataset.value[fixedDatapointIndex.value] ?? null,
+);
+const isFixed = computed(() => !!fixedDatapoint.value);
 const donutEvolutionChart = ref(null);
-const noTitle = ref(null);
 const step = ref(0);
-const slicerStep = ref(0);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
@@ -159,15 +164,18 @@ async function runParentStableLayoutPass() {
     await nextTick();
     await nextPaintFrame();
     await nextPaintFrame();
-    if (currentSequence !== pendingParentLayoutSequence.value) return;
+    if (disposed || currentSequence !== pendingParentLayoutSequence.value)
+        return;
     parentLayoutStableRunSequence.value += 1;
 }
 
 function queueParentStableLayoutRefresh() {
+    if (disposed) return;
     if (parentStableLayoutRefreshIsQueued.value) return;
     parentStableLayoutRefreshIsQueued.value = true;
     nextTick(() => {
         parentStableLayoutRefreshIsQueued.value = false;
+        if (disposed) return;
         setParentElementReference();
         runParentStableLayoutPass();
     });
@@ -190,11 +198,9 @@ const source = ref(null);
 const slicerComponent = ref(null);
 const chartSlicer = ref(null);
 
-const isLoaded = ref(false);
-
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
-const to = ref(null);
+let disposed = false;
 
 const activeTooltipIndex = ref(null); // a11y
 const isFocus = ref(false); // a11y
@@ -232,7 +238,6 @@ function prepareChart() {
             type: 'dataset',
             debug: debug.value,
         });
-        manualLoading.value = true; // v3
     } else {
         if (props.dataset.length) {
             props.dataset.forEach((ds, i) => {
@@ -247,67 +252,52 @@ function prepareChart() {
                         index: i,
                         debug: debug.value,
                     });
-                    manualLoading.value = true;
                 });
             });
         }
     }
 
-    // v3
-    if (!objectIsEmpty(props.dataset)) {
-        manualLoading.value = FINAL_CONFIG.value.loading;
-    }
-
-    setTimeout(() => {
-        isLoaded.value = true;
-    }, 10);
-
     setupSlicer();
+    updateSizing();
+    queueParentStableLayoutRefresh();
+}
 
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = () => {
-            isLoaded.value = false;
+function updateSizing() {
+    cancelAnimationFrame(resizeFrame);
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    if (!FINAL_CONFIG.value.responsive) {
+        defaultSizes.value = {
+            width: cfgLayout.value.width,
+            height: cfgLayout.value.height,
+        };
+        return;
+    }
+    const parent = donutEvolutionChart.value?.parentNode;
+    if (!parent) return;
+    const handleResize = () => {
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            if (disposed) return;
             const { width, height } = useResponsive({
                 chart: donutEvolutionChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text
-                    ? chartTitle.value
-                    : null,
-                legend: FINAL_CONFIG.value.style.chart.legend.show
-                    ? chartLegend.value
-                    : null,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
+                legend: cfgChart.value.legend.show ? chartLegend.value : null,
                 slicer:
-                    FINAL_CONFIG.value.style.chart.zoom.show && maxX.value > 1
+                    cfgChart.value.zoom.show && maxX.value > 1
                         ? chartSlicer.value
                         : null,
                 source: source.value,
             });
-
-            cancelAnimationFrame(resizeFrame);
-            resizeFrame = requestAnimationFrame(() => {
-                defaultSizes.value.width = width;
-                defaultSizes.value.height = height - 12;
-                responsiveSizeReady.value = true;
-                queueParentStableLayoutRefresh();
-                clearTimeout(to.value);
-                to.value = setTimeout(() => {
-                    isLoaded.value = true;
-                }, 10);
-            });
-        };
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = donutEvolutionChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
-
-    queueParentStableLayoutRefresh();
+            defaultSizes.value = { width, height: height - 12 };
+            responsiveSizeReady.value = true;
+            queueParentStableLayoutRefresh();
+        });
+    };
+    resizeObserver.value = new ResizeObserver(handleResize);
+    observedEl.value = parent;
+    resizeObserver.value.observe(parent);
+    handleResize();
 }
 
 const FINAL_CONFIG = ref(prepareConfig());
@@ -414,7 +404,7 @@ const skeletonConfig = computed(() => {
     });
 });
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
+const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
@@ -452,7 +442,7 @@ const defaultSizes = ref({
 });
 
 const maxX = computed(() => {
-    return Math.max(...FINAL_DATASET.value.map((ds) => ds.values.length));
+    return Math.max(0, ...FINAL_DATASET.value.map((ds) => ds.values.length));
 });
 
 const slicer = ref({
@@ -629,6 +619,7 @@ async function setupSlicer(applyControlledZoom = true) {
     try {
         await nextTick();
         await nextTick();
+        if (disposed) return;
 
         const { startIndex, endIndex } = cfgChart.value.zoom;
         const max = maxLength.value;
@@ -666,7 +657,7 @@ async function setupSlicer(applyControlledZoom = true) {
 async function refreshSlicer({ force = false, publish = false } = {}) {
     await setupSlicer(!force);
 
-    if (publish) {
+    if (publish && !disposed) {
         emitZoomState({
             start: Number(slicer.value.start),
             end: Number(slicer.value.end),
@@ -824,9 +815,6 @@ watch(
 watch(
     () => props.dataset,
     (_) => {
-        if (Array.isArray(_) && _.length > 0) {
-            manualLoading.value = false;
-        }
         refreshSlicer();
     },
     { deep: true },
@@ -919,9 +907,10 @@ function getScaleLabelX() {
 }
 
 onBeforeUnmount(() => {
+    disposed = true;
+    timeLabelsRequestId += 1;
     cancelAnimationFrame(resizeFrame);
     stableParentSize.stop();
-    clearTimeout(to.value);
     clearQueuedSlicerFrame();
     cancelPendingDatapointClick();
     cancelChartZoomSelection();
@@ -1019,26 +1008,31 @@ const convertedDataset = computed(() => {
                 palette[i] ||
                 palette[i % palette.length],
             length: (ds.values || []).length,
-            uid: createUid(),
+            uid: `donut_evolution_${uid.value}_${ds.id ?? i}`,
         };
     });
 });
 
+const visibleSeries = computed(() =>
+    convertedDataset.value.filter((ds) => !segregated.value.includes(ds.uid)),
+);
+
+watch(convertedDataset, (series) => {
+    const ids = new Set(series.map((ds) => ds.uid));
+    segregated.value = segregated.value.filter((id) => ids.has(id));
+});
+
 const mutableDataset = computed(() => {
-    return convertedDataset.value
-        .filter((ds) => !segregated.value.includes(ds.uid))
-        .map((ds) => {
-            return {
-                ...ds,
-                values: ds.values.filter(
-                    (_v, k) => k >= slicer.value.start && k <= slicer.value.end,
-                ),
-            };
-        });
+    return visibleSeries.value.map((ds) => {
+        return {
+            ...ds,
+            values: ds.values.slice(slicer.value.start, slicer.value.end),
+        };
+    });
 });
 
 const maxLength = computed(() => {
-    return Math.max(...convertedDataset.value.map((ds) => ds.length));
+    return Math.max(0, ...convertedDataset.value.map((ds) => ds.length));
 });
 
 const timeLabels = ref([]);
@@ -1090,18 +1084,11 @@ const datasetCopy = computed(() => {
 });
 
 const extremes = computed(() => {
-    const maxFromDataset =
-        Math.max(
-            ...datasetCopy.value
-                .map((ds) => ds.subtotal)
-                .filter((n) => isValidUserValue(n)),
-        ) ?? 1;
-    const minFromDataset =
-        Math.min(
-            ...datasetCopy.value
-                .map((ds) => ds.subtotal)
-                .filter((n) => isValidUserValue(n)),
-        ) ?? 0;
+    const values = datasetCopy.value
+        .map((ds) => ds.subtotal)
+        .filter(isValidUserValue);
+    const maxFromDataset = values.length ? Math.max(...values) : 1;
+    const minFromDataset = values.length ? Math.min(...values) : 0;
     let max = Math.max(cfgGrid.value.yAxis.scaleMax ?? 0, maxFromDataset);
     let min;
 
@@ -1163,11 +1150,8 @@ const yLabels = computed(() => {
     });
 });
 
-const drawableDataset = computed(() => {
+const donutGeometry = computed(() => {
     const arr = datasetCopy.value;
-    const minSubtotal = 0;
-    const maxSubtotal = Math.max(...arr.map((a) => a.subtotal));
-    const maxScale = arr.length === 1 ? maxSubtotal * 2 : maxSubtotal;
 
     return arr.map((a, i) => {
         const radiusReference = Math.min(
@@ -1178,8 +1162,6 @@ const drawableDataset = computed(() => {
             radiusReference > svg.value.width / 16
                 ? svg.value.width / 16
                 : radiusReference;
-        const activeRadius =
-            hoveredIndex.value === a.index ? svg.value.width / 16 : radius;
         const hoverRadius =
             arr.length > 4
                 ? radiusReference * 2
@@ -1200,7 +1182,6 @@ const drawableDataset = computed(() => {
             ...a,
             y,
             radius,
-            activeRadius,
             hoverRadius,
             donut: makeDonut(
                 { series },
@@ -1244,6 +1225,14 @@ const drawableDataset = computed(() => {
         };
     });
 });
+
+const drawableDataset = computed(() =>
+    donutGeometry.value.map((ds) => ({
+        ...ds,
+        activeRadius:
+            hoveredIndex.value === ds.index ? svg.value.width / 16 : ds.radius,
+    })),
+);
 
 function labellizeValue(val, datapoint, index) {
     return applyDataLabel(
@@ -1346,7 +1335,7 @@ function clampChartZoomX(x) {
 
 function clearChartZoomHover() {
     hoveredIndex.value = null;
-    hoveredDatapoint.value = null;
+
     activeTooltipIndex.value = null;
 }
 
@@ -1611,12 +1600,12 @@ function leave(datapoint) {
     if (isChartZoomSelecting.value) return;
 
     hoveredIndex.value = null;
-    hoveredDatapoint.value = null;
+
     activeTooltipIndex.value = null;
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({
             datapoint,
-            seriesIndex: datapoint.seriesIndex + slicer.value.start,
+            seriesIndex: datapoint.index + slicer.value.start,
         });
     }
 }
@@ -1631,11 +1620,9 @@ function enter(datapoint) {
         });
     }
     hoveredIndex.value = datapoint.index;
-    hoveredDatapoint.value = datapoint;
+
     activeTooltipIndex.value = datapoint.index;
 }
-
-const fixedDatapointIndex = ref(null);
 
 let pendingDatapointClickTimeout = null;
 
@@ -1655,14 +1642,10 @@ function fixDatapoint(datapoint, index) {
     }
 
     if (!datapoint.subtotal || !cfgDialog.value.show) return;
-    hoveredDatapoint.value = null;
+
     hoveredIndex.value = null;
-    isFixed.value = true;
-    fixedDatapoint.value = datapoint;
-    createDonutDatasetForDialog(datapoint);
-    if (![null, undefined].includes(index)) {
-        fixedDatapointIndex.value = index;
-    }
+    fixedAbsoluteIndex.value = (index ?? datapoint.index) + slicer.value.start;
+    dialog.value?.open?.();
 }
 
 function onDatapointClick(datapoint, index) {
@@ -1742,7 +1725,7 @@ const legendSet = computed(() => {
 });
 
 const grandTotal = computed(() => {
-    return drawableDataset.value
+    return datasetCopy.value
         .map((ds) => ds.subtotal)
         .reduce((a, b) => a + b, 0);
 });
@@ -1778,13 +1761,6 @@ function segregate(id) {
             return;
         segregated.value.push(id);
         emit('selectLegend', mutableDataset.value);
-    }
-    if (fixedDatapoint.value) {
-        fixDatapoint(
-            drawableDataset.value.find(
-                (_, i) => i === fixedDatapointIndex.value,
-            ),
-        );
     }
 }
 
@@ -1837,42 +1813,53 @@ function hideSeries(name) {
     }
 }
 
+const tableTimeLabels = ref([]);
+let tableLabelsRequest = 0;
+watchEffect(() => {
+    const request = ++tableLabelsRequest;
+    useTimeLabels({
+        values: cfgGrid.value.xAxis.dataLabels.values,
+        maxDatapoints: maxLength.value,
+        formatter: cfgGrid.value.xAxis.dataLabels.datetimeFormatter,
+        start: 0,
+        end: maxLength.value,
+    }).then((labels) => {
+        if (!disposed && request === tableLabelsRequest)
+            tableTimeLabels.value = labels;
+    });
+});
+
 const table = computed(() => {
     const head = ['']
         .concat(
-            convertedDataset.value
-                .filter((ds) => !segregated.value.includes(ds.uid))
-                .map((ds) => {
-                    return {
-                        name: ds.name,
-                        color: ds.color,
-                    };
-                }),
+            visibleSeries.value.map((ds) => {
+                return {
+                    name: ds.name,
+                    color: ds.color,
+                };
+            }),
         )
         .concat(['Σ']);
     let body = [];
 
     for (let i = 0; i < maxLength.value; i += 1) {
-        const sum = convertedDataset.value
-            .filter((ds) => !segregated.value.includes(ds.uid))
+        const sum = visibleSeries.value
             .map((ds) => {
                 return ds.values[i] ?? 0;
             })
             .reduce((a, b) => a + b, 0);
 
         body.push(
-            [timeLabels.value[i] ? timeLabels.value[i].text : '-']
+            [tableTimeLabels.value[i]?.text ?? '-']
                 .concat(
-                    convertedDataset.value
-                        .filter((ds) => !segregated.value.includes(ds.uid))
-                        .map((ds) => {
-                            return {
-                                value: ds.values[i] ?? 0,
-                                percentage: ds.values[i]
-                                    ? (ds.values[i] / sum) * 100
-                                    : 0,
-                            };
-                        }),
+                    visibleSeries.value.map((ds) => {
+                        return {
+                            value: ds.values[i] ?? 0,
+                            percentage: ds.values[i]
+                                ? (ds.values[i] / sum) * 100
+                                : 0,
+                        };
+                    }),
                 )
                 .concat([
                     `${cfgLayout.value.dataLabels.prefix}${Number(sum.toFixed(FINAL_CONFIG.value.table.td.roundingValue))}${cfgLayout.value.dataLabels.suffix}`,
@@ -1902,11 +1889,7 @@ const table = computed(() => {
     };
 
     const colNames = [FINAL_CONFIG.value.table.columnNames.period]
-        .concat(
-            convertedDataset.value
-                .filter((ds) => !segregated.value.includes(ds.uid))
-                .map((ds) => ds.name),
-        )
+        .concat(visibleSeries.value.map((ds) => ds.name))
         .concat(FINAL_CONFIG.value.table.columnNames.total);
 
     return { head, body, bodyA11y, config, colNames };
@@ -1970,37 +1953,33 @@ function isArcBigEnoughHover(arc) {
     );
 }
 
-const donutDataset = ref([]);
-const donutConfig = ref({});
-const dialog = ref(null);
-
-function closeDatapointDialog() {
-    dialog.value?.close?.();
-
-    fixedDatapoint.value = null;
-    fixedDatapointIndex.value = null;
-    isFixed.value = false;
-    hoveredDatapoint.value = null;
-    hoveredIndex.value = null;
-    activeTooltipIndex.value = null;
-}
-
-function createDonutDatasetForDialog(ds) {
-    donutDataset.value = ds.donut.map((ds) => {
-        return {
-            name: ds.name,
-            values: [ds.value],
-            color: ds.color,
-        };
-    });
-
-    donutConfig.value = deepEmptyObjectToNull({
+const donutDataset = computed(() =>
+    (fixedDatapoint.value?.donut ?? []).map((ds) => ({
+        name: ds.name,
+        values: [ds.value],
+        color: ds.color,
+    })),
+);
+const donutConfig = computed(() =>
+    deepEmptyObjectToNull({
         ...cfgDialog.value.donutChart,
         responsive: true,
         theme: FINAL_CONFIG.value.theme,
-    });
+    }),
+);
+watch([donutGeometry, slicer], () => {
+    if (fixedAbsoluteIndex.value != null && !fixedDatapoint.value)
+        closeDatapointDialog();
+});
+const dialog = ref(null);
 
-    dialog.value && dialog.value.open();
+function closeDatapointDialog() {
+    const wasOpen = fixedAbsoluteIndex.value != null;
+    fixedAbsoluteIndex.value = null;
+    if (wasOpen) dialog.value?.close?.();
+
+    hoveredIndex.value = null;
+    activeTooltipIndex.value = null;
 }
 
 const getImage = createChartImageGetter(
@@ -2120,7 +2099,7 @@ function onSvgBlur() {
     isChartZoomPointerFocused.value = false;
     activeTooltipIndex.value = null;
     hoveredIndex.value = null;
-    hoveredDatapoint.value = null;
+
     isFocus.value = false;
 }
 
@@ -2161,7 +2140,7 @@ function onSvgKeydown(event) {
 
         activeTooltipIndex.value = null;
         hoveredIndex.value = null;
-        hoveredDatapoint.value = null;
+
         return;
     }
 
@@ -2295,7 +2274,7 @@ const annotationViewport = computed(() => {
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -2328,7 +2307,6 @@ const annotationViewport = computed(() => {
         </PenAndPaper>
 
         <div
-            ref="noTitle"
             v-if="hasOptionsNoTitle"
             class="vue-data-ui-no-title-space"
             :style="`height:36px; width: 100%;background:transparent`"
@@ -2678,7 +2656,8 @@ const annotationViewport = computed(() => {
                             v-if="
                                 ((cfgGrid.xAxis.dataLabels
                                     .showOnlyFirstAndLast &&
-                                    (i === 0 || i === maxLength - 1)) ||
+                                    (i === 0 ||
+                                        i === slicer.end - slicer.start - 1)) ||
                                     !cfgGrid.xAxis.dataLabels
                                         .showOnlyFirstAndLast) &&
                                 timeLabels[i] &&
@@ -3045,7 +3024,6 @@ const annotationViewport = computed(() => {
             <SlicerPreview
                 ref="slicerComponent"
                 v-if="maxLength > 1 && cfgChart.zoom.show"
-                :key="`slicer_${slicerStep}`"
                 :background="cfgChart.zoom.color"
                 :borderColor="cfgChart.backgroundColor"
                 :fontSize="cfgChart.zoom.fontSize"
@@ -3227,13 +3205,7 @@ const annotationViewport = computed(() => {
         <BaseDraggableDialog
             v-if="cfgDialog.show"
             ref="dialog"
-            @close="
-                fixedDatapoint = null;
-                isFixed = false;
-                hoveredDatapoint = null;
-                hoveredIndex = null;
-                fixedDatapointIndex = null;
-            "
+            @close="closeDatapointDialog"
             :backgroundColor="cfgDialog.backgroundColor"
             :color="cfgDialog.color"
             :headerBg="cfgDialog.header.backgroundColor"
@@ -3243,8 +3215,8 @@ const annotationViewport = computed(() => {
         >
             <template #title>
                 {{
-                    timeLabels[Number(fixedDatapoint.index)]
-                        ? timeLabels[Number(fixedDatapoint.index)].text
+                    timeLabels[Number(fixedDatapoint?.index)]
+                        ? timeLabels[Number(fixedDatapoint?.index)].text
                         : ''
                 }}
             </template>

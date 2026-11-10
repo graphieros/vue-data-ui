@@ -457,6 +457,11 @@
                                 <label class="tool-input">
                                     {{ FINAL_CONFIG.translations.thickness }}
                                     <input
+                                        @focus="
+                                            lastSelectedShape && history.begin()
+                                        "
+                                        @blur="endControlEdit"
+                                        @change="endControlEdit"
                                         type="number"
                                         v-model="strokeSize"
                                         @input="setStrokeWidthOfSelectedShape"
@@ -517,16 +522,7 @@
                                 tooltip: true,
                             }"
                             :style="getToolButtonStyle('shapes', isTextMode)"
-                            @click="
-                                deleteEmptyTextElement();
-                                isTextMode = !isTextMode;
-                                isDeleteMode = false;
-                                isMoveMode = false;
-                                isResizeMode = false;
-                                isSelectMode = false;
-                                isDrawMode = false;
-                                activeShape = undefined;
-                            "
+                            @click="toggleTextTool"
                             @mouseenter="
                                 style.showTooltips &&
                                 showToolTipFor('setText', $event, 'top')
@@ -578,6 +574,11 @@
                                 <label class="tool-input">
                                     {{ FINAL_CONFIG.translations.fontSize }}
                                     <input
+                                        @focus="
+                                            lastSelectedShape && history.begin()
+                                        "
+                                        @blur="endControlEdit"
+                                        @change="endControlEdit"
                                         type="number"
                                         v-model="textFont"
                                         @input="setCurrentStyleOfSelectedText"
@@ -608,12 +609,6 @@
                                     )
                                 "
                                 @click="
-                                    isDeleteMode = false;
-                                    isMoveMode = false;
-                                    isResizeMode = false;
-                                    isDrawMode = false;
-                                    isSelectMode = false;
-                                    activeShape = undefined;
                                     textAlign = 'start';
                                     setSelectedTextAlignTo('start');
                                 "
@@ -693,12 +688,6 @@
                                 "
                                 :disabled="isBulletTextMode"
                                 @click="
-                                    isDeleteMode = false;
-                                    isMoveMode = false;
-                                    isResizeMode = false;
-                                    isDrawMode = false;
-                                    isSelectMode = false;
-                                    activeShape = undefined;
                                     textAlign = 'middle';
                                     setSelectedTextAlignTo('middle');
                                 "
@@ -778,12 +767,6 @@
                                 "
                                 :disabled="isBulletTextMode"
                                 @click="
-                                    isDeleteMode = false;
-                                    isMoveMode = false;
-                                    isResizeMode = false;
-                                    isDrawMode = false;
-                                    isSelectMode = false;
-                                    activeShape = undefined;
                                     textAlign = 'end';
                                     setSelectedTextAlignTo('end');
                                 "
@@ -853,12 +836,6 @@
                                     )
                                 "
                                 @click="
-                                    isDeleteMode = false;
-                                    isMoveMode = false;
-                                    isResizeMode = false;
-                                    isDrawMode = false;
-                                    isSelectMode = false;
-                                    activeShape = undefined;
                                     isBulletTextMode = !isBulletTextMode;
                                     textAlign = 'start';
                                     setSelectedTextAlignTo('start');
@@ -936,12 +913,6 @@
                                 }"
                                 :style="getToolButtonStyle('shapes', isBold)"
                                 @click="
-                                    isDeleteMode = false;
-                                    isMoveMode = false;
-                                    isResizeMode = false;
-                                    isDrawMode = false;
-                                    isSelectMode = false;
-                                    activeShape = undefined;
                                     isBold = !isBold;
                                     setCurrentStyleOfSelectedText();
                                 "
@@ -1008,12 +979,6 @@
                                 }"
                                 :style="getToolButtonStyle('shapes', isItalic)"
                                 @click="
-                                    isDeleteMode = false;
-                                    isMoveMode = false;
-                                    isResizeMode = false;
-                                    isDrawMode = false;
-                                    isSelectMode = false;
-                                    activeShape = undefined;
                                     isItalic = !isItalic;
                                     setCurrentStyleOfSelectedText();
                                 "
@@ -1081,12 +1046,6 @@
                                     getToolButtonStyle('shapes', isUnderline)
                                 "
                                 @click="
-                                    isDeleteMode = false;
-                                    isMoveMode = false;
-                                    isResizeMode = false;
-                                    isDrawMode = false;
-                                    isSelectMode = false;
-                                    activeShape = undefined;
                                     isUnderline = !isUnderline;
                                     setCurrentStyleOfSelectedText();
                                 "
@@ -1230,6 +1189,11 @@
                                 {{ transparency > 98 ? 100 : transparency }}
                                 %
                                 <input
+                                    @focus="
+                                        lastSelectedShape && history.begin()
+                                    "
+                                    @blur="endControlEdit"
+                                    @change="endControlEdit"
                                     name="colorTransparency"
                                     type="range"
                                     v-model="transparency"
@@ -1265,7 +1229,6 @@
             <svg
                 id="annotatorSvg"
                 v-if="isSummaryOpen || FINAL_CONFIG.alwaysVisible"
-                :key="step"
                 ref="mainSvg"
                 :class="{
                     annotator__overlay: true,
@@ -1278,12 +1241,11 @@
                 :height="sourceHeight"
                 @pointerdown="chooseAction($event)"
                 @pointerup="resetDraw($event)"
+                @pointercancel="cancelGesture"
+                @lostpointercapture="cancelGesture"
                 @touchend="resetDraw($event)"
                 @touchstart="setPointer($event)"
-                @pointermove="
-                    setPointer($event);
-                    chooseMove($event);
-                "
+                @pointermove="chooseMove($event)"
                 @pointerout="onPointerOut($event)"
                 @pointerover="allowEditAndHoverShapes($event)"
                 @click="clickSvg($event)"
@@ -1307,10 +1269,7 @@
                     :pointer-events="isSummaryOpen ? 'all' : 'none'"
                     :style="{ cursor: 'inherit' }"
                     @pointerdown.stop.prevent="chooseAction($event)"
-                    @pointermove.stop.prevent="
-                        setPointer($event);
-                        chooseMove($event);
-                    "
+                    @pointermove.stop.prevent="chooseMove($event)"
                     @pointerup.stop.prevent="resetDraw"
                     @click.stop.prevent="clickSvg($event)"
                 />
@@ -1452,18 +1411,23 @@ watch(isSummaryOpen, async (isOpen) => {
         return;
     }
     await nextTick();
-    teleportReady.value = true;
+    if (isSummaryOpen.value) teleportReady.value = true;
 });
 const isTextMode = ref(false);
 const isUnderline = ref(false);
 const isWriting = ref(false);
-const lastSelectedShape = ref(props.dataset?.lastSelectedShape ?? undefined);
+const initialShapes = copy(props.dataset?.shapes || []);
+const selectedShapeId = ref(props.dataset?.lastSelectedShape?.id);
+const lastSelectedShape = computed({
+    get: () => shapes.value.find((shape) => shape.id === selectedShapeId.value),
+    set: (shape) => {
+        selectedShapeId.value = shape?.id;
+    },
+});
 const pointerPosition = ref({ x: 0, y: 0 });
 const preventEdit = ref(true);
 const selectedGroup = ref([]);
-const shapes = ref(props.dataset?.shapes || []);
-const shapesOrder = ref([]);
-const step = ref(Math.round(Math.random()) * 100000);
+const shapes = ref(initialShapes);
 const svgHeight = ref(1000);
 const svgWidth = ref(1000);
 const options = ref({
@@ -1513,8 +1477,6 @@ const isMacLike = ref(false);
 const ONKEYDOWN = ref(null);
 const HISTORY_SIZE = ref({ undo: 0, redo: 0 });
 const RAF_ID = ref(null);
-const LAST_POINTER_ID = ref(null);
-const CAPTURE_EL = ref(null);
 const lastPointerId = ref(null);
 
 const FINAL_CONFIG = computed(() => {
@@ -1586,6 +1548,19 @@ function getToolButtonStyle(group, active = false) {
     };
 }
 
+function setToolMode(mode, shape) {
+    endControlEdit();
+    if (isWriting.value) finishTextEditing();
+    cancelGesture();
+    isMoveMode.value = mode === 'move';
+    isResizeMode.value = mode === 'resize';
+    isDeleteMode.value = mode === 'delete';
+    isSelectMode.value = mode === 'group';
+    isDrawMode.value = mode === 'draw';
+    isTextMode.value = mode === 'text';
+    activeShape.value = mode === 'draw' || mode === 'group' ? shape : undefined;
+    showCaret.value = false;
+}
 const toolbarActions = [
     {
         key: 'move',
@@ -1600,17 +1575,7 @@ const toolbarActions = [
             return shapes.value.length === 0;
         },
         shortcut: 'M',
-        run: () => {
-            deleteEmptyTextElement();
-            isMoveMode.value = !isMoveMode.value;
-            isDeleteMode.value = false;
-            isDrawMode.value = false;
-            isResizeMode.value = false;
-            isSelectMode.value = false;
-            isTextMode.value = false;
-            isWriting.value = false;
-            showCaret.value = false;
-        },
+        run: () => setToolMode(isMoveMode.value ? null : 'move', undefined),
     },
     {
         key: 'resize',
@@ -1624,18 +1589,7 @@ const toolbarActions = [
             return shapes.value.length === 0;
         },
         shortcut: 'R',
-        run: () => {
-            deleteEmptyTextElement();
-            isResizeMode.value = !isResizeMode.value;
-            isMoveMode.value = false;
-            isDeleteMode.value = false;
-            isDrawMode.value = false;
-            isSelectMode.value = false;
-            isTextMode.value = false;
-            isWriting.value = false;
-            activeShape.value = undefined;
-            showCaret.value = false;
-        },
+        run: () => setToolMode(isResizeMode.value ? null : 'resize', undefined),
     },
     {
         key: 'delete',
@@ -1649,17 +1603,7 @@ const toolbarActions = [
             return shapes.value.length === 0;
         },
         shortcut: 'D',
-        run: () => {
-            deleteEmptyTextElement();
-            isDeleteMode.value = !isDeleteMode.value;
-            isMoveMode.value = false;
-            isResizeMode.value = false;
-            isSelectMode.value = false;
-            isTextMode.value = false;
-            isWriting.value = false;
-            activeShape.value = undefined;
-            showCaret.value = false;
-        },
+        run: () => setToolMode(isDeleteMode.value ? null : 'delete', undefined),
     },
     {
         key: 'selectAndGroup',
@@ -1673,18 +1617,7 @@ const toolbarActions = [
             return !canSelect.value;
         },
         shortcut: 'G',
-        run: () => {
-            deleteEmptyTextElement();
-            setShapeTo('group');
-            isSelectMode.value = !isSelectMode.value;
-            isDeleteMode.value = false;
-            isMoveMode.value = false;
-            isResizeMode.value = false;
-            isTextMode.value = false;
-            isWriting.value = false;
-            activeShape.value = 'group';
-            showCaret.value = false;
-        },
+        run: () => setToolMode(isSelectMode.value ? null : 'group', 'group'),
     },
     {
         key: 'bringToFront',
@@ -1692,17 +1625,10 @@ const toolbarActions = [
         icon: 'bringToFront',
         translation: 'tooltipBringToFront',
         get disabled() {
-            return shapes.value.length === 0;
+            return !lastSelectedShape.value;
         },
         run: () => {
-            isResizeMode.value = false;
-            isMoveMode.value = true;
-            isDeleteMode.value = false;
-            isDrawMode.value = false;
-            isSelectMode.value = false;
-            isTextMode.value = false;
-            isWriting.value = false;
-            showCaret.value = false;
+            setToolMode('move');
             bringShapeTo('front');
         },
     },
@@ -1712,17 +1638,10 @@ const toolbarActions = [
         icon: 'bringToBack',
         translation: 'tooltipBringToBack',
         get disabled() {
-            return shapes.value.length === 0;
+            return !lastSelectedShape.value;
         },
         run: () => {
-            isResizeMode.value = false;
-            isMoveMode.value = true;
-            isDeleteMode.value = false;
-            isDrawMode.value = false;
-            isSelectMode.value = false;
-            isTextMode.value = false;
-            isWriting.value = false;
-            showCaret.value = false;
+            setToolMode('move');
             bringShapeTo('back');
         },
     },
@@ -1732,19 +1651,11 @@ const toolbarActions = [
         icon: 'copy',
         translation: 'tooltipDuplicate',
         get disabled() {
-            return shapes.value.length === 0 || activeShape.value === 'line';
+            return !lastSelectedShape.value;
         },
         iconProps: { size: 18 },
         run: () => {
-            deleteEmptyTextElement();
-            isResizeMode.value = false;
-            isMoveMode.value = true;
-            isDeleteMode.value = false;
-            isDrawMode.value = false;
-            isSelectMode.value = false;
-            isTextMode.value = false;
-            isWriting.value = false;
-            showCaret.value = false;
+            setToolMode('move');
             copyPaste();
         },
     },
@@ -1762,15 +1673,7 @@ const toolbarActions = [
         shortcut: 'Z',
         iconProps: { size: 20 },
         run: () => {
-            isResizeMode.value = false;
-            isMoveMode.value = false;
-            isDeleteMode.value = false;
-            isDrawMode.value = false;
-            isSelectMode.value = false;
-            isTextMode.value = false;
-            isWriting.value = false;
-            activeShape.value = undefined;
-            showCaret.value = false;
+            setToolMode(null);
             undoLastShape();
         },
     },
@@ -1793,15 +1696,7 @@ const toolbarActions = [
             },
         },
         run: () => {
-            isResizeMode.value = false;
-            isMoveMode.value = false;
-            isDeleteMode.value = false;
-            isDrawMode.value = false;
-            isSelectMode.value = false;
-            isTextMode.value = false;
-            isWriting.value = false;
-            activeShape.value = undefined;
-            showCaret.value = false;
+            setToolMode(null);
             redoLastShape();
         },
     },
@@ -2228,49 +2123,6 @@ function includeDeleteButton(shape, isBulletTextMode = false) {
     }
 }
 
-function computeCaretPosition(shape) {
-    switch (true) {
-        case shape.textAlign === 'middle':
-            return `<path class="vue-ui-annotator-caret" stroke="black" stroke-width="2" d="M${shape.x},${
-                shape.y - shape.fontSize
-            } ${shape.x},${
-                shape.y - shape.fontSize - 15
-            }" /> <path class="vue-ui-annotator-caret" stroke="black" stroke-width="2" d="M${shape.x - 3},${
-                shape.y - shape.fontSize - 5
-            } ${shape.x},${shape.y - shape.fontSize} ${shape.x + 3},${
-                shape.y - shape.fontSize - 5
-            }"/>`;
-
-        case shape.textAlign === 'start':
-            const bulletModeOffset = shape.isBulletTextMode
-                ? shape.fontSize
-                : 0;
-            return `<path class="vue-ui-annotator-caret" d="M${shape.x - 20 - bulletModeOffset},${
-                shape.y - shape.fontSize / 6
-            } ${shape.x - 5 - bulletModeOffset},${
-                shape.y - shape.fontSize / 6
-            }" stroke="black" stroke-width="2" />
-                    <path class="vue-ui-annotator-caret" d="M${shape.x - 10 - bulletModeOffset},${
-                        shape.y - shape.fontSize / 3
-                    } ${shape.x - 5 - bulletModeOffset},${shape.y - shape.fontSize / 6} ${
-                        shape.x - 10 - bulletModeOffset
-                    },${shape.y}" stroke="black" stroke-width="2">`;
-
-        case shape.textAlign === 'end':
-            return `<path class="vue-ui-annotator-caret" d="M${shape.x + 20},${shape.y - shape.fontSize / 6} ${
-                shape.x + 5
-            },${shape.y - shape.fontSize / 6}" stroke="black" stroke-width="2" />
-                    <path class="vue-ui-annotator-caret" d="M${shape.x + 10},${shape.y - shape.fontSize / 3} ${
-                        shape.x + 5
-                    },${shape.y - shape.fontSize / 6} ${shape.x + 10},${
-                        shape.y
-                    }" stroke="black" stroke-width="2">`;
-
-        default:
-            return '';
-    }
-}
-
 function normalizeLegacyText(value = '') {
     return String(value).replace(/&nbsp;/g, '\u00A0');
 }
@@ -2299,7 +2151,12 @@ function renderTextLine(value = '') {
     return text || '&#8203;';
 }
 
-function computeTextElement(shape, content, isBulletTextMode = false) {
+function computeTextElement(
+    shape,
+    content,
+    isBulletTextMode = false,
+    decorations = true,
+) {
     const lines = getTextLines(shape);
     const lineCount = Math.max(1, lines.length);
     const longestLine = lines.reduce(
@@ -2346,24 +2203,23 @@ function computeTextElement(shape, content, isBulletTextMode = false) {
             >
                 ${content.join('')}
             </text>
-            ${includeDeleteButton(shape, isBulletTextMode)}
+            ${decorations ? includeDeleteButton(shape, isBulletTextMode) : ''}
         </g>
     `;
 }
 
-const userShapes = computed(() => {
-    return records.value.map((shape) => {
-        switch (true) {
-            case shape && shape.type === 'arrow': {
-                const shapeWidthMax = shape.strokeWidth > 3 ? 5 : 10;
-                const shapeWidthMin = shape.strokeWidth > 3 ? 2.5 : 5;
-                const markerId = `marker_${shape.id}`;
-                const hitStrokeWidth = Math.max(
-                    SHAPE_HIT_PADDING * 2,
-                    Number(shape.strokeWidth || 1) + SHAPE_HIT_PADDING * 2,
-                );
-                return {
-                    html: `
+function renderShape(shape, decorations = true, markerKey = '') {
+    switch (true) {
+        case shape && shape.type === 'arrow': {
+            const shapeWidthMax = shape.strokeWidth > 3 ? 5 : 10;
+            const shapeWidthMin = shape.strokeWidth > 3 ? 2.5 : 5;
+            const markerId = `marker_${uid.value}_${markerKey || shape.id}`;
+            const hitStrokeWidth = Math.max(
+                SHAPE_HIT_PADDING * 2,
+                Number(shape.strokeWidth || 1) + SHAPE_HIT_PADDING * 2,
+            );
+            return {
+                html: `
           <defs>
           <marker
               id="${markerId}"
@@ -2380,7 +2236,7 @@ const userShapes = computed(() => {
           </marker>
           </defs>
           <g id="${shape.id}">
-              ${includeSelectionIndicator(shape)}
+              ${decorations ? includeSelectionIndicator(shape) : ''}
               <path
                   id="${shape.id}"
                   data-shape-hit-area="true"
@@ -2405,19 +2261,19 @@ const userShapes = computed(() => {
                   pointer-events="stroke"
                   marker-end="url(#${markerId})"
               />
-              ${includeResizeHandles(shape)}
-              ${includeDeleteButton(shape)}
+              ${decorations ? includeResizeHandles(shape) : ''}
+              ${decorations ? includeDeleteButton(shape) : ''}
           </g>
           `,
-                    id: shape.id,
-                };
-            }
+                id: shape.id,
+            };
+        }
 
-            case shape && shape.type === 'circle':
-                return {
-                    html: `
+        case shape && shape.type === 'circle':
+            return {
+                html: `
           <g id="${shape.id}">
-              ${includeSelectionIndicator(shape)}
+              ${decorations ? includeSelectionIndicator(shape) : ''}
               <circle 
               id="${shape.id}" 
               cx="${shape.x}" 
@@ -2437,16 +2293,16 @@ const userShapes = computed(() => {
               }"
               >
               </circle>
-              ${includeResizeHandles(shape)}
+              ${decorations ? includeResizeHandles(shape) : ''}
           </g>
           
-          ${includeDeleteButton(shape)}`,
-                    id: shape.id,
-                };
+          ${decorations ? includeDeleteButton(shape) : ''}`,
+                id: shape.id,
+            };
 
-            case shape && shape.type === 'group':
-                return {
-                    html: `<g id="${shape.id}">
+        case shape && shape.type === 'group':
+            return {
+                html: `<g id="${shape.id}">
             <rect
                 data-dom-to-png-ignore
                 id="${isResizeMode.value ? '' : shape.id}"
@@ -2470,18 +2326,18 @@ const userShapes = computed(() => {
                 };"
                         />
             <g id="${shape.id}">
-            ${shape.content ? shape.content : ''}
+            ${getGroupContent(shape)}
             </g>
-            ${includeResizeHandles(shape)}
-            ${includeDeleteButton(shape)}
+            ${decorations ? includeResizeHandles(shape) : ''}
+            ${decorations ? includeDeleteButton(shape) : ''}
             </g> `,
-                    id: shape.id,
-                };
+                id: shape.id,
+            };
 
-            case shape && shape.type === 'rect':
-                return {
-                    html: `<g id="${shape.id}">
-            ${includeSelectionIndicator(shape)}
+        case shape && shape.type === 'rect':
+            return {
+                html: `<g id="${shape.id}">
+            ${decorations ? includeSelectionIndicator(shape) : ''}
             <rect
                 id="${isResizeMode.value ? '' : shape.id}"
                 x="${shape.x}"
@@ -2501,21 +2357,21 @@ const userShapes = computed(() => {
                         : ''
                 }"
             />
-            ${includeResizeHandles(shape)}
-            ${includeDeleteButton(shape)}
+            ${decorations ? includeResizeHandles(shape) : ''}
+            ${decorations ? includeDeleteButton(shape) : ''}
             </g> `,
-                    id: shape.id,
-                };
+                id: shape.id,
+            };
 
-            case shape && shape.type === 'line': {
-                const hitStrokeWidth = Math.max(
-                    SHAPE_HIT_PADDING * 2,
-                    Number(shape.strokeWidth || 1) + SHAPE_HIT_PADDING * 2,
-                );
-                return {
-                    html: `
+        case shape && shape.type === 'line': {
+            const hitStrokeWidth = Math.max(
+                SHAPE_HIT_PADDING * 2,
+                Number(shape.strokeWidth || 1) + SHAPE_HIT_PADDING * 2,
+            );
+            return {
+                html: `
                 <g id="${shape.id}">
-                    ${includeSelectionIndicator(shape)}
+                    ${decorations ? includeSelectionIndicator(shape) : ''}
                     <path
                         id="${shape.id}"
                         data-shape-hit-area="true"
@@ -2542,19 +2398,19 @@ const userShapes = computed(() => {
                         }"
                         pointer-events="stroke"
                     />
-                    ${includeResizeHandles(shape)}
-                    ${includeDeleteButton(shape)}
+                    ${decorations ? includeResizeHandles(shape) : ''}
+                    ${decorations ? includeDeleteButton(shape) : ''}
                 </g>
                 `,
-                    id: shape.id,
-                };
-            }
+                id: shape.id,
+            };
+        }
 
-            case shape && shape.type === 'text': {
-                const parsedText = getTextLines(shape);
-                const parsedContent = [];
-                for (let i = 0; i < parsedText.length; i += 1) {
-                    parsedContent.push(`
+        case shape && shape.type === 'text': {
+            const parsedText = getTextLines(shape);
+            const parsedContent = [];
+            for (let i = 0; i < parsedText.length; i += 1) {
+                parsedContent.push(`
         ${
             shape.isBulletTextMode
                 ? `<tspan
@@ -2572,21 +2428,23 @@ const userShapes = computed(() => {
                     x="${shape.x}"
                     y="${shape.y + shape.fontSize * i}"
                 >${renderTextLine(parsedText[i])}</tspan>`);
-                }
-                return {
-                    html: `
-            ${includeSelectionIndicator(shape)}
-            ${computeTextElement(shape, parsedContent, shape.isBulletTextMode)}
-            `,
-                    id: shape.id,
-                };
             }
-
-            default:
-                break;
+            return {
+                html: `
+            ${decorations ? includeSelectionIndicator(shape) : ''}
+            ${computeTextElement(shape, parsedContent, shape.isBulletTextMode, decorations)}
+            `,
+                id: shape.id,
+            };
         }
-    });
-});
+
+        default:
+            break;
+    }
+}
+const userShapes = computed(() =>
+    records.value.map((shape) => renderShape(shape)).filter(Boolean),
+);
 
 function copy(source) {
     if (source === undefined || source === null) return source;
@@ -2779,6 +2637,7 @@ function makeHistory(opts = {}) {
     };
 
     return {
+        isOpen: () => state.open,
         begin() {
             if (state.open) return;
             state.open = true;
@@ -2831,7 +2690,7 @@ function updateTooltipPosition() {
 }
 
 // FIXME: remove placement arg
-function showToolTipFor(key, ev, _placement = 'top') {
+function showToolTipFor(key, ev) {
     tooltipKey.value = key;
     tooltipAnchor.value = ev.currentTarget || ev.target;
     updateTooltipPosition();
@@ -2929,6 +2788,15 @@ function initResizeState(shape, handle) {
         return;
     }
 
+    if (shape.type === 'group' && handle === 'group-scale') {
+        resizeState.value = {
+            shapeId: shape.id,
+            width: shape.rectWidth,
+            height: shape.rectHeight,
+            source: copy(shape.source || []),
+        };
+        return;
+    }
     if (shape.type === 'circle' && handle === 'circle-radius') {
         const radius = Math.max(1, Number(shape.circleRadius) || 1);
         resizeState.value = {
@@ -2945,45 +2813,68 @@ function initResizeState(shape, handle) {
     }
 }
 
-function bringShapeTo(layer) {
-    const thisShape = shapes.value.find(
-        (shape) => shape.id === lastSelectedShape.value.id,
-    );
-    switch (true) {
-        case layer === 'front':
-            shapes.value = shapes.value.filter(
-                (shape) => shape.id !== thisShape.id,
-            );
-            shapes.value.push(thisShape);
-            break;
-
-        case layer === 'back':
-            shapes.value = shapes.value.filter(
-                (shape) => shape.id !== thisShape.id,
-            );
-            shapes.value = [thisShape, ...shapes.value];
-            break;
-
-        default:
-            return;
+let controlEditOpen = false;
+function beginControlEdit() {
+    if (!lastSelectedShape.value || history.value?.isOpen?.()) return;
+    history.value?.begin?.();
+    controlEditOpen = true;
+}
+function endControlEdit() {
+    if (!controlEditOpen) return;
+    controlEditOpen = false;
+    history.value?.end?.();
+}
+function editShapes(action) {
+    const ownsTransaction =
+        !history.value?.isOpen?.() && !isWriting.value && !isMouseDown.value;
+    if (ownsTransaction) history.value?.begin?.();
+    try {
+        return action();
+    } finally {
+        if (ownsTransaction) history.value?.end?.();
     }
 }
-
+function bringShapeTo(layer) {
+    const shape = lastSelectedShape.value;
+    if (!shape || !['front', 'back'].includes(layer)) return;
+    editShapes(() => {
+        shapes.value = shapes.value.filter((item) => item.id !== shape.id);
+        if (layer === 'front') shapes.value.push(shape);
+        else shapes.value.unshift(shape);
+    });
+}
 function copyPaste() {
-    if (!lastSelectedShape.value?.id) return;
-    const shapeCopy = {
-        ...lastSelectedShape.value,
-        id: `${lastSelectedShape.value.id}_copy_${createUid()}`,
-        x:
-            lastSelectedShape.value.x - 100 < 0
-                ? 1
-                : lastSelectedShape.value.x - 100,
-        y:
-            lastSelectedShape.value.y - 100 < 0
-                ? 1
-                : lastSelectedShape.value.y - 100,
-    };
-    shapes.value.push(shapeCopy);
+    const original = lastSelectedShape.value;
+    if (!original) return;
+    editShapes(() => {
+        const shape = copy(original);
+        shape.id = `${original.id}_copy_${createUid()}`;
+        const dx = Math.max(1, original.x - 100) - original.x;
+        const dy = Math.max(1, original.y - 100) - original.y;
+        shape.x += dx;
+        shape.y += dy;
+        if (shape.type === 'arrow') {
+            shape.endX += dx;
+            shape.endY += dy;
+        }
+        if (shape.type === 'line')
+            shape.path = serializeLinePoints(
+                parseLinePoints(shape.path).map((point) => ({
+                    x: point.x + dx,
+                    y: point.y + dy,
+                })),
+            );
+        if (shape.type === 'group') {
+            shape.source = (shape.source || []).map((child, index) => ({
+                ...child,
+                id: shape.id,
+                oldId: `${shape.id}_${index}`,
+            }));
+            moveGroup(shape);
+        }
+        shapes.value.push(shape);
+        lastSelectedShape.value = shape;
+    });
 }
 
 function syncControlsFromShape(shape) {
@@ -3283,20 +3174,27 @@ function clickSvg(e) {
 }
 
 function setSelectedTextAlignTo(position) {
-    if (!lastSelectedShape.value || lastSelectedShape.value.type !== 'text') {
-        return;
-    }
-    lastSelectedShape.value.textAlign = position;
-    textAlign.value = position;
-    updateTextCaretOverlay();
+    return editShapes(() => {
+        if (
+            !lastSelectedShape.value ||
+            lastSelectedShape.value.type !== 'text'
+        ) {
+            return;
+        }
+        lastSelectedShape.value.textAlign = position;
+        textAlign.value = position;
+        updateTextCaretOverlay();
+    });
 }
 
 function undoLastShape() {
+    endControlEdit();
     if (isWriting.value) finishTextEditing();
     history.value?.undo?.();
 }
 
 function redoLastShape() {
+    endControlEdit();
     if (isWriting.value) finishTextEditing();
     history.value?.redo?.();
 }
@@ -3641,146 +3539,23 @@ function groupShapes() {
 
     return group;
 }
+function getGroupContent(group) {
+    if (!Array.isArray(group.source)) return group.content || '';
+    return group.source
+        .map((child, index) => {
+            const materialized = materializeGroupedChild(child, group);
+            return (
+                renderShape(
+                    { ...materialized, id: group.id },
+                    false,
+                    `${group.id}_${index}`,
+                )?.html || ''
+            );
+        })
+        .join('');
+}
 function moveGroup(group) {
-    group.content = '';
-
-    const baseX = group.x || 0;
-    const baseY = group.y || 0;
-
-    (group.source || []).forEach((shape) => {
-        switch (shape.type) {
-            case 'circle': {
-                const cx = baseX + shape.diffX;
-                const cy = baseY + shape.diffY;
-                group.content += `
-          <circle
-            id="${shape.id}"
-            cx="${cx}"
-            cy="${cy}"
-            r="${shape.circleRadius ? shape.circleRadius : Number.MIN_VALUE}"
-            fill="${shape.isFilled ? shape.color + shape.alpha : 'rgba(255,255,255,0.001)'}"
-            stroke="${shape.color + shape.alpha}"
-            stroke-width="${shape.strokeWidth}"
-            style="${shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ''}"
-          />
-        `;
-                break;
-            }
-
-            case 'rect': {
-                const x = baseX + shape.diffX;
-                const y = baseY + shape.diffY;
-                group.content += `
-          <rect
-            id="${isResizeMode.value ? '' : shape.id}"
-            x="${x}"
-            y="${y}"
-            fill="${shape.isFilled ? shape.color + shape.alpha : 'rgba(255,255,255,0.001)'}"
-            height="${shape.rectHeight}"
-            width="${shape.rectWidth}"
-            stroke="${shape.color + shape.alpha}"
-            stroke-width="${shape.strokeWidth}"
-            style="rx:1 !important; ry:1 !important; ${shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ''}"
-          />
-        `;
-                break;
-            }
-
-            case 'arrow': {
-                const sx = baseX + shape.diffX;
-                const sy = baseY + shape.diffY;
-                const ex = baseX + shape.diffEndX;
-                const ey = baseY + shape.diffEndY;
-                const shapeWidthMax = shape.strokeWidth > 3 ? 5 : 10;
-                const shapeWidthMin = shape.strokeWidth > 3 ? 2.5 : 5;
-                const uid = `m_${shape.id}_${createUid()}`;
-                group.content += `
-          <g id="${shape.id}">
-            <defs>
-              <marker 
-                id="${uid}" 
-                markerWidth="${shapeWidthMax}" 
-                markerHeight="${shapeWidthMax}" 
-                refX="0" 
-                refY="${shapeWidthMin}" 
-                orient="auto">
-                <polygon points="0 0,${shapeWidthMax} ${shapeWidthMin}, 0 ${shapeWidthMax}" fill="${shape.color}" />
-              </marker>
-            </defs>
-            <path
-              style="stroke-linecap: round !important; ${shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ''}"
-              stroke="${shape.color}"
-              id="${shape.id}"
-              d="M${sx},${sy} ${ex},${ey}"
-              stroke-width="${shape.strokeWidth}"
-              marker-end="url(#${uid})"
-            />
-          </g>
-        `;
-                break;
-            }
-
-            case 'line': {
-                const points =
-                    Array.isArray(shape.diffPoints) && shape.diffPoints.length
-                        ? shape.diffPoints.map((point) => ({
-                              x: baseX + point.x,
-                              y: baseY + point.y,
-                          }))
-                        : parseLinePoints(shape.path);
-
-                const path = serializeLinePoints(points);
-                group.content += `
-          <path
-            id="${shape.id}"
-            d="M${path}"
-            style="stroke:${shape.color + shape.alpha} !important; fill:none; stroke-width:${shape.strokeWidth} !important; stroke-linecap:round !important; stroke-linejoin:round !important; ${shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ''}"
-          />
-        `;
-                break;
-            }
-
-            case 'text': {
-                const parsedText = (shape.textContent || '').split('‎');
-                const content = parsedText
-                    .map(
-                        (line, i) => `
-          ${
-              shape.isBulletTextMode
-                  ? `<tspan x="${baseX + shape.diffX - shape.fontSize}" y="${baseY + shape.diffY + shape.fontSize * i}" id="${shape.id}" font-size="${shape.fontSize / 2}">⬤</tspan>`
-                  : ''
-          }
-          <tspan id="${shape.id}" x="${baseX + shape.diffX}" y="${baseY + shape.diffY + shape.fontSize * i}">
-            ${line}
-          </tspan>
-        `,
-                    )
-                    .join('');
-
-                group.content += `
-          <g id="${shape.id}">
-            <text
-              style="user-select:none; height:100px;"
-              id="${shape.id}"
-              x="${baseX + shape.diffX}"
-              y="${baseY + shape.diffY}"
-              text-anchor="${shape.textAlign}"
-              font-size="${shape.fontSize}"
-              fill="${shape.color}"
-              font-weight="${shape.isBold ? 'bold' : 'normal'}"
-              font-style="${shape.isItalic ? 'italic' : 'normal'}"
-              text-decoration="${shape.isUnderline ? 'underline' : 'none'}">
-              ${content}
-            </text>
-          </g>
-        `;
-                break;
-            }
-
-            default:
-                break;
-        }
-    });
+    group.content = getGroupContent(group);
 }
 
 function onPointerOut(e) {
@@ -3795,15 +3570,11 @@ function onPointerOut(e) {
 }
 
 function drawDown() {
-    isDrawing.value = true;
     if (!activeShape.value && !isSelectMode.value) {
         return;
     }
 
-    if (!isDrawing.value) {
-        return;
-    }
-
+    isDrawing.value = true;
     isDrawingNewShape.value = true;
 
     currentPointer.value.start = {
@@ -4237,11 +4008,47 @@ function resize() {
             break;
         }
 
-        case 'group':
-            if (resizeHandle.value !== 'group-scale') return;
-            shape.rectWidth = Math.max(20, px - shape.x);
-            shape.rectHeight = Math.max(20, py - shape.y);
+        case 'group': {
+            if (
+                resizeHandle.value !== 'group-scale' ||
+                resizeState.value?.shapeId !== shape.id
+            )
+                return;
+            const initial = resizeState.value;
+            const width = Math.max(1, initial.width),
+                height = Math.max(1, initial.height);
+            const factor = Math.max(
+                20 / width,
+                20 / height,
+                Math.min((px - shape.x) / width, (py - shape.y) / height),
+            );
+            shape.rectWidth = width * factor;
+            shape.rectHeight = height * factor;
+            shape.source = initial.source.map((child) => {
+                const scaled = copy(child);
+                for (const key of [
+                    'diffX',
+                    'diffY',
+                    'diffEndX',
+                    'diffEndY',
+                    'circleRadius',
+                    'rectWidth',
+                    'rectHeight',
+                    'fontSize',
+                    'strokeWidth',
+                ]) {
+                    if (typeof scaled[key] === 'number') scaled[key] *= factor;
+                }
+                if (scaled.diffPoints)
+                    scaled.diffPoints = scaled.diffPoints.map((point) => ({
+                        x: point.x * factor,
+                        y: point.y * factor,
+                    }));
+                return scaled;
+            });
+            moveGroup(shape);
             break;
+        }
 
         default:
             break;
@@ -4411,111 +4218,118 @@ function walkTheDOM(node, func) {
     }
 }
 
-function print() {
+async function print() {
+    if (isPrinting.value || disposed) return;
     if (isWriting.value) finishTextEditing();
+    setToolMode(null);
     isPrinting.value = true;
-    isDeleteMode.value = false;
-    isMoveMode.value = false;
-    isResizeMode.value = false;
-    isTextMode.value = false;
-    isWriting.value = false;
-    isSelectMode.value = false;
-    activeShape.value = undefined;
-    showCaret.value = false;
-
-    nextTick(async () => {
+    const fonts = [];
+    try {
+        await nextTick();
         const wrapper = drawSvgContainer.value;
-        if (!wrapper) return;
-
+        if (!wrapper || disposed) return;
         walkTheDOM(wrapper, (node) => {
-            if (node && node.nodeType === 1) {
-                node.setAttribute('font-family', 'Helvetica');
-                node.style.fontFamily = 'Helvetica';
-            }
+            if (node?.nodeType !== 1) return;
+            fonts.push({
+                node,
+                attribute: node.getAttribute('font-family'),
+                font: node.style.getPropertyValue('font-family'),
+                priority: node.style.getPropertyPriority('font-family'),
+            });
+            node.setAttribute('font-family', 'Helvetica');
+            node.style.fontFamily = 'Helvetica';
         });
-
-        try {
-            let JsPDF;
-            try {
-                JsPDF = (await import('jspdf')).default;
-            } catch (e) {
-                throw new Error('jspdf is not installed. Run pnpm add jspdf');
-            }
-
-            const pngDataUrl = await domToPng({
-                container: wrapper,
-                scale: 2,
-            });
-
+        const { default: JsPDF } = await import('jspdf');
+        if (disposed) return;
+        const pngDataUrl = await domToPng({ container: wrapper, scale: 2 });
+        if (disposed) return;
+        const image = await new Promise((resolve, reject) => {
             const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = () =>
+                reject(new Error('Unable to load annotation export image.'));
             image.src = pngDataUrl;
-
-            image.onload = () => {
-                const a4 = {
-                    width: 595.28,
-                    height: 841.89,
-                };
-
-                const contentWidth = image.width;
-                const contentHeight = image.height;
-                const pageHeight = (contentWidth / a4.width) * a4.height;
-
-                const imgWidth = a4.width;
-                const imgHeight = (imgWidth / contentWidth) * contentHeight;
-
-                const pdf = new JsPDF('', 'pt', 'a4');
-                let position = 0;
-                let leftHeight = contentHeight;
-
-                if (leftHeight < pageHeight) {
-                    pdf.addImage(
-                        pngDataUrl,
-                        'PNG',
-                        0,
-                        0,
-                        imgWidth,
-                        imgHeight,
-                        '',
-                        'FAST',
-                    );
-                } else {
-                    while (leftHeight > 0) {
-                        pdf.addImage(
-                            pngDataUrl,
-                            'PNG',
-                            0,
-                            position,
-                            imgWidth,
-                            imgHeight,
-                            '',
-                            'FAST',
-                        );
-                        leftHeight -= pageHeight;
-                        position -= a4.height;
-                        if (leftHeight > 0) {
-                            pdf.addPage();
-                        }
-                    }
-                }
-
-                pdf.save(`${new Date().toLocaleDateString()}_annotations.pdf`);
-            };
-        } catch (err) {
-            console.error('Error generating image:', err);
-        } finally {
-            isPrinting.value = false;
-
-            walkTheDOM(wrapper, (node) => {
-                if (node && node.nodeType === 1) {
-                    node.setAttribute('font-family', style.value.fontFamily);
-                    node.style.fontFamily = style.value.fontFamily;
-                }
-            });
+        });
+        if (disposed) return;
+        const contentWidth = image.naturalWidth || image.width;
+        const contentHeight = image.naturalHeight || image.height;
+        if (!(contentWidth > 0 && contentHeight > 0))
+            throw new Error('Annotation export image has no dimensions.');
+        const a4 = { width: 595.28, height: 841.89 };
+        const pageHeight = (contentWidth / a4.width) * a4.height;
+        const imageHeight = (a4.width / contentWidth) * contentHeight;
+        const pdf = new JsPDF('', 'pt', 'a4');
+        for (
+            let remaining = contentHeight, position = 0;
+            remaining > 0;
+            remaining -= pageHeight, position -= a4.height
+        ) {
+            pdf.addImage(
+                pngDataUrl,
+                'PNG',
+                0,
+                position,
+                a4.width,
+                imageHeight,
+                '',
+                'FAST',
+            );
+            if (remaining > pageHeight) pdf.addPage();
         }
-    });
+        pdf.save(`${new Date().toLocaleDateString()}_annotations.pdf`);
+    } catch (error) {
+        console.error('Error generating image:', error);
+    } finally {
+        for (const { node, attribute, font, priority } of fonts) {
+            if (attribute == null) node.removeAttribute('font-family');
+            else node.setAttribute('font-family', attribute);
+            if (font) node.style.setProperty('font-family', font, priority);
+            else node.style.removeProperty('font-family');
+        }
+        isPrinting.value = false;
+    }
 }
 
+function cancelGesture() {
+    if (
+        !isDrawing.value &&
+        !isMouseDown.value &&
+        lastPointerId.value == null &&
+        RAF_ID.value == null
+    )
+        return;
+    const pendingGroup =
+        isDrawing.value && activeShape.value === 'group'
+            ? shapes.value.at(-1)
+            : null;
+    if (pendingGroup?.type === 'group' && !pendingGroup.source)
+        shapes.value = shapes.value.filter(
+            (shape) => shape.id !== pendingGroup.id,
+        );
+    isDrawing.value = false;
+    isMouseDown.value = false;
+    if (RAF_ID.value !== null) cancelAnimationFrame(RAF_ID.value);
+    RAF_ID.value = null;
+    dragOffset.value = null;
+    resizeHandle.value = null;
+    resizeState.value = null;
+    if (lastPointerId.value != null) {
+        const id = lastPointerId.value;
+        lastPointerId.value = null;
+        try {
+            mainSvg.value?.releasePointerCapture?.(id);
+        } catch {}
+    }
+    history.value?.end?.();
+}
 function resetDraw(e) {
+    if (!isDrawing.value && !isMouseDown.value) return;
+    if (e && Number.isFinite(e.clientX) && Number.isFinite(e.clientY)) {
+        setPointer(e);
+        if (isDrawing.value) drawUp();
+        else if (isResizeMode.value && resizeHandle.value) resize();
+        else if (isMoveMode.value || isResizeMode.value) moveDown();
+    }
     const completedShape =
         isDrawMode.value &&
         isDrawing.value &&
@@ -4539,10 +4353,11 @@ function resetDraw(e) {
     resizeState.value = null;
 
     if (lastPointerId.value != null) {
-        try {
-            mainSvg.value?.releasePointerCapture?.(lastPointerId.value);
-        } catch {}
+        const id = lastPointerId.value;
         lastPointerId.value = null;
+        try {
+            mainSvg.value?.releasePointerCapture?.(id);
+        } catch {}
     }
 
     if (RAF_ID.value) {
@@ -4576,99 +4391,122 @@ function resetDraw(e) {
 }
 
 function setFillOfSelectedRect() {
-    if (
-        !lastSelectedShape.value ||
-        !lastSelectedShape.value.id.includes('rect')
-    ) {
-        return;
-    }
-    lastSelectedShape.value.isFilled = !lastSelectedShape.value.isFilled;
+    return editShapes(() => {
+        if (
+            !lastSelectedShape.value ||
+            lastSelectedShape.value.type !== 'rect'
+        ) {
+            return;
+        }
+        lastSelectedShape.value.isFilled = !lastSelectedShape.value.isFilled;
+    });
 }
 
 function setFillOfSelectedCircle() {
-    if (
-        !lastSelectedShape.value ||
-        !lastSelectedShape.value.id.includes('circle')
-    ) {
-        return;
-    }
-    lastSelectedShape.value.isFilled = !lastSelectedShape.value.isFilled;
+    return editShapes(() => {
+        if (
+            !lastSelectedShape.value ||
+            lastSelectedShape.value.type !== 'circle'
+        ) {
+            return;
+        }
+        lastSelectedShape.value.isFilled = !lastSelectedShape.value.isFilled;
+    });
 }
 
 function setColorOfSelectedShape(color = selectedColor.value) {
-    const nextColor = toShapeColor(
-        typeof color === 'string' && color.length ? color : selectedColor.value,
-    );
+    return editShapes(() => {
+        const nextColor = toShapeColor(
+            typeof color === 'string' && color.length
+                ? color
+                : selectedColor.value,
+        );
 
-    selectedColor.value = nextColor;
+        selectedColor.value = nextColor;
 
-    if (!lastSelectedShape.value) {
-        return;
-    }
+        if (!lastSelectedShape.value) {
+            return;
+        }
 
-    const selectedShape = shapes.value.find(
-        (shape) => shape.id === lastSelectedShape.value.id,
-    );
-    if (!selectedShape) {
-        return;
-    }
+        const selectedShape = shapes.value.find(
+            (shape) => shape.id === lastSelectedShape.value.id,
+        );
+        if (!selectedShape) {
+            return;
+        }
 
-    selectedShape.color = copy(nextColor);
-    lastSelectedShape.value = selectedShape;
+        selectedShape.color = copy(nextColor);
+        lastSelectedShape.value = selectedShape;
 
-    if (['arrow', 'text'].includes(selectedShape.type)) {
-        updateTextCaretOverlay();
-        return;
-    }
+        if (['arrow', 'text'].includes(selectedShape.type)) {
+            updateTextCaretOverlay();
+            return;
+        }
 
-    selectedShape.alpha = copy(colorTransparency.value);
+        selectedShape.alpha = copy(colorTransparency.value);
+    });
 }
 
 function setSelectedShapeToDash() {
-    if (!lastSelectedShape.value || lastSelectedShape.value.type === 'text') {
-        return;
-    }
-    lastSelectedShape.value.isDash = copy(isDash.value);
+    return editShapes(() => {
+        if (
+            !lastSelectedShape.value ||
+            lastSelectedShape.value.type === 'text'
+        ) {
+            return;
+        }
+        lastSelectedShape.value.isDash = copy(isDash.value);
+    });
 }
 
 function setTransparencyOfSelectedShape() {
-    if (
-        !lastSelectedShape.value ||
-        ['arrow', 'text'].includes(lastSelectedShape.value.type)
-    ) {
-        return;
-    }
-    lastSelectedShape.value.alpha = copy(colorTransparency.value);
+    return editShapes(() => {
+        if (
+            !lastSelectedShape.value ||
+            ['arrow', 'text'].includes(lastSelectedShape.value.type)
+        ) {
+            return;
+        }
+        lastSelectedShape.value.alpha = copy(colorTransparency.value);
+    });
 }
 
 function setStrokeWidthOfSelectedShape() {
-    if (
-        !lastSelectedShape.value ||
-        !['arrow', 'circle', 'rect', 'line'].includes(
-            lastSelectedShape.value.type,
-        )
-    ) {
-        return;
-    }
-    lastSelectedShape.value.strokeWidth = copy(Math.abs(strokeSize.value));
+    return editShapes(() => {
+        if (
+            !lastSelectedShape.value ||
+            !['arrow', 'circle', 'rect', 'line'].includes(
+                lastSelectedShape.value.type,
+            )
+        ) {
+            return;
+        }
+        lastSelectedShape.value.strokeWidth = copy(Math.abs(strokeSize.value));
+    });
 }
 
 function setCurrentStyleOfSelectedText() {
-    if (!lastSelectedShape.value || lastSelectedShape.value.type !== 'text') {
-        return;
-    }
-    lastSelectedShape.value.isBold = copy(isBold.value);
-    lastSelectedShape.value.isItalic = copy(isItalic.value);
-    lastSelectedShape.value.isUnderline = copy(isUnderline.value);
-    lastSelectedShape.value.fontSize = copy(textFont.value);
-    lastSelectedShape.value.isBulletTextMode = copy(isBulletTextMode.value);
-    updateTextCaretOverlay();
+    return editShapes(() => {
+        if (
+            !lastSelectedShape.value ||
+            lastSelectedShape.value.type !== 'text'
+        ) {
+            return;
+        }
+        lastSelectedShape.value.isBold = copy(isBold.value);
+        lastSelectedShape.value.isItalic = copy(isItalic.value);
+        lastSelectedShape.value.isUnderline = copy(isUnderline.value);
+        lastSelectedShape.value.fontSize = copy(textFont.value);
+        lastSelectedShape.value.isBulletTextMode = copy(isBulletTextMode.value);
+        updateTextCaretOverlay();
+    });
 }
 
 function setPointer(e) {
-    e.preventDefault();
+    e.preventDefault?.();
     if (!mainSvg.value) return;
     const rect = mainSvg.value.getBoundingClientRect();
+    if (!(rect.width > 0 && rect.height > 0)) return;
     let clientX, clientY;
 
     if (e.touches && e.touches.length > 0) {
@@ -4681,6 +4519,7 @@ function setPointer(e) {
         clientY = e.clientY;
     }
 
+    if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return;
     pointerPosition.value.x =
         ((clientX - rect.left) / rect.width) * svgWidth.value;
     pointerPosition.value.y =
@@ -4688,23 +4527,22 @@ function setPointer(e) {
 }
 
 function setShapeTo(shape) {
-    showCaret.value = false;
     deleteEmptyTextElement();
-    if (shape === activeShape.value) {
-        activeShape.value = undefined;
-        isDrawMode.value = false;
-
-        return;
-    }
-    isDrawMode.value = true;
-    isDeleteMode.value = false;
-    isMoveMode.value = false;
-    isResizeMode.value = false;
-    isTextMode.value = false;
-    activeShape.value = shape;
+    setToolMode(
+        isDrawMode.value && activeShape.value === shape ? null : 'draw',
+        shape,
+    );
+}
+function toggleTextTool() {
+    const next = !isTextMode.value;
+    deleteEmptyTextElement();
+    setToolMode(next ? 'text' : null);
 }
 
 function toggleSummary() {
+    endControlEdit();
+    cancelGesture();
+    hideTooltip();
     if (isWriting.value) finishTextEditing();
     isSummaryOpen.value = !isSummaryOpen.value;
     if (!isSummaryOpen.value) {
@@ -4725,14 +4563,17 @@ function toggleSummary() {
 }
 
 function save() {
+    endControlEdit();
     if (isWriting.value) finishTextEditing();
     emit('saveAnnotations', {
-        shapes: shapes.value,
-        lastSelectedShape: lastSelectedShape.value,
+        shapes: copy(shapes.value),
+        lastSelectedShape: copy(lastSelectedShape.value),
     });
 }
 
 let UNREGISTER_SHORTCUTS = null;
+let resizeObserver = null;
+let disposed = false;
 
 onMounted(() => {
     if (drawSvgContainer.value) {
@@ -4759,26 +4600,20 @@ onMounted(() => {
         return /(Mac|iPhone|iPad|iPod)/i.test(ua);
     })();
 
-    const slottedSvgRect = slottedSvg?.value.getBoundingClientRect();
-
-    sizeRatio.value = slottedSvgRect.height / slottedSvgRect.width;
-
-    svgWidth.value = 1000;
-    svgHeight.value = sizeRatio.value * 1000;
-    sourceWidth.value = slottedSvgRect.width;
-    sourceHeight.value = slottedSvgRect.height;
-
-    const myObserver = new ResizeObserver((entries) => {
-        entries.forEach((entry) => {
-            sourceWidth.value = entry.contentRect.width;
-            sourceHeight.value = entry.contentRect.height;
-            sizeRatio.value =
-                entry.contentRect.height / entry.contentRect.width;
-            svgHeight.value = sizeRatio.value * 1000;
-        });
-    });
-
-    myObserver.observe(slottedSvg.value);
+    function measure({ width, height }) {
+        if (disposed || !(width > 0 && height > 0)) return;
+        sizeRatio.value = height / width;
+        sourceWidth.value = width;
+        sourceHeight.value = height;
+        svgHeight.value = sizeRatio.value * svgWidth.value;
+    }
+    if (slottedSvg.value) {
+        measure(slottedSvg.value.getBoundingClientRect());
+        resizeObserver = new ResizeObserver((entries) =>
+            entries.forEach((entry) => measure(entry.contentRect)),
+        );
+        resizeObserver.observe(slottedSvg.value);
+    }
 
     ONKEYDOWN.value = (e) => write(e);
     window.addEventListener('keydown', ONKEYDOWN.value);
@@ -4808,15 +4643,19 @@ onMounted(() => {
         setShapeTo,
         undoLastShape,
         redoLastShape,
+        setToolMode,
+        editShapes,
     });
 });
 
 onBeforeUnmount(() => {
+    disposed = true;
+    cancelGesture();
+    resizeObserver?.disconnect();
     hideTooltip();
     if (RAF_ID.value) cancelAnimationFrame(RAF_ID.value);
     if (ONKEYDOWN.value) window.removeEventListener('keydown', ONKEYDOWN.value);
     UNREGISTER_SHORTCUTS && UNREGISTER_SHORTCUTS();
-    window.removeEventListener('keydown', write);
 });
 
 watch(shapes, (newVal) => {

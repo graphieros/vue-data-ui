@@ -117,9 +117,7 @@ function createCases(env) {
                         read = () => previous()[0].getAttribute('viewBox');
                     }
                     await waitFor(() => {
-                        expect(read()).toEqual(
-                            '0 0 304.00000000000045 304.00000000000045',
-                        );
+                        expect(read()).toEqual('0 0 304 304');
                     });
                 }
                 {
@@ -138,9 +136,7 @@ function createCases(env) {
                         read = () => previous()[0].getAttribute('viewBox');
                     }
                     await waitFor(() => {
-                        expect(read()).toEqual(
-                            '208.00000000000006 0 304.00000000000045 304.00000000000045',
-                        );
+                        expect(read()).toEqual('208 0 304 304');
                     });
                 }
                 {
@@ -159,9 +155,7 @@ function createCases(env) {
                         read = () => previous()[0].getAttribute('viewBox');
                     }
                     await waitFor(() => {
-                        expect(read()).toEqual(
-                            '208.00000000000006 208.00000000000006 304.00000000000045 304.00000000000045',
-                        );
+                        expect(read()).toEqual('208 208 304 304');
                     });
                 }
                 {
@@ -180,9 +174,7 @@ function createCases(env) {
                         read = () => previous()[0].getAttribute('viewBox');
                     }
                     await waitFor(() => {
-                        expect(read()).toEqual(
-                            '-4.263256414560601e-14 208.00000000000006 304.00000000000045 304.00000000000045',
-                        );
+                        expect(read()).toEqual('0 208 304 304');
                     });
                 }
                 {
@@ -199,9 +191,7 @@ function createCases(env) {
                         read = () => previous()[0].getAttribute('viewBox');
                     }
                     await waitFor(() => {
-                        expect(read()).toEqual(
-                            '-1.4988357199199224e-29 -4.263256414560601e-14 304.00000000000045 304.00000000000045',
-                        );
+                        expect(read()).toEqual('0 0 304 304');
                     });
                 }
                 {
@@ -218,9 +208,7 @@ function createCases(env) {
                         read = () => previous()[0].getAttribute('viewBox');
                     }
                     await waitFor(() => {
-                        expect(read()).toEqual(
-                            '208.00000000000006 -1.4988357199199224e-29 304.00000000000045 304.00000000000045',
-                        );
+                        expect(read()).toEqual('208 0 304 304');
                     });
                 }
                 {
@@ -237,9 +225,7 @@ function createCases(env) {
                         read = () => previous()[0].getAttribute('viewBox');
                     }
                     await waitFor(() => {
-                        expect(read()).toEqual(
-                            '208.00000000000006 208.00000000000006 304.00000000000045 304.00000000000045',
-                        );
+                        expect(read()).toEqual('208 208 304 304');
                     });
                 }
                 {
@@ -256,9 +242,7 @@ function createCases(env) {
                         read = () => previous()[0].getAttribute('viewBox');
                     }
                     await waitFor(() => {
-                        expect(read()).toEqual(
-                            '-4.263256414560601e-14 208.00000000000006 304.00000000000045 304.00000000000045',
-                        );
+                        expect(read()).toEqual('0 208 304 304');
                     });
                 }
                 {
@@ -275,9 +259,7 @@ function createCases(env) {
                         read = () => previous()[0].getAttribute('viewBox');
                     }
                     await waitFor(() => {
-                        expect(read()).toEqual(
-                            '-1.4988357199199224e-29 -4.263256414560601e-14 512 512',
-                        );
+                        expect(read()).toEqual('0 0 512 512');
                     });
                 }
                 {

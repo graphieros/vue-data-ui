@@ -1,4 +1,4 @@
-import { expect, waitFor } from 'storybook/test';
+import { expect, waitFor, fireEvent } from 'storybook/test';
 import { scenarioRender, runScenario, visible } from '../support/scenario.js';
 import { commonFeatures } from '../support/common.js';
 import VueUiStackline from '../../src/components/vue-ui-stackline.vue';
@@ -18,6 +18,7 @@ function createCases(env) {
             subtitle: true,
             slicer: true,
             dataTable: true,
+            deferredTable: true,
             legend: true,
         });
         {
@@ -184,6 +185,121 @@ function createCases(env) {
             }
         }
     };
+    cases.DenseData = async () => {
+        await env.resize(2400, 800);
+        const dense = Array.from({ length: 5 }, (_, series) => ({
+            name: `Series ${series}`,
+            series: Array.from(
+                { length: 1000 },
+                (_, i) => 10 + series + Math.sin(i / 20),
+            ),
+        }));
+        const config = {
+            style: {
+                chart: {
+                    grid: {
+                        x: {
+                            timeLabels: {
+                                values: Array.from(
+                                    { length: 1000 },
+                                    (_, i) => `Period ${i}`,
+                                ),
+                            },
+                        },
+                    },
+                },
+            },
+        };
+        const { wrapper } = await mountSubject(VueUiStackline, {
+            props: { dataset: dense, config },
+        });
+        await waitFor(() =>
+            expect(
+                wrapper.findAll('[data-cy="time-label"]').length,
+            ).toBeGreaterThan(1),
+        );
+        expect(wrapper.findAll('[data-cy="time-label"]').length).toBeLessThan(
+            40,
+        );
+        expect(wrapper.findAll('table')).toHaveLength(0);
+        expect(
+            wrapper.vm
+                .getData()
+                .every((series) => series.points.length === 1000),
+        ).toBe(true);
+        const svg = wrapper.find('svg').element;
+        let screen;
+        await fireEvent.mouseEnter(wrapper.element);
+        await waitFor(async () => {
+            const point = wrapper.vm.getData()[0].points[123];
+            screen = new DOMPoint(point.x, point.y).matrixTransform(
+                svg.getScreenCTM(),
+            );
+            await fireEvent.mouseMove(svg, {
+                clientX: screen.x,
+                clientY: screen.y,
+            });
+            await new Promise((resolve) => requestAnimationFrame(resolve));
+            expect(wrapper.find('[data-cy="selected-time-label"]').text()).toBe(
+                'Period 123',
+            );
+        });
+        expect(wrapper.findAll('[data-cy="highlighter"]')).toHaveLength(1);
+        expect(wrapper.findAll('[data-cy="time-label"]').length).toBeLessThan(
+            40,
+        );
+        await fireEvent.click(svg, { clientX: screen.x, clientY: screen.y });
+        expect(
+            wrapper.emitted('selectDatapoint').at(-1)[0].datapoint,
+        ).toHaveLength(5);
+        wrapper.vm.toggleTable();
+        await waitFor(() =>
+            expect(wrapper.find('table tbody tr').exists()).toBe(true),
+        );
+        wrapper.vm.toggleTable();
+        await waitFor(() => expect(wrapper.find('table').exists()).toBe(false));
+        await wrapper.setProps({
+            config: { ...config, table: { useDialog: true } },
+        });
+        wrapper.vm.toggleTable();
+        await waitFor(() =>
+            expect(
+                document.querySelector('.vue-ui-draggable-dialog'),
+            ).toBeTruthy(),
+        );
+        wrapper.vm.toggleTable();
+        await waitFor(() => expect(wrapper.find('table').exists()).toBe(false));
+    };
+    cases.DotVisibility = async () => {
+        const data = [
+            { name: 'A', series: [1, 2, 3, 4] },
+            { name: 'B', series: [4, 3, 2, 1] },
+        ];
+        const config = (show = true, showOnHover = true) => ({
+            style: {
+                chart: {
+                    legend: { show: false },
+                    zoom: { show: false },
+                    lines: { dot: { show, showOnHover } },
+                },
+            },
+        });
+        const { wrapper } = await mountSubject(VueUiStackline, {
+            props: { dataset: data, config: config() },
+        });
+        const selector =
+            '.vue-ui-stackline-zoom-geometry [data-cy="atom-shape"]';
+        await waitFor(() => expect(wrapper.findAll(selector)).toHaveLength(8));
+        await wrapper.setProps({ config: config(false, true) });
+        expect(wrapper.findAll(selector)).toHaveLength(0);
+        await fireEvent.mouseEnter(wrapper.element);
+        await wrapper.setProps({ selectedXIndex: 2 });
+        await waitFor(() => expect(wrapper.findAll(selector)).toHaveLength(2));
+        await wrapper.setProps({ config: config(false, false) });
+        expect(wrapper.findAll(selector)).toHaveLength(0);
+        await wrapper.setProps({ config: config(true, false) });
+        await waitFor(() => expect(wrapper.findAll(selector)).toHaveLength(8));
+    };
     return {
         cases,
         hooks,
@@ -196,4 +312,14 @@ export default {
 export const Renders = {
     name: 'renders',
     play: async (context) => runScenario(context, createCases, 'Renders'),
+};
+
+export const DenseData = {
+    name: 'renders and interacts with 1000 full-resolution periods',
+    play: async (context) => runScenario(context, createCases, 'DenseData'),
+};
+
+export const DotVisibility = {
+    name: 'controls permanent and hover-only dots independently',
+    play: async (context) => runScenario(context, createCases, 'DotVisibility'),
 };

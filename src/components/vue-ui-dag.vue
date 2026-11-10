@@ -19,7 +19,6 @@ import {
     onBeforeUnmount,
     onMounted,
     ref,
-    toRefs,
     watch,
 } from 'vue';
 import {
@@ -30,16 +29,14 @@ import {
     error,
     lerp,
     objectIsEmpty,
-    sleep,
     treeShake,
+    svgToClientCoords,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import usePanZoom from '../usePanZoom';
 import { useDag } from '../useDag';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
-import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
 
 import { useChartExport } from '../useChartExport';
@@ -99,61 +96,46 @@ const source = ref(null);
 const zoomControls = ref(null);
 const titleStep = ref(0);
 const step = ref(0);
-const userHovers = ref(false);
-const isDataset = ref(false);
-const resizeObserver = ref(null);
-const observedEl = ref(null);
+let resizeObserver = null;
+let resizeFrame = null;
+let disposed = false;
 
 const activeA11yItemId = ref(null);
 const activeA11yItemType = ref(null); // "node" | "midpoint"
-const activeA11yItemIndex = ref(null);
-const tooltipTriggerMode = ref('pointer');
 const isFocus = ref(false);
 
-const FINAL_CONFIG = ref(prepareConfig());
-const cfgNodes = computed(() => FINAL_CONFIG.value.style.chart.nodes);
-const cfgEdges = computed(() => FINAL_CONFIG.value.style.chart.edges);
-const cfgMidpoints = computed(() => FINAL_CONFIG.value.style.chart.midpoints);
-const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
-
-useHints({
-    config: () => FINAL_CONFIG.value,
-    dataset: () => props.dataset,
-    component: 'VueUiDag',
-    rules: [COMMON_RULES.noHint],
+const resolvedConfig = computed(prepareConfig);
+const isDataset = computed(() => {
+    const ds = props.dataset;
+    if (
+        !Array.isArray(ds?.nodes) ||
+        !ds.nodes.length ||
+        (ds.edges != null && !Array.isArray(ds.edges))
+    )
+        return false;
+    const ids = new Set();
+    for (const node of ds.nodes) {
+        if (
+            node?.id == null ||
+            !['string', 'number'].includes(typeof node.id) ||
+            (typeof node.id === 'number' && !Number.isFinite(node.id)) ||
+            ids.has(String(node.id))
+        )
+            return false;
+        ids.add(String(node.id));
+    }
+    return (ds.edges || []).every(
+        (edge) =>
+            edge &&
+            edge.from != null &&
+            edge.to != null &&
+            ids.has(String(edge.from)) &&
+            ids.has(String(edge.to)),
+    );
 });
-
-const isCursorPointer = computed(
-    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+const loading = computed(
+    () => !!resolvedConfig.value.loading || !isDataset.value,
 );
-
-const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
-const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
-
-const tooltipPosition = ref({ x: 0, y: 0 }); // anchor (screen coords)
-const tooltipEdge = ref(null);
-const tooltipRef = ref(null);
-const tooltipStyle = ref({ left: '0px', top: '0px' });
-const tooltipPlacement = ref('top');
-
-const isNodeTooltip = ref(false);
-const nodeTooltipPosition = ref({ x: 0, y: 0 });
-const nodeTooltipOffset = ref({ x: 0, y: 0 });
-const nodeTooltipNode = ref(null);
-const nodeTooltipRef = ref(null);
-const nodeTooltipStyle = ref({ left: '0px', top: '0px' });
-const nodeTooltipPlacement = ref('top');
-
-const isTooltip = ref(false);
-const isAnnotator = ref(false);
-
-const { svgRef } = useChartAccessibility({
-    config: cfgChart.value.title,
-});
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
-    useUserOptionState({ config: FINAL_CONFIG.value });
-const direction = ref(FINAL_CONFIG.value.style.chart.layout.rankDirection);
-
 const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
@@ -175,81 +157,143 @@ const skeletonConfig = computed(() => {
                 },
             },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+        userConfig: resolvedConfig.value.skeletonConfig ?? {},
     });
 });
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: props.config?.skeletonDataset ?? {
-        nodes: [
-            { id: 'A', label: '' },
-            { id: 'B', label: '' },
-            { id: 'C', label: '' },
-        ],
-        edges: [
-            { from: 'A', to: 'B' },
-            { from: 'A', to: 'C' },
-        ],
-    },
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value,
-    }),
+const FINAL_CONFIG = computed(() =>
+    loading.value
+        ? treeShake({
+              defaultConfig: resolvedConfig.value,
+              userConfig: skeletonConfig.value,
+          })
+        : resolvedConfig.value,
+);
+const cfgNodes = computed(() => FINAL_CONFIG.value.style.chart.nodes);
+const cfgEdges = computed(() => FINAL_CONFIG.value.style.chart.edges);
+const cfgMidpoints = computed(() => FINAL_CONFIG.value.style.chart.midpoints);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
+
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
+
+const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
+const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
+
+const tooltipPosition = ref({ x: 0, y: 0 }); // anchor (screen coords)
+const tooltipEdgeId = ref(null);
+const tooltipEdge = computed(
+    () => edgeById.value.get(tooltipEdgeId.value) ?? null,
+);
+const tooltipRef = ref(null);
+const tooltipStyle = ref({ left: '0px', top: '0px' });
+const tooltipPlacement = ref('top');
+
+const isNodeTooltip = ref(false);
+const nodeTooltipPosition = ref({ x: 0, y: 0 });
+const nodeTooltipOffset = ref({ x: 0, y: 0 });
+const nodeTooltipId = ref(null);
+const nodeTooltipNode = computed(() => getNodeById(nodeTooltipId.value));
+const nodeTooltipRef = ref(null);
+const nodeTooltipStyle = ref({ left: '0px', top: '0px' });
+const nodeTooltipPlacement = ref('top');
+
+const isTooltip = ref(false);
+const isAnnotator = ref(false);
+
+const { svgRef } = useChartAccessibility({
+    config: cfgChart.value.title,
+});
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
+    useUserOptionState({ config: FINAL_CONFIG.value });
+const direction = ref(FINAL_CONFIG.value.style.chart.layout.rankDirection);
+
+const defaultSkeletonDataset = {
+    nodes: [
+        { id: 'A', label: '' },
+        { id: 'B', label: '' },
+        { id: 'C', label: '' },
+    ],
+    edges: [
+        { from: 'A', to: 'B' },
+        { from: 'A', to: 'C' },
+    ],
+};
+const FINAL_DATASET = computed(() =>
+    loading.value
+        ? (props.config?.skeletonDataset ?? defaultSkeletonDataset)
+        : props.dataset,
+);
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiDag',
+    rules: [COMMON_RULES.noHint],
 });
 
 function prepareConfig() {
     return resolveChartConfig(props.config, DEFAULT_CONFIG, themes);
 }
 
-const debug = computed(() => FINAL_CONFIG.value.debug);
+const debug = computed(() => resolvedConfig.value.debug);
+watch(
+    [() => props.dataset, debug],
+    ([dataset, enabled]) => {
+        if (!enabled) return;
+        if (objectIsEmpty(dataset)) {
+            error({ componentName: 'VueUiDag', type: 'dataset' });
+        }
+        if (!Array.isArray(dataset?.nodes) || !dataset.nodes.length) {
+            error({
+                componentName: 'VueUiDag',
+                type: 'datasetAttributeEmpty',
+                property: 'nodes',
+                index: 0,
+            });
+        } else if (!isDataset.value) {
+            console.warn(
+                'VueUiDag: provide unique node IDs and an edges array whose endpoints reference existing nodes.',
+            );
+        }
+    },
+    { deep: true, immediate: true },
+);
 
-onMounted(async () => {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiDag',
-            type: 'dataset',
-            debug: debug.value,
-        });
-        isDataset.value = false;
-        manualLoading.value = true;
-    }
-    if (!props.dataset.nodes || props.dataset.nodes.length === 0) {
-        error({
-            componentName: 'VueUiDag',
-            type: 'datasetAttributeEmpty',
-            property: 'nodes',
-            index: 0,
-            debug: debug.value,
-        });
-        isDataset.value = false;
-        manualLoading.value = true;
-    }
-    isDataset.value = true;
-
-    await nextTick();
-    setupResponsive();
-});
-
+onMounted(setupResponsive);
 watch(
     () => props.config,
-    async (_newCfg) => {
-        if (!loading.value) {
-            FINAL_CONFIG.value = prepareConfig();
-        }
+    () => {
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
         titleStep.value += 1;
-        direction.value = cfgChart.value.layout.rankDirection;
-        WIDTH.value = cfgChart.value.width;
-        HEIGHT.value = cfgChart.value.height;
-        panZoomActive.value = cfgChart.value.zoom.active;
-        await nextTick();
-        setupResponsive();
     },
     { deep: true },
+);
+watch(
+    () => resolvedConfig.value.style.chart.layout.rankDirection,
+    (value) => {
+        direction.value = value;
+    },
+);
+watch(
+    () => resolvedConfig.value.style.chart.zoom.active,
+    (value) => {
+        zoomEnabled.value = value;
+    },
+);
+watch(() => FINAL_CONFIG.value.responsive, setupResponsive, { flush: 'post' });
+watch(
+    cfgChart,
+    () => {
+        if (FINAL_CONFIG.value.responsive) scheduleResize();
+        else {
+            WIDTH.value = cfgChart.value.width;
+            HEIGHT.value = cfgChart.value.height;
+        }
+    },
+    { deep: true, flush: 'post' },
 );
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -273,13 +317,11 @@ const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     });
 
 function onChartEnter() {
-    userHovers.value = true;
     setUserOptionsVisibility(true);
 }
 
 function onChartLeave() {
     setUserOptionsVisibility(false);
-    userHovers.value = false;
 }
 
 function createTooltipPlacementUpdater({
@@ -366,54 +408,106 @@ function createTooltipPlacementUpdater({
     };
 }
 
-const initialNodes = computed(() =>
-    FINAL_DATASET.value.nodes.map((node) => {
-        return {
-            ...node,
-            backgroundColor: node.backgroundColor
-                ? convertColorToHex(node.backgroundColor)
-                : cfgNodes.value.backgroundColor,
-            color: node.color
-                ? convertColorToHex(node.color)
-                : cfgNodes.value.labels.color,
-        };
-    }),
+// Reuse equal geometry inputs so presentation changes do not run layout again.
+function reuseGeometry(previous, next) {
+    return previous && JSON.stringify(previous) === JSON.stringify(next)
+        ? previous
+        : next;
+}
+const initialNodes = computed((previous) =>
+    reuseGeometry(
+        previous,
+        (FINAL_DATASET.value.nodes || []).map((node) => ({
+            id: node.id,
+            width: node.width,
+            height: node.height,
+        })),
+    ),
 );
-
-const initialEdges = computed(() => FINAL_DATASET.value.edges);
-
-const dagConfiguration = computed(() => {
-    return {
+const initialEdges = computed((previous) =>
+    reuseGeometry(
+        previous,
+        (FINAL_DATASET.value.edges || []).map((edge) => ({
+            from: edge.from,
+            to: edge.to,
+            ...(edge.weight !== undefined ? { weight: edge.weight } : {}),
+            ...(edge.minLength !== undefined
+                ? { minLength: edge.minLength }
+                : {}),
+        })),
+    ),
+);
+const dagConfiguration = computed((previous) =>
+    reuseGeometry(previous, {
         ...cfgChart.value.layout,
         rankDirection: direction.value,
-    };
-});
-
-const { layoutData, lastError, arrowMarkerIdentifier } = useDag({
+    }),
+);
+const {
+    layoutData: geometry,
+    lastError,
+    arrowMarkerIdentifier,
+} = useDag({
     nodes: initialNodes,
     edges: initialEdges,
     configuration: dagConfiguration,
 });
-
-function getNodeById(id) {
-    if (!layoutData.value) return null;
-    return layoutData.value.nodes.find((node) => node.id === id);
-}
-
-const edgeColors = computed(() => {
-    if (!layoutData.value) return [];
-    const defaultColor = cfgEdges.value.stroke;
-    const colors = new Set();
-    layoutData.value.edges.forEach((edge) => {
-        colors.add({
-            id: edge.id,
-            from: edge.from,
-            to: edge.to,
-            color: edge.original?.color || defaultColor,
-        });
-    });
-    return Array.from(colors);
+const layoutData = computed(() => {
+    if (!geometry.value) return null;
+    const nodes = new Map(
+        (FINAL_DATASET.value.nodes || []).map((node) => [
+            String(node.id),
+            node,
+        ]),
+    );
+    const edges = new Map();
+    for (const edge of FINAL_DATASET.value.edges || []) {
+        const key = JSON.stringify([String(edge.from), String(edge.to)]);
+        if (!edges.has(key)) edges.set(key, edge);
+    }
+    return {
+        ...geometry.value,
+        nodes: geometry.value.nodes.map((node) => {
+            const original = nodes.get(String(node.id)) ?? node.original;
+            return {
+                ...node,
+                label: original.label,
+                original: {
+                    ...original,
+                    backgroundColor: original.backgroundColor
+                        ? convertColorToHex(original.backgroundColor)
+                        : cfgNodes.value.backgroundColor,
+                    color: original.color
+                        ? convertColorToHex(original.color)
+                        : cfgNodes.value.labels.color,
+                },
+            };
+        }),
+        edges: geometry.value.edges.map((edge) => ({
+            ...edge,
+            original: {
+                ...edges.get(JSON.stringify([edge.from, edge.to])),
+                ...edge.original,
+            },
+        })),
+    };
 });
+const nodeById = computed(
+    () =>
+        new Map(
+            (layoutData.value?.nodes || []).map((node) => [
+                String(node.id),
+                node,
+            ]),
+        ),
+);
+const edgeById = computed(
+    () =>
+        new Map((layoutData.value?.edges || []).map((edge) => [edge.id, edge])),
+);
+function getNodeById(id) {
+    return id == null ? null : (nodeById.value.get(String(id)) ?? null);
+}
 
 const userViewBox = computed(() => {
     const widthRaw = WIDTH.value;
@@ -435,11 +529,12 @@ const userViewBox = computed(() => {
     };
 });
 
-const panZoomActive = ref(cfgChart.value.zoom.active);
+const zoomEnabled = ref(cfgChart.value.zoom.active);
+const panZoomActive = computed(() => zoomEnabled.value && !isAnnotator.value);
 
 const {
     viewBox: panZoomViewBox,
-    resetZoom,
+    resetZoom: resetPanZoom,
     setInitialViewBox,
     scale,
     zoomByFactor,
@@ -449,18 +544,30 @@ const {
     1,
     panZoomActive,
     () => {
-        isNodeTooltip.value = false;
+        cancelFocusAnimation();
+        hideNodeTooltip();
+        hideMidpointTooltip();
     },
 );
 
 let focusAnimationFrame = null;
+let focusSequence = 0;
+function cancelFocusAnimation() {
+    focusSequence += 1;
+    if (focusAnimationFrame !== null) cancelAnimationFrame(focusAnimationFrame);
+    focusAnimationFrame = null;
+}
+function resetZoom(animated = false) {
+    cancelFocusAnimation();
+    resetPanZoom(animated);
+}
 
 async function focusOnNode(
     nodeId,
     { smooth = true, duration = 300, zoomReset = false, zoom = null } = {},
 ) {
     const node = getNodeById(nodeId);
-    if (!node) return false;
+    if (disposed || !node) return false;
 
     const currentViewBox = panZoomViewBox.value;
     if (!currentViewBox) return false;
@@ -512,14 +619,12 @@ async function focusOnNode(
         height: targetHeight,
     };
 
-    if (focusAnimationFrame !== null) {
-        cancelAnimationFrame(focusAnimationFrame);
-        focusAnimationFrame = null;
-    }
+    cancelFocusAnimation();
+    const sequence = focusSequence;
 
     isNodeTooltip.value = false;
 
-    if (!smooth || duration <= 0) {
+    if (!smooth || !Number.isFinite(duration) || duration <= 0) {
         panZoomViewBox.value = targetViewBox;
         scale.value = targetScale;
         return true;
@@ -528,6 +633,7 @@ async function focusOnNode(
     const startTime = performance.now();
 
     function animate(currentTime) {
+        if (disposed || sequence !== focusSequence) return;
         const progress = Math.min((currentTime - startTime) / duration, 1);
         const easedProgress = easeInOutCubic(progress);
         panZoomViewBox.value = {
@@ -553,8 +659,10 @@ async function focusOnNode(
     return true;
 }
 
+watch(geometry, cancelFocusAnimation);
+
 function toggleZoom() {
-    panZoomActive.value = !panZoomActive.value;
+    zoomEnabled.value = !zoomEnabled.value;
 }
 
 function updateInitialViewBoxFromLayout() {
@@ -612,13 +720,6 @@ watch(
     () => userViewBox.value,
     () => {
         updateInitialViewBoxFromLayout();
-    },
-);
-
-watch(
-    () => isAnnotator.value,
-    (isActive) => {
-        panZoomActive.value = !isActive;
     },
 );
 
@@ -692,10 +793,12 @@ function toggleAnnotator() {
 const zoomStepFactor = 1.5;
 
 function zoomIn() {
+    cancelFocusAnimation();
     zoomByFactor(zoomStepFactor, true);
 }
 
 function zoomOut() {
+    cancelFocusAnimation();
     zoomByFactor(1 / zoomStepFactor, true);
 }
 
@@ -716,7 +819,6 @@ const updateTooltipPlacement = createTooltipPlacementUpdater({
     anchorRef: tooltipPosition,
     styleRef: tooltipStyle,
     placementRef: tooltipPlacement,
-    isNode: false,
 });
 
 const updateNodeTooltipPlacement = createTooltipPlacementUpdater({
@@ -732,43 +834,25 @@ const hoveredEdgeId = ref(null);
 
 async function showMidpointTooltip(edge) {
     emit('onMidpointEnter', edge);
-    const svg = svgRef.value;
-    if (!svg || !edge?.midpoint) return;
-
-    const pt = svg.createSVGPoint();
-    pt.x = edge.midpoint.x;
-    pt.y = edge.midpoint.y;
-
-    const ctm = svg.getScreenCTM();
-    if (!ctm) return;
-
-    const screenPoint = pt.matrixTransform(ctm);
-
-    tooltipPosition.value = {
-        x: screenPoint.x,
-        y: screenPoint.y,
-    };
-
-    tooltipEdge.value = edge;
+    if (!edge?.midpoint || !svgRef.value) return;
+    tooltipEdgeId.value = edge.id;
     isTooltip.value = true;
 
     if (cfgMidpoints.value.selectedEdge.animated === true) {
         hoveredEdgeId.value = edge.id;
-        startEdgeAnimations();
     }
 
     await nextTick();
-    updateTooltipPlacement();
+    refreshTooltipAnchors();
 }
 
 function hideMidpointTooltip() {
     isTooltip.value = false;
-    tooltipEdge.value = null;
+    tooltipEdgeId.value = null;
     emit('onMidpointLeave');
 
     if (cfgMidpoints.value.selectedEdge.animated === true) {
         hoveredEdgeId.value = null;
-        startEdgeAnimations();
     }
 }
 
@@ -776,46 +860,72 @@ async function showNodeTooltip(node) {
     emit('onNodeClick', node);
     if (!cfgNodes.value.tooltip.showOnClick) return;
 
-    const svg = svgRef.value;
-    if (!svg) return;
-
-    const pt = svg.createSVGPoint();
-    pt.x = node.x;
-    pt.y = node.y;
-    const ctm = svg.getScreenCTM();
-    if (!ctm) return;
-
-    const screenPoint = pt.matrixTransform(ctm);
-    const nodeWidthSvg = cfgChart.value.layout.nodeWidth;
-    const nodeHeightSvg = cfgChart.value.layout.nodeHeight;
-
-    const scaleX = ctm.a;
-    const scaleY = ctm.d;
-
-    const nodeWidthPx = nodeWidthSvg * scaleX;
-    const nodeHeightPx = nodeHeightSvg * scaleY;
-
-    nodeTooltipOffset.value = {
-        x: nodeWidthPx / 2,
-        y: nodeHeightPx / 2,
-    };
-
-    nodeTooltipPosition.value = {
-        x: screenPoint.x,
-        y: screenPoint.y,
-    };
-
-    nodeTooltipNode.value = node;
+    if (!svgRef.value) return;
+    nodeTooltipId.value = node.id;
     isNodeTooltip.value = true;
 
     await nextTick();
-    updateNodeTooltipPlacement();
+    refreshTooltipAnchors();
 }
 
 function hideNodeTooltip() {
     isNodeTooltip.value = false;
-    nodeTooltipNode.value = null;
+    nodeTooltipId.value = null;
 }
+
+function refreshTooltipAnchors() {
+    if (disposed) return;
+    const svg = svgRef.value;
+    if (!svg) return;
+    if (isTooltip.value && tooltipEdge.value?.midpoint) {
+        const point = tooltipEdge.value.midpoint;
+        const anchor = svgToClientCoords(point.x, point.y, svg);
+        if (anchor) tooltipPosition.value = anchor;
+        updateTooltipPlacement();
+    }
+    if (isNodeTooltip.value && nodeTooltipNode.value) {
+        const node = nodeTooltipNode.value;
+        const anchor = svgToClientCoords(node.x, node.y, svg);
+        if (anchor) nodeTooltipPosition.value = anchor;
+        const ctm = svg.getScreenCTM?.();
+        if (ctm)
+            nodeTooltipOffset.value = {
+                x: (node.width * Math.hypot(ctm.a, ctm.b || 0)) / 2,
+                y: (node.height * Math.hypot(ctm.c || 0, ctm.d)) / 2,
+            };
+        updateNodeTooltipPlacement();
+    }
+}
+watch(
+    [layoutData, panZoomViewBox, loading],
+    () => {
+        if (
+            isNodeTooltip.value &&
+            (loading.value ||
+                !cfgNodes.value.tooltip.showOnClick ||
+                (nodeTooltipId.value != null && !nodeTooltipNode.value))
+        )
+            hideNodeTooltip();
+        if (
+            isTooltip.value &&
+            (loading.value ||
+                !cfgMidpoints.value.show ||
+                (tooltipEdgeId.value != null && !tooltipEdge.value))
+        )
+            hideMidpointTooltip();
+        if (
+            activeA11yItemId.value != null &&
+            !a11yItems.value.some(
+                (item) =>
+                    item.id === activeA11yItemId.value &&
+                    item.type === activeA11yItemType.value,
+            )
+        )
+            clearA11ySelection();
+        refreshTooltipAnchors();
+    },
+    { deep: true, flush: 'post' },
+);
 
 function handleDocumentClick(event) {
     const hasOpenTooltip = isNodeTooltip.value || isTooltip.value;
@@ -869,129 +979,89 @@ function handleDocumentKeydown(event) {
 onMounted(() => {
     document.addEventListener('mousedown', handleDocumentClick);
     document.addEventListener('keydown', handleDocumentKeydown);
+    window.addEventListener('scroll', refreshTooltipAnchors, true);
+    window.addEventListener('resize', refreshTooltipAnchors);
 });
 
 onBeforeUnmount(() => {
+    disposed = true;
     document.removeEventListener('mousedown', handleDocumentClick);
     document.removeEventListener('keydown', handleDocumentKeydown);
-
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    window.removeEventListener('scroll', refreshTooltipAnchors, true);
+    window.removeEventListener('resize', refreshTooltipAnchors);
+    resizeObserver?.disconnect();
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    cancelFocusAnimation();
+    clearTimeout(clearHoverTimer);
 });
 
+function resizeChart() {
+    resizeFrame = null;
+    if (
+        disposed ||
+        !FINAL_CONFIG.value.responsive ||
+        !dagChart.value?.parentNode
+    )
+        return;
+    const { width, height } = useResponsive({
+        chart: dagChart.value,
+        title: cfgChart.value.title.text ? chartTitle.value : null,
+        legend: cfgChart.value.controls.show ? zoomControls.value?.$el : null,
+        source: source.value,
+    });
+    WIDTH.value = Math.max(0.1, width);
+    HEIGHT.value = Math.max(0.1, height - 12);
+}
+function scheduleResize() {
+    if (!disposed && FINAL_CONFIG.value.responsive && resizeFrame === null)
+        resizeFrame = requestAnimationFrame(resizeChart);
+}
 function setupResponsive() {
+    resizeObserver?.disconnect();
+    resizeObserver = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+    if (disposed) return;
     if (!FINAL_CONFIG.value.responsive) {
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-            resizeObserver.value = null;
-            observedEl.value = null;
-        }
+        WIDTH.value = cfgChart.value.width;
+        HEIGHT.value = cfgChart.value.height;
         return;
     }
-
-    const handleResize = throttle(() => {
-        if (!dagChart.value) return;
-
-        const { width, height } = useResponsive({
-            chart: dagChart.value,
-            title: cfgChart.value.title.text ? chartTitle.value : null,
-            legend: cfgChart.value.controls.show
-                ? zoomControls.value?.$el
-                : null,
-            source: source.value,
-        });
-
-        requestAnimationFrame(() => {
-            WIDTH.value = Math.max(0.1, width);
-            HEIGHT.value = Math.max(0.1, height - 12);
-        });
-    });
-
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
+    if (dagChart.value?.parentNode) {
+        resizeObserver = new ResizeObserver(scheduleResize);
+        resizeObserver.observe(dagChart.value.parentNode);
+        scheduleResize();
     }
-
-    resizeObserver.value = new ResizeObserver(handleResize);
-    observedEl.value = dagChart.value ? dagChart.value.parentNode : null;
-    if (observedEl.value) {
-        resizeObserver.value.observe(observedEl.value);
-    }
-
-    handleResize();
 }
 
-function getIdealDashoffsetDelta(pathElement, options = {}) {
-    const {
-        direction = -1,
-        mode = 'oneLapNearest',
-        dasharray = null,
-    } = options;
-
+function getIdealDashoffsetDelta(
+    pathElement,
+    { direction = -1, dasharray } = {},
+) {
     if (!pathElement || typeof pathElement.getTotalLength !== 'function') {
-        if (debug.value) {
+        if (debug.value)
             console.warn(
                 'VueUiDag @getIdealDashoffsetDelta: invalid path element',
                 pathElement,
             );
-        }
         return 0;
     }
-
     const pathLength = pathElement.getTotalLength();
-
-    const dasharrayValue =
-        dasharray ??
-        pathElement.getAttribute('stroke-dasharray') ??
-        (typeof getComputedStyle === 'function'
-            ? getComputedStyle(pathElement).strokeDasharray
-            : '');
-
-    const patternLength = sumDasharray(dasharrayValue);
-
-    if (!Number.isFinite(patternLength) || patternLength <= 0) {
-        return direction * pathLength;
-    }
-
-    const nearestMultiple = Math.max(1, Math.round(pathLength / patternLength));
-    const ceilMultiple = Math.max(1, Math.ceil(pathLength / patternLength));
-    const floorMultiple = Math.max(1, Math.floor(pathLength / patternLength));
-
-    let delta;
-    if (mode === 'pattern') delta = patternLength;
-    else if (mode === 'oneLapCeil') delta = ceilMultiple * patternLength;
-    else if (mode === 'oneLapFloor') delta = floorMultiple * patternLength;
-    else delta = nearestMultiple * patternLength;
-
-    return direction * delta;
-
-    function sumDasharray(value) {
-        if (!value || value === 'none') return NaN;
-
-        const numbers = String(value)
-            .replace(/,/g, ' ')
-            .trim()
-            .split(/\s+/)
-            .map((token) => Number.parseFloat(token))
-            .filter((number) => Number.isFinite(number));
-
-        if (!numbers.length) return NaN;
-
-        const sum = numbers.reduce(
-            (accumulator, current) => accumulator + current,
-            0,
-        );
-        return numbers.length % 2 === 1 ? sum * 2 : sum;
-    }
+    const numbers = String(dasharray ?? '')
+        .trim()
+        .split(/[\s,]+/)
+        .map((value) => Number.parseFloat(value))
+        .filter(Number.isFinite);
+    const patternLength =
+        numbers.reduce((sum, value) => sum + value, 0) *
+        (numbers.length % 2 ? 2 : 1);
+    return (
+        direction *
+        (patternLength > 0 && Number.isFinite(patternLength)
+            ? Math.max(1, Math.round(pathLength / patternLength)) *
+              patternLength
+            : pathLength)
+    );
 }
 
 const edgePathElementByIdentifier = ref(new Map());
@@ -1020,6 +1090,7 @@ function stopAllEdgeAnimations() {
 
 function startEdgeAnimations() {
     stopAllEdgeAnimations();
+    if (disposed) return;
 
     const edges = layoutData.value?.edges ?? [];
     if (!edges.length) return;
@@ -1032,18 +1103,10 @@ function startEdgeAnimations() {
             : 24;
 
     edges.forEach((edge) => {
-        const isMidpointSelectedAnimated =
-            cfgMidpoints.value.selectedEdge.animated === true &&
-            hoveredEdgeId.value != null &&
-            edge.id === hoveredEdgeId.value;
-
-        const isAnimated =
-            !!edge?.original?.animated ||
-            !!edge?.animated ||
-            isMidpointSelectedAnimated;
+        const isAnimated = edgeStates.value.get(edge.id)?.animated;
 
         const pathElement = edgePathElementByIdentifier.value.get(edge.id);
-        if (!pathElement) return;
+        if (!pathElement || typeof pathElement.animate !== 'function') return;
 
         if (!isAnimated) {
             pathElement.style.strokeDasharray = '0';
@@ -1072,7 +1135,6 @@ function startEdgeAnimations() {
 
         const dashoffsetDelta = getIdealDashoffsetDelta(pathElement, {
             direction,
-            mode: 'oneLapNearest',
             dasharray: String(dasharrayValue),
         });
 
@@ -1107,15 +1169,6 @@ function startEdgeAnimations() {
         edgeAnimationByIdentifier.value.set(edge.id, animationHandle);
     });
 }
-
-watch(
-    () => layoutData.value && layoutData.value.edges,
-    async () => {
-        await nextTick();
-        startEdgeAnimations();
-    },
-    { deep: true, immediate: true },
-);
 
 onBeforeUnmount(() => {
     stopAllEdgeAnimations();
@@ -1169,24 +1222,14 @@ function setHoveredNode(nodeId) {
     if (hoveredNodeId.value === nodeId) return;
 
     hoveredNodeId.value = nodeId;
-
-    if (
-        cfgNodes.value.selected.downstreamEdges.animated === true ||
-        cfgNodes.value.selected.upstreamEdges.animated === true
-    ) {
-        // restart only when actual hovered node changes
-        startEdgeAnimations();
-    }
 }
 
 function onNodePointerEnter(nodeId) {
-    tooltipTriggerMode.value = 'pointer';
     hoveredEdgeId.value = null;
     setHoveredNode(nodeId);
 }
 
 async function onMidpointPointerEnter(edge) {
-    tooltipTriggerMode.value = 'pointer';
     hoveredNodeId.value = null;
     await showMidpointTooltip(edge);
 }
@@ -1202,70 +1245,80 @@ function scheduleClearHoveredNode(nodeId) {
         // Only clear if we are still leaving the same node
         if (hoveredNodeId.value === nodeId) {
             hoveredNodeId.value = null;
-            if (
-                cfgNodes.value.selected.downstreamEdges.animated === true ||
-                cfgNodes.value.selected.upstreamEdges.animated === true
-            ) {
-                startEdgeAnimations();
-            }
         }
     }, 20);
 }
 
+const edgeStates = computed(
+    () =>
+        new Map(
+            (layoutData.value?.edges || []).map((edge) => {
+                const downstream =
+                    hoveredNodeId.value != null &&
+                    String(edge.from) === String(hoveredNodeId.value);
+                const upstream =
+                    hoveredNodeId.value != null &&
+                    String(edge.to) === String(hoveredNodeId.value);
+                const active =
+                    hoveredEdgeId.value === edge.id ||
+                    tooltipEdge.value?.id === edge.id ||
+                    (activeA11yItemType.value === 'midpoint' &&
+                        activeA11yItemId.value === edge.id);
+                let stroke = edge.original.color ?? cfgEdges.value.stroke;
+                if (active && cfgMidpoints.value.selectedEdge.stroke != null)
+                    stroke = cfgMidpoints.value.selectedEdge.stroke;
+                else if (
+                    downstream &&
+                    cfgNodes.value.selected.downstreamEdges.stroke != null
+                )
+                    stroke = cfgNodes.value.selected.downstreamEdges.stroke;
+                else if (
+                    upstream &&
+                    cfgNodes.value.selected.upstreamEdges.stroke != null
+                )
+                    stroke = cfgNodes.value.selected.upstreamEdges.stroke;
+                return [
+                    edge.id,
+                    {
+                        stroke,
+                        active,
+                        width:
+                            cfgEdges.value.strokeWidth *
+                            (active || downstream ? 2 : 1),
+                        animated:
+                            !!edge.original.animated ||
+                            (active &&
+                                cfgMidpoints.value.selectedEdge.animated ===
+                                    true) ||
+                            (downstream &&
+                                cfgNodes.value.selected.downstreamEdges
+                                    .animated === true) ||
+                            (upstream &&
+                                cfgNodes.value.selected.upstreamEdges
+                                    .animated === true),
+                    },
+                ];
+            }),
+        ),
+);
+watch(
+    [
+        edgeStates,
+        () => cfgEdges.value.animations,
+        () => layoutData.value?.edges,
+    ],
+    startEdgeAnimations,
+    { deep: true, flush: 'post' },
+);
+onMounted(startEdgeAnimations);
+
 function setEdge(edge) {
-    const isHighlightedFrom = edge.from === hoveredNodeId.value;
-    const isHighlightedTo = edge.to === hoveredNodeId.value;
-    const isKeyboardSelectedMidpoint =
-        activeA11yItemType.value === 'midpoint' &&
-        activeA11yItemId.value === edge.id;
-    const isActive =
-        hoveredEdgeId.value === edge.id ||
-        tooltipEdge.value?.id === edge.id ||
-        isKeyboardSelectedMidpoint;
-
-    let stroke = edge.original.color ?? cfgEdges.value.stroke;
-
-    if (isActive && cfgMidpoints.value.selectedEdge.stroke != null) {
-        stroke = cfgMidpoints.value.selectedEdge.stroke;
-    } else if (
-        isHighlightedFrom &&
-        cfgNodes.value.selected.downstreamEdges.stroke != null
-    ) {
-        stroke = cfgNodes.value.selected.downstreamEdges.stroke;
-    } else if (
-        isHighlightedTo &&
-        cfgNodes.value.selected.upstreamEdges.stroke != null
-    ) {
-        stroke = cfgNodes.value.selected.upstreamEdges.stroke;
-    }
-
-    if (
-        isHighlightedFrom &&
-        cfgNodes.value.selected.downstreamEdges.animated === true
-    ) {
-        edge.animated = true;
-    } else if (
-        isHighlightedTo &&
-        cfgNodes.value.selected.upstreamEdges.animated === true
-    ) {
-        edge.animated = true;
-    } else if (
-        isKeyboardSelectedMidpoint &&
-        cfgMidpoints.value.selectedEdge.animated === true
-    ) {
-        edge.animated = true;
-    } else {
-        const thisEdge = layoutData.value?.edges.find((e) => e.id === edge.id);
-        edge.animated = thisEdge?.original?.animated ?? false;
-    }
-
+    const state = edgeStates.value.get(edge.id);
     return {
         d: edge.pathData,
         fill: 'none',
-        stroke,
-        'stroke-width':
-            cfgEdges.value.strokeWidth *
-            (isActive || edge.from === hoveredNodeId.value ? 2 : 1),
+        stroke: state.stroke,
+        'stroke-width': state.width,
         'stroke-linecap': 'round',
         'stroke-linejoin': 'round',
     };
@@ -1312,76 +1365,32 @@ function setNode(node) {
 }
 
 function setMidpoint(edge) {
-    const isHighlightedFrom = edge.from === hoveredNodeId.value;
-    const isHighlightedTo = edge.to === hoveredNodeId.value;
-    const isKeyboardSelected =
+    const state = edgeStates.value.get(edge.id);
+    const selected =
         activeA11yItemType.value === 'midpoint' &&
         activeA11yItemId.value === edge.id;
-    const isActive =
-        hoveredEdgeId.value === edge.id ||
-        tooltipEdge.value?.id === edge.id ||
-        isKeyboardSelected;
-
-    let stroke = edge.original.color ?? cfgEdges.value.stroke;
-
-    if (isActive && cfgMidpoints.value.selectedEdge.stroke != null) {
-        stroke = cfgMidpoints.value.selectedEdge.stroke;
-    } else if (
-        isHighlightedFrom &&
-        cfgNodes.value.selected.downstreamEdges.stroke != null
-    ) {
-        stroke = cfgNodes.value.selected.downstreamEdges.stroke;
-    } else if (
-        isHighlightedTo &&
-        cfgNodes.value.selected.upstreamEdges.stroke != null
-    ) {
-        stroke = cfgNodes.value.selected.upstreamEdges.stroke;
-    }
-
     return {
-        cx: edge?.midpoint?.x,
-        cy: edge?.midpoint?.y,
+        cx: edge.midpoint?.x,
+        cy: edge.midpoint?.y,
         r: cfgMidpoints.value.radius,
-        fill: isKeyboardSelected
+        fill: selected
             ? (cfgMidpoints.value.selectedEdge.stroke ??
               cfgMidpoints.value.fill)
             : cfgMidpoints.value.fill,
-        stroke,
-        'stroke-width':
-            cfgEdges.value.strokeWidth *
-            (isActive || edge.from === hoveredNodeId.value ? 2 : 1),
+        stroke: state.stroke,
+        'stroke-width': state.width,
     };
 }
-
 function arrowColor(edge) {
-    const isHighlightedFrom = edge.from === hoveredNodeId.value;
-    const isHighlightedTo = edge.to === hoveredNodeId.value;
-    const isKeyboardSelectedMidpoint =
-        activeA11yItemType.value === 'midpoint' &&
-        activeA11yItemId.value === edge.id;
-    const isActive =
-        hoveredEdgeId.value === edge.id ||
-        tooltipEdge.value?.id === edge.id ||
-        isKeyboardSelectedMidpoint;
-
-    let stroke = edge.color ?? edge.original?.color ?? cfgEdges.value.stroke;
-
-    if (isActive && cfgMidpoints.value.selectedEdge.stroke != null) {
-        stroke = cfgMidpoints.value.selectedEdge.stroke;
-    } else if (
-        isHighlightedFrom &&
-        cfgNodes.value.selected.downstreamEdges.stroke != null
-    ) {
-        stroke = cfgNodes.value.selected.downstreamEdges.stroke;
-    } else if (
-        isHighlightedTo &&
-        cfgNodes.value.selected.upstreamEdges.stroke != null
-    ) {
-        stroke = cfgNodes.value.selected.upstreamEdges.stroke;
-    }
-
-    return stroke;
+    return edgeStates.value.get(edge.id).stroke;
 }
+
+const arrowPath = computed(() => {
+    const size = layoutData.value?.arrowSize || 0;
+    return layoutData.value?.arrowShape === 'normal'
+        ? `M 0 0 L ${size} ${size / 2} L 0 ${size} Z`
+        : `M 0 0 L ${size} ${size / 2} L 0 ${size} L ${size / 3} ${size / 2} Z`;
+});
 
 function makeMarkerId(edgeIdentifier) {
     return `${arrowMarkerIdentifier}-${String(edgeIdentifier).replace(/[^a-zA-Z0-9_-]/g, '_')}`;
@@ -1456,14 +1465,6 @@ const a11yItems = computed(() => {
     });
 });
 
-const a11yItemIndexMap = computed(() => {
-    const map = new Map();
-    a11yItems.value.forEach((item, index) => {
-        map.set(`${item.type}:${item.id}`, index);
-    });
-    return map;
-});
-
 const a11yTable = computed(() => {
     const nodes = layoutData.value?.nodes ?? [];
     const edges = layoutData.value?.edges ?? [];
@@ -1474,19 +1475,21 @@ const a11yTable = computed(() => {
         FINAL_CONFIG.value.a11y?.translations?.children ?? 'Children',
     ];
 
-    const rows = nodes.map((node) => {
-        const parents = edges
-            .filter((edge) => edge.to === node.id)
-            .map((edge) => getNodeById(edge.from)?.label ?? edge.from)
-            .join(', ');
-
-        const children = edges
-            .filter((edge) => edge.from === node.id)
-            .map((edge) => getNodeById(edge.to)?.label ?? edge.to)
-            .join(', ');
-
-        return [node.label ?? node.id, parents || '—', children || '—'];
-    });
+    const parents = new Map(),
+        children = new Map();
+    for (const edge of edges) {
+        const from = String(edge.from),
+            to = String(edge.to);
+        if (!parents.has(to)) parents.set(to, []);
+        if (!children.has(from)) children.set(from, []);
+        parents.get(to).push(getNodeById(edge.from)?.label ?? edge.from);
+        children.get(from).push(getNodeById(edge.to)?.label ?? edge.to);
+    }
+    const rows = nodes.map((node) => [
+        node.label ?? node.id,
+        parents.get(String(node.id))?.join(', ') || '—',
+        children.get(String(node.id))?.join(', ') || '—',
+    ]);
 
     return { headers, rows };
 });
@@ -1527,8 +1530,6 @@ function setActiveA11yItem(item) {
 
     activeA11yItemId.value = item.id;
     activeA11yItemType.value = item.type;
-    activeA11yItemIndex.value =
-        a11yItemIndexMap.value.get(getA11yItemKey(item)) ?? null;
 
     if (item.type === 'node') {
         setHoveredNode(item.id);
@@ -1539,17 +1540,12 @@ function setActiveA11yItem(item) {
     if (item.type === 'midpoint') {
         hoveredNodeId.value = null;
         hoveredEdgeId.value = item.id;
-
-        if (cfgMidpoints.value.selectedEdge.animated === true) {
-            startEdgeAnimations();
-        }
     }
 }
 
 function clearA11ySelection() {
     activeA11yItemId.value = null;
     activeA11yItemType.value = null;
-    activeA11yItemIndex.value = null;
 
     if (!isNodeTooltip.value) {
         hoveredNodeId.value = null;
@@ -1557,9 +1553,6 @@ function clearA11ySelection() {
 
     if (!isTooltip.value) {
         hoveredEdgeId.value = null;
-        if (cfgMidpoints.value.selectedEdge.animated === true) {
-            startEdgeAnimations();
-        }
     }
 }
 
@@ -1623,7 +1616,6 @@ function findNextDirectionalItem(currentItem, direction) {
 
 async function activateA11yItem(item) {
     if (!item) return;
-    tooltipTriggerMode.value = 'keyboard';
     if (item.type === 'node') {
         hideMidpointTooltip();
         await showNodeTooltip(item.raw);
@@ -1743,7 +1735,7 @@ const annotationViewport = computed(() =>
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -1780,7 +1772,6 @@ const annotationViewport = computed(() =>
         </PenAndPaper>
 
         <UserOptions
-            ref="userOptionsRef"
             :key="`user_option_${step}`"
             v-if="
                 FINAL_CONFIG.userOptions.show &&
@@ -1891,6 +1882,8 @@ const annotationViewport = computed(() =>
                 }"
                 tabindex="0"
                 :aria-describedby="`chart-instructions-${uid}`"
+                @mousedown="cancelFocusAnimation"
+                @touchstart="cancelFocusAnimation"
                 @focus="onSvgFocus"
                 @blur="onSvgBlur"
                 @keydown="onSvgKeydown"
@@ -1962,25 +1955,8 @@ const annotationViewport = computed(() =>
                             orient="auto"
                             markerUnits="strokeWidth"
                         >
-                            <!-- `normal` arrow -->
                             <path
-                                v-if="layoutData.arrowShape === 'normal'"
-                                :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize / 2} L 0 ${layoutData.arrowSize} Z`"
-                                :fill="arrowColor(edge)"
-                                :stroke="arrowColor(edge)"
-                                stroke-width="0"
-                                style="
-                                    transition:
-                                        stroke 0.2s ease-in-out,
-                                        fill 0.2s ease-in-out,
-                                        stroke-width 0.2s ease-in-out;
-                                "
-                            />
-
-                            <!-- `vee` arrow -->
-                            <path
-                                v-else
-                                :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize / 2} L 0 ${layoutData.arrowSize} L ${layoutData.arrowSize / 3} ${layoutData.arrowSize / 2} Z`"
+                                :d="arrowPath"
                                 :fill="arrowColor(edge)"
                                 :stroke="arrowColor(edge)"
                                 stroke-width="0"
@@ -2359,78 +2335,39 @@ const annotationViewport = computed(() =>
 }
 
 .vue-ui-dag-tooltip {
-    position: fixed;
+    --dag-tooltip-background: var(
+        --vue-data-ui-dag-tooltip-background,
+        #e1e5e8
+    );
+    --dag-tooltip-color: var(--vue-data-ui-dag-tooltip-color, #2d353c);
     pointer-events: none;
-    background: var(--vue-data-ui-dag-tooltip-background, #e1e5e8);
-    color: var(--vue-data-ui-dag-tooltip-color, #2d353c);
-    box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.2);
     padding: 0.35rem 0.55rem;
-    border-radius: 4px;
-    font-size: 12px;
     z-index: 999999;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px);
-}
-
-.vue-ui-dag-tooltip::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    border-style: solid;
-}
-
-.vue-ui-dag-tooltip[data-position='top']::after {
-    bottom: -8px;
-    border-width: 8px 8px 0 8px;
-    border-color: var(--vue-data-ui-dag-tooltip-background, #e1e5e8) transparent
-        transparent transparent;
-}
-
-.vue-ui-dag-tooltip[data-position='bottom']::after {
-    top: -8px;
-    border-width: 0 8px 8px 8px;
-    border-color: transparent transparent
-        var(--vue-data-ui-dag-tooltip-background, #e1e5e8) transparent;
-}
-
-.vue-ui-dag-tooltip[data-position='left']::after {
-    top: 50%;
-    transform: translateY(-50%);
-    left: 100%;
-    border-width: 8px 0 8px 8px;
-    border-color: transparent transparent transparent
-        var(--vue-data-ui-dag-tooltip-background, #e1e5e8);
-}
-
-.vue-ui-dag-tooltip[data-position='right']::after {
-    top: 50%;
-    transform: translateY(-50%);
-    left: -8px;
-    border-width: 8px 8px 8px 0;
-    border-color: transparent var(--vue-data-ui-dag-tooltip-background, #e1e5e8)
-        transparent transparent;
-}
-
-.vue-ui-dag-tooltip[data-position='center']::after {
-    display: none;
 }
 
 .vue-ui-dag-node-tooltip {
-    position: fixed;
+    --dag-tooltip-background: var(
+        --vue-data-ui-dag-node-tooltip-background,
+        #ffffff
+    );
+    --dag-tooltip-color: var(--vue-data-ui-dag-node-tooltip-color, #2d353c);
     pointer-events: auto;
-    background: var(--vue-data-ui-dag-node-tooltip-background, #ffffff);
-    color: var(--vue-data-ui-dag-node-tooltip-color, #2d353c);
-    box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.2);
     padding: 0.5rem 0.75rem;
+    z-index: 1000000;
+}
+
+:is(.vue-ui-dag-tooltip, .vue-ui-dag-node-tooltip) {
+    position: fixed;
+    background: var(--dag-tooltip-background);
+    color: var(--dag-tooltip-color);
+    box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.2);
     border-radius: 4px;
     font-size: 12px;
-    z-index: 1000000;
     backdrop-filter: blur(10px) !important;
     -webkit-backdrop-filter: blur(10px);
 }
 
-.vue-ui-dag-node-tooltip::after {
+:is(.vue-ui-dag-tooltip, .vue-ui-dag-node-tooltip)::after {
     content: '';
     position: absolute;
     left: 50%;
@@ -2438,42 +2375,51 @@ const annotationViewport = computed(() =>
     border-style: solid;
 }
 
-.vue-ui-dag-node-tooltip[data-position='top']::after {
+:is(.vue-ui-dag-tooltip, .vue-ui-dag-node-tooltip)[data-position='top']::after {
     bottom: -8px;
     border-width: 8px 8px 0 8px;
-    border-color: var(--vue-data-ui-dag-node-tooltip-background, #ffffff)
-        transparent transparent transparent;
+    border-color: var(--dag-tooltip-background) transparent transparent
+        transparent;
 }
 
-.vue-ui-dag-node-tooltip[data-position='bottom']::after {
+:is(
+        .vue-ui-dag-tooltip,
+        .vue-ui-dag-node-tooltip
+    )[data-position='bottom']::after {
     top: -8px;
     border-width: 0 8px 8px 8px;
-    border-color: transparent transparent
-        var(--vue-data-ui-dag-node-tooltip-background, #ffffff) transparent;
+    border-color: transparent transparent var(--dag-tooltip-background)
+        transparent;
 }
 
-.vue-ui-dag-node-tooltip[data-position='left']::after {
+:is(
+        .vue-ui-dag-tooltip,
+        .vue-ui-dag-node-tooltip
+    )[data-position='left']::after {
     top: 50%;
     transform: translateY(-50%);
     left: 100%;
     border-width: 8px 0 8px 8px;
     border-color: transparent transparent transparent
-        var(--vue-data-ui-dag-node-tooltip-background, #e1e5e8);
+        var(--dag-tooltip-background);
 }
 
-.vue-ui-dag-node-tooltip[data-position='right']::after {
+:is(
+        .vue-ui-dag-tooltip,
+        .vue-ui-dag-node-tooltip
+    )[data-position='right']::after {
     top: 50%;
-    left: -8px;
-    right: auto;
-    bottom: auto;
     transform: translateY(-50%);
+    left: -8px;
     border-width: 8px 8px 8px 0;
-    border-color: transparent
-        var(--vue-data-ui-dag-node-tooltip-background, #ffffff) transparent
+    border-color: transparent var(--dag-tooltip-background) transparent
         transparent;
 }
 
-.vue-ui-dag-node-tooltip[data-position='center']::after {
+:is(
+        .vue-ui-dag-tooltip,
+        .vue-ui-dag-node-tooltip
+    )[data-position='center']::after {
     display: none;
 }
 

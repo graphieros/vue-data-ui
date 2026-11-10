@@ -27,6 +27,57 @@ function createCases(env) {
     );
     const total = dataset.flatMap((d) => d.values).reduce((a, b) => a + b, 0);
     const average = total / dataset.length;
+    cases.HiddenSeriesSorting = async () => {
+        const config = (sorted) => ({
+            sorted,
+            autoSize: false,
+            useCssAnimation: false,
+            startAnimation: { show: false },
+            serieToggleAnimation: { show: false },
+        });
+        const { wrapper } = await mountSubject(VueUiDonut, {
+            props: {
+                dataset: [
+                    { name: 'Small', values: [10] },
+                    { name: 'Large', values: [100] },
+                    { name: 'Medium', values: [50] },
+                ],
+                config: config(true),
+            },
+        });
+        const state = wrapper.vm.$.setupState;
+        const largeItem = () =>
+            [
+                ...wrapper.element.querySelectorAll('[data-cy="legend-item"]'),
+            ].find((item) => item.textContent.includes('Large'));
+        await waitFor(() => expect(largeItem()).toBeTruthy());
+        largeItem().click();
+        await waitFor(() =>
+            expect(
+                state.legendSet.find((serie) => serie.name === 'Large')
+                    .isSegregated,
+            ).toBe(true),
+        );
+        for (const sorted of [false, true, false]) {
+            await wrapper.setProps({ config: config(sorted) });
+            await waitFor(() => {
+                expect(
+                    state.legendSet
+                        .filter((serie) => serie.isSegregated)
+                        .map((serie) => serie.name),
+                ).toEqual(['Large']);
+                expect(state.donutSet.map((serie) => serie.name)).not.toContain(
+                    'Large',
+                );
+            });
+        }
+        largeItem().click();
+        await waitFor(() =>
+            expect(
+                state.donutSet.find((serie) => serie.name === 'Large')?.value,
+            ).toBe(100),
+        );
+    };
     async function commonTest() {
         await testCommonFeatures({
             userOptions: true,
@@ -421,4 +472,9 @@ export const RendersPolarVariation = {
     name: 'renders polar variation',
     play: async (context) =>
         runScenario(context, createCases, 'RendersPolarVariation'),
+};
+export const HiddenSeriesSorting = {
+    name: 'legend selection stays on the same series after sorting changes',
+    play: async (context) =>
+        runScenario(context, createCases, 'HiddenSeriesSorting'),
 };

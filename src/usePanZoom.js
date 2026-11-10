@@ -1,14 +1,22 @@
-import { ref, onMounted, onUnmounted, watch, watchEffect, computed } from 'vue';
+import {
+    ref,
+    onMounted,
+    onBeforeUnmount,
+    watch,
+    watchEffect,
+    computed,
+    toValue,
+} from 'vue';
 
 /**
  * Controls an SVG viewBox with wheel, pointer, and touch pan/zoom gestures.
  * Call during setup and bind the returned viewBox to the rendered SVG.
  * @param {import('vue').Ref<SVGSVGElement | null>} svgRef - Gesture target.
  * @param {{x: number, y: number, width: number, height: number}} [initialViewBox] - Initial SVG coordinate bounds.
- * @param {number} [speed=1] - Zoom sensitivity.
+ * @param {import('vue').MaybeRefOrGetter<number>} [speed=1] - Zoom sensitivity.
  * @param {import('vue').Ref<boolean>} activeRef - Enables gesture handling.
  * @param {Function | null} [callbackOnZoom=null] - Called on zoom changes.
- * @returns {object} viewBox, scale, isZoom, resetZoom, setInitialViewBox, and zoomByFactor.
+ * @returns {object} viewBox, scale, isZoom, resetZoom, setInitialViewBox, zoomByFactor, and cancelAnimation.
  */
 export default function usePanZoom(
     svgRef,
@@ -37,6 +45,14 @@ export default function usePanZoom(
     );
 
     let zoomAnimationFrame = null;
+    let disposed = false;
+    let animationGeneration = 0;
+    function cancelAnimation() {
+        animationGeneration += 1;
+        if (zoomAnimationFrame !== null)
+            cancelAnimationFrame(zoomAnimationFrame);
+        zoomAnimationFrame = null;
+    }
 
     function getTouchDistance(touches) {
         if (touches.length < 2) return 0;
@@ -73,6 +89,7 @@ export default function usePanZoom(
     }
 
     function startPan(e) {
+        cancelAnimation();
         isPanning.value = true;
         const t = e.touches?.[0] || e;
         startClient.value = { x: t.clientX, y: t.clientY };
@@ -97,6 +114,7 @@ export default function usePanZoom(
     }
 
     function zoom(event) {
+        cancelAnimation();
         callbackOnZoom && callbackOnZoom();
         event.preventDefault();
         const factor = event.deltaY > 0 ? 0.9 : 1.1;
@@ -106,12 +124,13 @@ export default function usePanZoom(
     function doubleClickZoom(event) {
         event.preventDefault();
         const cursorPoint = toSvgPoint(event);
-        const factor = 1.5 * (1 + speed / 100);
+        const factor = 1.5 * (1 + toValue(speed) / 100);
         animateZoom(factor, cursorPoint);
     }
 
     function animateZoom(factor, cursorPoint) {
-        if (zoomAnimationFrame) cancelAnimationFrame(zoomAnimationFrame);
+        cancelAnimation();
+        const generation = animationGeneration;
         const startScale = scale.value;
         const targetScale = startScale * factor;
         let t0 = null;
@@ -120,6 +139,7 @@ export default function usePanZoom(
         const ease = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
 
         const step = (ts) => {
+            if (disposed || generation !== animationGeneration) return;
             if (t0 == null) t0 = ts;
             const p = Math.min((ts - t0) / duration, 1);
             const desiredScale =
@@ -134,7 +154,7 @@ export default function usePanZoom(
             }
         };
 
-        requestAnimationFrame(step);
+        zoomAnimationFrame = requestAnimationFrame(step);
     }
 
     function applyZoom(zoomFactor, cursorPoint) {
@@ -152,6 +172,7 @@ export default function usePanZoom(
     }
 
     function handleTouchStart(event) {
+        cancelAnimation();
         if (event.touches.length === 2) {
             isPinching.value = true;
             pinchStartDist.value = getTouchDistance(event.touches);
@@ -196,18 +217,21 @@ export default function usePanZoom(
     }
 
     function resetZoom(animated = false) {
+        cancelAnimation();
         if (!animated) {
             viewBox.value = { ...initial.value };
             scale.value = 1;
             return;
         }
 
+        const generation = animationGeneration;
         const from = { ...viewBox.value };
         const fromScale = scale.value;
         const duration = 300;
         let t0 = null;
 
         const step = (ts) => {
+            if (disposed || generation !== animationGeneration) return;
             if (t0 == null) t0 = ts;
             const p = Math.min((ts - t0) / duration, 1);
             viewBox.value = {
@@ -217,12 +241,13 @@ export default function usePanZoom(
                 height: from.height + (initial.value.height - from.height) * p,
             };
             scale.value = fromScale + (1 - fromScale) * p;
-            if (p < 1) requestAnimationFrame(step);
+            zoomAnimationFrame = p < 1 ? requestAnimationFrame(step) : null;
         };
-        requestAnimationFrame(step);
+        zoomAnimationFrame = requestAnimationFrame(step);
     }
 
     function setInitialViewBox(box, opts = {}) {
+        cancelAnimation();
         const { overwriteCurrentIfNotZoomed = true } = opts;
         const wasZoomed =
             viewBox.value.x !== initial.value.x ||
@@ -257,6 +282,8 @@ export default function usePanZoom(
     }
 
     function removeEventListeners() {
+        endPan();
+        isPinching.value = false;
         const svg = svgRef.value;
         if (!svg) return;
 
@@ -279,7 +306,9 @@ export default function usePanZoom(
         if (!activeRef || activeRef.value) addEventListeners();
     });
 
-    onUnmounted(() => {
+    onBeforeUnmount(() => {
+        disposed = true;
+        cancelAnimation();
         removeEventListeners();
         svgRef.value?.removeAttribute('data-vdui-pan-zoom');
     });
@@ -287,7 +316,10 @@ export default function usePanZoom(
     watchEffect(() => {
         if (!activeRef) return;
         if (activeRef.value) addEventListeners();
-        else removeEventListeners();
+        else {
+            cancelAnimation();
+            removeEventListeners();
+        }
         return () => removeEventListeners();
     });
 
@@ -303,6 +335,7 @@ export default function usePanZoom(
             x: viewBox.value.x + viewBox.value.width / 2,
             y: viewBox.value.y + viewBox.value.height / 2,
         };
+        cancelAnimation();
         if (animated) {
             animateZoom(factor, center);
         } else {
@@ -313,6 +346,7 @@ export default function usePanZoom(
     return {
         viewBox,
         resetZoom,
+        cancelAnimation,
         isZoom,
         setInitialViewBox,
         scale,

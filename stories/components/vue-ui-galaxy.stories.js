@@ -1,4 +1,4 @@
-import { expect, waitFor } from 'storybook/test';
+import { expect, waitFor, fireEvent } from 'storybook/test';
 import {
     scenarioRender,
     runScenario,
@@ -136,6 +136,67 @@ function createCases(env) {
             }
         }
     };
+    cases.LiveUpdates = async () => {
+        const data = [
+            { id: 'a', name: 'A', values: [60] },
+            { id: 'b', name: 'B', values: [30] },
+            { id: 'c', name: 'C', values: [10] },
+            { id: 'zero', name: 'Zero', values: [0] },
+        ];
+        const base = {
+            a11y: { includeTable: true },
+            style: { chart: { tooltip: { show: false } } },
+        };
+        const { wrapper } = await mountSubject(VueUiGalaxy, {
+            props: { dataset: data, config: base },
+        });
+        const svg = wrapper.find('[data-cy="galaxy-svg"]').element;
+        svg.focus();
+        await fireEvent.keyDown(svg, { key: 'ArrowRight' });
+        await fireEvent.keyDown(svg, { key: 'Enter' });
+        expect(wrapper.emitted('selectDatapoint')[0][0].name).toBe('C');
+        const ids = wrapper
+            .findAll('[data-cy="tooltip-trap"]')
+            .map((trap) => trap.attributes('data-a11y-serie-id'));
+        wrapper.vm.hideSeries('B');
+        await wrapper.setProps({
+            config: {
+                ...base,
+                customPalette: ['#ff0000', '#00ff00', '#0000ff'],
+            },
+        });
+        await waitFor(() =>
+            expect(wrapper.findAll('[data-cy="tooltip-trap"]')).toHaveLength(2),
+        );
+        expect(
+            wrapper
+                .findAll('[data-cy="tooltip-trap"]')
+                .map((trap) => trap.attributes('data-a11y-serie-id')),
+        ).toEqual([ids[0], ids[2]]);
+        expect(
+            wrapper.findAll('.sr-only tbody th').map((th) => th.text()),
+        ).toEqual(['C', 'Zero', 'A']);
+        await wrapper.setProps({
+            config: {
+                ...base,
+                loading: true,
+                skeletonDataset: [{ name: 'Skeleton', values: [1] }],
+            },
+        });
+        await waitFor(() => expect(wrapper.classes()).toContain('loading'));
+        await wrapper.setProps({
+            config: {
+                ...base,
+                loading: true,
+                style: { chart: { color: '#abcdef' } },
+            },
+        });
+        expect(wrapper.classes()).toContain('loading');
+        expect(wrapper.find('[data-cy="user-options"]').exists()).toBe(false);
+        await wrapper.setProps({ config: base });
+        await waitFor(() => expect(wrapper.classes()).not.toContain('loading'));
+        expect(wrapper.findAll('[data-cy="tooltip-trap"]')).toHaveLength(2);
+    };
     return {
         cases,
         hooks,
@@ -152,4 +213,9 @@ export const Renders = {
 export const Emits = {
     name: 'emits',
     play: async (context) => runScenario(context, createCases, 'Emits'),
+};
+
+export const LiveUpdates = {
+    name: 'preserves selection and hidden series through live updates',
+    play: async (context) => runScenario(context, createCases, 'LiveUpdates'),
 };

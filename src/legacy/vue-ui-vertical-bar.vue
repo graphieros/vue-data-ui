@@ -468,6 +468,7 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    ro?.disconnect();
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);

@@ -19,7 +19,6 @@ import {
     onMounted,
     reactive,
     ref,
-    shallowRef,
     toRefs,
     watch,
     watchEffect,
@@ -34,7 +33,6 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    functionReturnsString,
     getMissingDatasetAttributes,
     interpolateColorHex,
     isFunction,
@@ -47,17 +45,16 @@ import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
 import { useLoading } from '../useLoading';
-import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useTimeLabels } from '../useTimeLabels';
-import { useThemeCheck } from '../useThemeCheck';
 import { useChartExport } from '../useChartExport';
 import { useTableResponsive } from '../useTableResponsive';
 import { useUserOptionState } from '../useUserOptionState';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useSvgLabelLayout } from '../useSvgLabelLayout';
-import img from '../img';
+import { createChartImageGetter } from '../chartImage';
+import { resolveChartConfig } from '../resolveChartConfig';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_heatmap.json';
 import vFitText from '../directives/vFitText';
@@ -81,7 +78,6 @@ const BaseDraggableDialog = defineAsyncComponent(
 );
 
 const { vue_ui_heatmap: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -100,14 +96,7 @@ const props = defineProps({
 
 const emit = defineEmits(['selectDatapoint', 'copyAlt']);
 
-const isDataset = computed({
-    get() {
-        return !!props.dataset && props.dataset.length;
-    },
-    set(bool) {
-        return bool;
-    },
-});
+const isDataset = computed(() => !!props.dataset?.length);
 
 const uid = ref(createUid());
 const heatmapChart = ref(null);
@@ -118,23 +107,19 @@ const selectedClone = ref(null);
 const step = ref(0);
 const tableContainer = ref(null);
 const titleStep = ref(0);
-const datapoints = ref(null);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 
 const chartTitle = ref(null);
 const noTitle = ref(null);
-const legendRight = ref(null);
 
 const yAxisLabels = ref(null);
-const yAxisSumRects = ref(null);
 
 const xAxisLabels = ref(null);
 const xAxisSums = ref(null);
-const xAxisSumRects = ref(null);
 
 const source = ref(null);
-const observedEl = shallowRef(null);
+let chartDisposed = false;
 
 const activeTooltipIndex = ref(null); // a11y
 const activeTooltipCellId = ref(null); // a11y
@@ -205,7 +190,7 @@ const skeletonConfig = computed(() => {
 });
 
 // v3 - Skeleton loader management
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
+const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
@@ -231,42 +216,8 @@ const { svgRef } = useChartAccessibility({
     config: FINAL_CONFIG.value.style.title,
 });
 
-function setVisibility(state) {
-    setUserOptionsVisibility(state);
-}
-
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-
-    let finalConfig = {};
-
-    const theme = mergedConfig.theme;
-
-    if (theme) {
-        if (!isThemeValid.value(mergedConfig)) {
-            warnInvalidTheme(mergedConfig);
-            finalConfig = mergedConfig;
-        } else {
-            const fused = useNestedProp({
-                userConfig: themes[theme] || props.config,
-                defaultConfig: mergedConfig,
-            });
-
-            finalConfig = {
-                ...useNestedProp({
-                    userConfig: props.config,
-                    defaultConfig: fused,
-                }),
-            };
-        }
-    } else {
-        finalConfig = mergedConfig;
-    }
-
-    return finalConfig;
+    return resolveChartConfig(props.config, DEFAULT_CONFIG, themes);
 }
 
 let previousStructuralConfig = stringifyStructuralConfig(props.config);
@@ -315,9 +266,6 @@ watch(
 watch(
     () => props.dataset,
     (newVal) => {
-        if (Array.isArray(newVal) && newVal.length > 0) {
-            manualLoading.value = false;
-        }
         prepareChart();
     },
     { deep: true },
@@ -353,6 +301,8 @@ watch(
     { immediate: true },
 );
 
+const tableOutline = computed(() => FINAL_CONFIG.value.table.td.outline);
+
 const breakpoint = computed(() => {
     return FINAL_CONFIG.value.table.responsiveBreakpoint;
 });
@@ -363,24 +313,26 @@ let resizeFrame = 0;
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
+function stopResponsive() {
+    cancelAnimationFrame(resizeFrame);
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+}
+
 function prepareChart() {
+    if (chartDisposed) return;
+    stopResponsive();
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiHeatmap',
             type: 'dataset',
             debug: debug.value,
         });
-        isDataset.value = false;
-        manualLoading.value = true; // v3
     }
 
-    // v3
-    if (!objectIsEmpty(props.dataset)) {
-        manualLoading.value = FINAL_CONFIG.value.loading;
-    }
-
-    if (FINAL_CONFIG.value.responsive) {
+    if (FINAL_CONFIG.value.responsive && heatmapChart.value) {
         const handleResize = () => {
+            if (chartDisposed || !FINAL_CONFIG.value.responsive) return;
             const { width, height } = useResponsive({
                 chart: heatmapChart.value,
                 title: FINAL_CONFIG.value.style.title.text
@@ -400,27 +352,16 @@ function prepareChart() {
             });
         };
 
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
         resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = heatmapChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
+        resizeObserver.value.observe(heatmapChart.value.parentNode);
     }
 }
 
 onBeforeUnmount(() => {
-    cancelAnimationFrame(resizeFrame);
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    chartDisposed = true;
+    stopResponsive();
+    xAxisLabelsRequestId += 1;
+    yAxisLabelsRequestId += 1;
 });
 
 onMounted(() => {
@@ -429,7 +370,8 @@ onMounted(() => {
 
 const maxX = computed(() => {
     return Math.max(
-        ...FINAL_DATASET.value.flatMap((el) => (el.values || []).length),
+        0,
+        ...FINAL_DATASET.value.map((el) => (el.values || []).length),
     );
 });
 
@@ -543,13 +485,11 @@ const drawingArea = computed(() => {
     };
 });
 
-const maxValue = computed(() => {
-    return Math.max(...FINAL_DATASET.value.flatMap((el) => el.values));
-});
-
-const minValue = computed(() => {
-    return Math.min(...FINAL_DATASET.value.flatMap((el) => el.values));
-});
+const allValues = computed(() =>
+    FINAL_DATASET.value.flatMap((row) => row.values || []),
+);
+const maxValue = computed(() => Math.max(...allValues.value));
+const minValue = computed(() => Math.min(...allValues.value));
 
 const colorScaleMax = computed(() => {
     return cfgCells.value.scaleMax !== null
@@ -563,11 +503,11 @@ const colorScaleMin = computed(() => {
         : minValue.value;
 });
 
-const average = computed(() => {
-    const allValues = FINAL_DATASET.value.flatMap((el) => el.values);
-    const sum = allValues.reduce((a, b) => a + b, 0);
-    return sum / allValues.length;
-});
+const average = computed(
+    () =>
+        allValues.value.reduce((sum, value) => sum + value, 0) /
+        allValues.value.length,
+);
 
 const yAxisTimeLabels = ref([]);
 const yAxisLabelsAreReady = ref(false);
@@ -654,80 +594,52 @@ function getLegendIndicatorTop(value) {
     return (1 - clampedRatio) * 100;
 }
 
-const dataLabels = computed(() => {
-    const yLabels = yAxisTimeLabels.value.map((y) => y.text);
-    const xLabels = xAxisTimeLabels.value.map((x) => x.text);
-    const hasCustomColorScale =
+function getTotals(values, counts) {
+    const minimum = Math.min(...values);
+    const maximum = Math.max(...values);
+    const custom =
         cfgCells.value.scaleMin !== null || cfgCells.value.scaleMax !== null;
+    return values.map((total, index) => ({
+        total,
+        proportion: isNaN(total / maximum) ? 0 : total / maximum,
+        color: getHeatmapColor(
+            total,
+            custom ? colorScaleMin.value * counts[index] : minimum,
+            custom ? colorScaleMax.value * counts[index] : maximum,
+        ),
+    }));
+}
 
-    const _yTotals = FINAL_DATASET.value.map((ds) =>
-        ds.values.reduce((a, b) => a + b, 0),
-    );
-    const yCellCounts = FINAL_DATASET.value.map((ds) =>
-        Math.max(1, ds.values.length),
-    );
-
-    const maxYTotal = Math.max(..._yTotals);
-    const minYTotal = Math.min(..._yTotals);
-
-    const _xTotals = [];
-    const xCellCounts = [];
-
-    for (let i = 0; i < maxX.value; i += 1) {
-        let columnTotal = 0;
-        let columnCellCount = 0;
-
-        FINAL_DATASET.value.forEach((ds) => {
-            if (i < ds.values.length) {
-                columnTotal += ds.values[i] || 0;
-                columnCellCount += 1;
-            }
-        });
-
-        _xTotals.push(columnTotal);
-        xCellCounts.push(Math.max(1, columnCellCount));
+const totals = computed(() => {
+    const rowTotals = [];
+    const rowCounts = [];
+    const columnTotals = Array(maxX.value).fill(0);
+    const columnCounts = Array(maxX.value).fill(0);
+    for (const row of FINAL_DATASET.value) {
+        const values = row.values || [];
+        rowTotals.push(values.reduce((sum, value) => sum + value, 0));
+        rowCounts.push(Math.max(1, values.length));
+        for (let index = 0; index < values.length; index += 1) {
+            columnTotals[index] += values[index] || 0;
+            columnCounts[index] += 1;
+        }
     }
-
-    const maxXTotal = Math.max(..._xTotals);
-    const minXTotal = Math.min(..._xTotals);
-
     return {
-        yTotals: _yTotals.map((rowTotal, rowIndex) => {
-            const proportion = isNaN(rowTotal / maxYTotal)
-                ? 0
-                : rowTotal / maxYTotal;
-            const cellCount = yCellCounts[rowIndex];
-            const totalScaleMin = colorScaleMin.value * cellCount;
-            const totalScaleMax = colorScaleMax.value * cellCount;
-
-            return {
-                total: rowTotal,
-                proportion,
-                color: hasCustomColorScale
-                    ? getHeatmapColor(rowTotal, totalScaleMin, totalScaleMax)
-                    : getHeatmapColor(rowTotal, minYTotal, maxYTotal),
-            };
-        }),
-        xTotals: _xTotals.map((columnTotal, columnIndex) => {
-            const proportion = isNaN(columnTotal / maxXTotal)
-                ? 0
-                : columnTotal / maxXTotal;
-            const cellCount = xCellCounts[columnIndex];
-            const totalScaleMin = colorScaleMin.value * cellCount;
-            const totalScaleMax = colorScaleMax.value * cellCount;
-
-            return {
-                total: columnTotal,
-                proportion,
-                color: hasCustomColorScale
-                    ? getHeatmapColor(columnTotal, totalScaleMin, totalScaleMax)
-                    : getHeatmapColor(columnTotal, minXTotal, maxXTotal),
-            };
-        }),
-        yLabels,
-        xLabels: xLabels.slice(0, maxX.value),
+        yTotals: getTotals(rowTotals, rowCounts),
+        xTotals: getTotals(
+            columnTotals,
+            columnCounts.map((count) => Math.max(1, count)),
+        ),
     };
 });
+
+const dataLabels = computed(() => ({
+    ...totals.value,
+    yLabels: yAxisTimeLabels.value.map((label) => label.text),
+    xLabels: xAxisTimeLabels.value
+        .slice(0, maxX.value)
+        .map((label) => label.text),
+}));
 
 const mutableDataset = computed(() => {
     FINAL_DATASET.value.forEach((ds, i) => {
@@ -748,54 +660,29 @@ const mutableDataset = computed(() => {
     return FINAL_DATASET.value.map((ds, d) => {
         return {
             ...ds,
-            temperatures: (ds.values || []).map((v, i) => {
-                if (v >= average.value) {
-                    return {
-                        side: 'up',
-                        color: getHeatmapColor(
-                            v,
-                            colorScaleMin.value,
-                            colorScaleMax.value,
-                        ),
-                        ratio:
-                            Math.abs(
-                                Math.abs(v - average.value) /
-                                    Math.abs(maxValue.value - average.value),
-                            ) > 1
-                                ? 1
-                                : Math.abs(
-                                      Math.abs(v - average.value) /
-                                          Math.abs(
-                                              maxValue.value - average.value,
-                                          ),
-                                  ),
-                        value: v,
-                        yAxisName: dataLabels.value.yLabels[d],
-                        xAxisName: dataLabels.value.xLabels[i],
-                        id: `vue-data-ui-heatmap-cell-${createUid()}`,
-                    };
-                } else {
-                    return {
-                        side: 'down',
-                        ratio:
-                            Math.abs(
-                                1 - Math.abs(v) / Math.abs(average.value),
-                            ) > 1
-                                ? 1
-                                : Math.abs(
-                                      1 - Math.abs(v) / Math.abs(average.value),
-                                  ),
-                        color: getHeatmapColor(
-                            v,
-                            colorScaleMin.value,
-                            colorScaleMax.value,
-                        ),
-                        value: v,
-                        yAxisName: dataLabels.value.yLabels[d],
-                        xAxisName: dataLabels.value.xLabels[i],
-                        id: `vue-data-ui-heatmap-cell-${createUid()}`,
-                    };
-                }
+            temperatures: (ds.values || []).map((value, columnIndex) => {
+                const up = value >= average.value;
+                const denominator = up
+                    ? Math.abs(maxValue.value - average.value)
+                    : Math.abs(average.value);
+                const ratio = up
+                    ? denominator === 0
+                        ? 0
+                        : Math.abs(value - average.value) / denominator
+                    : Math.abs(1 - Math.abs(value) / denominator);
+                return {
+                    side: up ? 'up' : 'down',
+                    color: getHeatmapColor(
+                        value,
+                        colorScaleMin.value,
+                        colorScaleMax.value,
+                    ),
+                    ratio: Math.min(1, ratio),
+                    value,
+                    yAxisName: dataLabels.value.yLabels[d],
+                    xAxisName: dataLabels.value.xLabels[columnIndex],
+                    id: `vue-data-ui-heatmap-cell-${uid.value}-${d}-${columnIndex}`,
+                };
             }),
         };
     });
@@ -852,6 +739,16 @@ function reportHide(idx, didHide) {
     hideFlags[idx] = didHide;
 }
 
+watch(
+    [() => FINAL_DATASET.value, maxX, () => cfgCells.value.value],
+    () => {
+        const size = rows.value * maxX.value || 1;
+        rotateFlags.splice(0, rotateFlags.length, ...Array(size).fill(false));
+        hideFlags.splice(0, hideFlags.length, ...Array(size).fill(false));
+    },
+    { deep: true },
+);
+
 const hoveredValue = ref(null);
 const dataTooltipSlot = ref(null);
 
@@ -885,6 +782,7 @@ function useTooltip(
     y,
     triggerMode = 'pointer',
     flatIndex = null,
+    notify = true,
 ) {
     const w = drawingArea.value.cellSize.width - cellGap.value;
     const dp = {
@@ -894,14 +792,12 @@ function useTooltip(
         width: drawingArea.value.cellSize.width - cellGap.value,
         height: drawingArea.value.cellSize.height - cellGap.value,
     };
-    if (FINAL_CONFIG.value.events.datapointEnter) {
+    if (notify && FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({
             datapoint: dp,
             seriesIndex,
         });
     }
-
-    if (!mutableConfig.value.showTooltip) return;
 
     tooltipTriggerMode.value = triggerMode;
     activeTooltipIndex.value = flatIndex;
@@ -920,28 +816,22 @@ function useTooltip(
         config: FINAL_CONFIG.value,
     };
 
-    isTooltip.value = true;
+    isTooltip.value = mutableConfig.value.showTooltip;
+    if (!mutableConfig.value.showTooltip) return;
     let html = '';
 
     const customFormat = FINAL_CONFIG.value.style.tooltip.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                datapoint,
-                seriesIndex,
-                series: mutableDataset.value,
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            datapoint,
-            seriesIndex,
-            series: mutableDataset.value,
-            config: FINAL_CONFIG.value,
-        });
+    const formatted = isFunction(customFormat)
+        ? customFormat({
+              datapoint,
+              seriesIndex,
+              series: mutableDataset.value,
+              config: FINAL_CONFIG.value,
+          })
+        : undefined;
+    if (typeof formatted === 'string') {
+        tooltipContent.value = formatted;
     } else {
         html += `<div data-cy="heatmap-tootlip-name">${yAxisName} ${xAxisName ? (yAxisName ? ` - ${xAxisName}` : `${xAxisName}`) : ''}</div>`;
         html += `<div data-cy="heatmap-tooltip-value" style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor};font-weight:bold;display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center"><span style="color:${getHeatmapColor(value, colorScaleMin.value, colorScaleMax.value)}">⬤</span><span>${
@@ -984,6 +874,27 @@ function onTrapLeave({ datapoint, seriesIndex }) {
     selectedClone.value = null;
 }
 
+watch(cells, (entries) => {
+    if (hoveredCell.value === undefined) return;
+    const index = entries.findIndex(
+        (entry) => entry.datapoint.id === hoveredCell.value,
+    );
+    if (index === -1) {
+        clearCellSelection();
+        return;
+    }
+    const entry = entries[index];
+    useTooltip(
+        entry.datapoint,
+        entry.rowIndex,
+        entry.selectionX,
+        entry.selectionY,
+        tooltipTriggerMode.value,
+        index,
+        false,
+    );
+});
+
 function getRowTotal(index) {
     return applyDataLabel(
         cfgCells.value.value.formatter,
@@ -1012,34 +923,36 @@ function getcolumnTotal(index) {
     );
 }
 
-const table = computed(() => {
-    const head = FINAL_DATASET.value.map((ds) => {
-        return {
-            name: ds.name,
-        };
-    });
-    const body = FINAL_DATASET.value.map((ds) => ds.values);
-    return { head, body };
-});
+const table = computed(() => ({
+    head: FINAL_DATASET.value.map((row) => ({ name: row.name })),
+    body: FINAL_DATASET.value.map((row) => row.values),
+}));
+const tableRows = computed(() =>
+    dataLabels.value.xLabels.map((label, index) => [
+        label,
+        ...FINAL_DATASET.value.map((row) => row.values?.[index]),
+    ]),
+);
+const formattedTableRows = computed(() =>
+    tableRows.value.map((row) => [
+        row[0],
+        ...row.slice(1).map((value) =>
+            isNaN(value)
+                ? '-'
+                : dataLabel({
+                      p: cfgLabels.value.prefix,
+                      v: value,
+                      s: cfgLabels.value.suffix,
+                      r: FINAL_CONFIG.value.table.td.roundingValue,
+                  }),
+        ),
+    ]),
+);
 
 function generateCsv(callback = null) {
     nextTick(() => {
-        const labels = [
-            '',
-            ...FINAL_DATASET.value.map((ds, i) => {
-                return ds.name;
-            }),
-        ];
-
-        const values = [];
-
-        for (let i = 0; i < dataLabels.value.xLabels.length; i += 1) {
-            const row = [dataLabels.value.xLabels[i]];
-            for (let j = 0; j < FINAL_DATASET.value.length; j += 1) {
-                row.push([FINAL_DATASET.value[j].values[i]]);
-            }
-            values.push(row);
-        }
+        const labels = ['', ...table.value.head.map((column) => column.name)];
+        const values = tableRows.value;
 
         const tableXls = [
             [FINAL_CONFIG.value.style.title.text],
@@ -1097,25 +1010,10 @@ function getData() {
     return mutableDataset.value;
 }
 
-async function getImage({ scale = 2 } = {}) {
-    if (!heatmapChart.value) return;
-    const { width, height } = heatmapChart.value.getBoundingClientRect();
-    const aspectRatio = width / height;
-    const { imageUri, base64 } = await img({
-        domElement: heatmapChart.value,
-        base64: true,
-        img: true,
-        scale,
-    });
-    return {
-        imageUri,
-        base64,
-        title: FINAL_CONFIG.value.style.title.text,
-        width,
-        height,
-        aspectRatio,
-    };
-}
+const getImage = createChartImageGetter(
+    heatmapChart,
+    () => FINAL_CONFIG.value.style.title.text,
+);
 
 const slicer = computed(() => {
     return {
@@ -1196,9 +1094,9 @@ watch(
         if (FINAL_CONFIG.value.table.show) return;
         if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
             await nextTick();
-            tableUnit.value.open();
+            tableUnit.value?.open?.();
         } else {
-            if ('close' in tableUnit.value) {
+            if (tableUnit.value && 'close' in tableUnit.value) {
                 tableUnit.value.close();
             }
         }
@@ -1216,6 +1114,24 @@ function closeTable() {
         userOptionsRef.value.setTableIconState(false);
     }
 }
+
+function formatLegendValue(value) {
+    return applyDataLabel(
+        cfgCells.value.value.formatter,
+        checkNaN(value),
+        dataLabel({
+            p: cfgLabels.value.prefix,
+            v: checkNaN(value),
+            s: cfgLabels.value.suffix,
+            r: FINAL_CONFIG.value.style.legend.roundingValue,
+        }),
+    );
+}
+const legendLabels = computed(() => ({
+    min: formatLegendValue(colorScaleMin.value),
+    max: formatLegendValue(colorScaleMax.value),
+    hovered: formatLegendValue(hoveredValue.value),
+}));
 
 const svgBg = computed(() => FINAL_CONFIG.value.style.backgroundColor);
 const svgTitle = computed(() => FINAL_CONFIG.value.style.title);
@@ -1286,6 +1202,18 @@ function onSvgBlur() {
     isFocus.value = false;
 }
 
+function showKeyboardCell(entry, flatIndex) {
+    const area = drawingArea.value;
+    useTooltip(
+        entry.cell,
+        entry.rowIndex,
+        area.left + area.cellSize.width * entry.columnIndex,
+        area.top + area.cellSize.height * entry.rowIndex,
+        'keyboard',
+        flatIndex,
+    );
+}
+
 function onSvgKeydown(event) {
     if (!svgRef.value || isAnnotator.value) return;
     if (document.activeElement !== svgRef.value) return;
@@ -1326,100 +1254,13 @@ function onSvgKeydown(event) {
         return;
     }
 
-    let currentEntry =
-        activeTooltipIndex.value === null
+    const currentEntry =
+        (activeTooltipIndex.value === null
             ? null
-            : a11yCells.value[activeTooltipIndex.value];
-
+            : a11yCells.value[activeTooltipIndex.value]) ??
+        a11yCells.value.find((entry) => entry.cell.id === hoveredCell.value);
     if (!currentEntry) {
-        const hoveredFlatIndex = hoveredCell.value
-            ? a11yCells.value.findIndex(
-                  (entry) => entry.cell.id === hoveredCell.value,
-              )
-            : null;
-
-        const hasValidHoveredIndex =
-            hoveredFlatIndex !== null &&
-            hoveredFlatIndex >= 0 &&
-            hoveredFlatIndex < a11yCells.value.length;
-
-        if (hasValidHoveredIndex) {
-            const hoveredEntry = a11yCells.value[hoveredFlatIndex];
-            if (!hoveredEntry) return;
-
-            let nextRowIndex = hoveredEntry.rowIndex;
-            let nextColumnIndex = hoveredEntry.columnIndex;
-
-            if (isRightKey) {
-                nextColumnIndex += 1;
-            } else if (isLeftKey) {
-                nextColumnIndex -= 1;
-            } else if (isDownKey) {
-                nextRowIndex += 1;
-            } else if (isUpKey) {
-                nextRowIndex -= 1;
-            }
-
-            const rowCount = a11yGrid.value.rowCount;
-            if (rowCount <= 0) return;
-
-            if (nextRowIndex < 0) {
-                nextRowIndex = rowCount - 1;
-            }
-
-            if (nextRowIndex >= rowCount) {
-                nextRowIndex = 0;
-            }
-
-            const targetRow = mutableDataset.value[nextRowIndex];
-            if (!targetRow || !targetRow.temperatures.length) return;
-
-            const targetColumnCount = targetRow.temperatures.length;
-
-            if (nextColumnIndex < 0) {
-                nextColumnIndex = targetColumnCount - 1;
-            }
-
-            if (nextColumnIndex >= targetColumnCount) {
-                nextColumnIndex = 0;
-            }
-
-            const nextEntry = getCellEntry(nextRowIndex, nextColumnIndex);
-            if (!nextEntry) return;
-
-            const nextFlatIndex = getFlatIndexFromGridPosition(
-                nextRowIndex,
-                nextColumnIndex,
-            );
-            const x =
-                drawingArea.value.left +
-                drawingArea.value.cellSize.width * nextEntry.columnIndex;
-            const y =
-                drawingArea.value.top +
-                drawingArea.value.cellSize.height * nextEntry.rowIndex;
-
-            useTooltip(
-                nextEntry.cell,
-                nextEntry.rowIndex,
-                x,
-                y,
-                'keyboard',
-                nextFlatIndex,
-            );
-            return;
-        }
-
-        const firstEntry = a11yCells.value[0];
-        if (!firstEntry) return;
-
-        const x =
-            drawingArea.value.left +
-            drawingArea.value.cellSize.width * firstEntry.columnIndex;
-        const y =
-            drawingArea.value.top +
-            drawingArea.value.cellSize.height * firstEntry.rowIndex;
-
-        useTooltip(firstEntry.cell, firstEntry.rowIndex, x, y, 'keyboard', 0);
+        showKeyboardCell(a11yCells.value[0], 0);
         return;
     }
 
@@ -1468,48 +1309,16 @@ function onSvgKeydown(event) {
         nextRowIndex,
         nextColumnIndex,
     );
-    const x =
-        drawingArea.value.left +
-        drawingArea.value.cellSize.width * nextEntry.columnIndex;
-    const y =
-        drawingArea.value.top +
-        drawingArea.value.cellSize.height * nextEntry.rowIndex;
-
-    useTooltip(
-        nextEntry.cell,
-        nextEntry.rowIndex,
-        x,
-        y,
-        'keyboard',
-        nextFlatIndex,
-    );
+    showKeyboardCell(nextEntry, nextFlatIndex);
 }
 
-const a11yTable = computed(() => {
-    const headers = [
+const a11yTable = computed(() => ({
+    headers: [
         FINAL_CONFIG.value.table.colNames.xAxis,
-        ...FINAL_DATASET.value.map((ds) => ds.name),
-    ];
-
-    const rows = dataLabels.value.xLabels.map((label, rowIndex) => {
-        return [
-            label,
-            ...FINAL_DATASET.value.map((ds) => {
-                const value = ds.values?.[rowIndex];
-                return isNaN(value)
-                    ? '-'
-                    : dataLabel({
-                          p: cfgLabels.value.prefix,
-                          v: value,
-                          s: cfgLabels.value.suffix,
-                          r: FINAL_CONFIG.value.table.td.roundingValue,
-                      });
-            }),
-        ];
-    });
-
-    return { headers, rows };
-});
+        ...table.value.head.map((column) => column.name),
+    ],
+    rows: formattedTableRows.value,
+}));
 
 const a11yGrid = computed(() => {
     const rowCount = mutableDataset.value.length;
@@ -1575,10 +1384,10 @@ watch(
         :class="`vue-data-ui-component vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.backgroundColor}`"
         :id="`heatmap__${uid}`"
-        @mouseenter="() => setVisibility(true)"
+        @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="
             () => {
-                setVisibility(false);
+                setUserOptionsVisibility(false);
                 if (!isFocus) {
                     clearCellSelection();
                 }
@@ -1591,7 +1400,7 @@ watch(
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -1766,7 +1575,7 @@ watch(
 
                 <!-- X AXIS SUM RECTS -->
                 <template v-if="cfgCells.columnTotal.color.show">
-                    <g ref="xAxisSumRects">
+                    <g>
                         <rect
                             v-for="(_, i) in dataLabels.xTotals"
                             :x="
@@ -1809,7 +1618,7 @@ watch(
                 </template>
 
                 <!-- DATAPOINTS -->
-                <g ref="datapoints">
+                <g>
                     <g v-for="cell in cells">
                         <rect
                             data-cy="cell-underlayer"
@@ -1905,7 +1714,7 @@ watch(
                 </g>
 
                 <!-- Y AXIS SUM RECTS -->
-                <g ref="yAxisSumRects" v-if="cfgCells.rowTotal.color.show">
+                <g v-if="cfgCells.rowTotal.color.show">
                     <template v-for="(_, i) in mutableDataset">
                         <rect
                             :x="drawingArea.left"
@@ -2128,7 +1937,6 @@ watch(
 
             <!-- LEGEND RIGHT -->
             <div
-                ref="legendRight"
                 v-if="FINAL_CONFIG.style.legend.show"
                 class="vue-ui-heatmap-legend-right"
                 :style="{
@@ -2145,18 +1953,7 @@ watch(
                         color: FINAL_CONFIG.style.legend.color,
                     }"
                 >
-                    {{
-                        applyDataLabel(
-                            cfgCells.value.formatter,
-                            checkNaN(colorScaleMax),
-                            dataLabel({
-                                p: cfgLabels.prefix,
-                                v: checkNaN(colorScaleMax),
-                                s: cfgLabels.suffix,
-                                r: FINAL_CONFIG.style.legend.roundingValue,
-                            }),
-                        )
-                    }}
+                    {{ legendLabels.max }}
                 </div>
                 <!-- LEGEND GAUGE -->
                 <div class="vue-ui-heatmap-legend-gauge-right">
@@ -2170,19 +1967,7 @@ watch(
                         <div
                             class="vue-ui-heatmap-gauge-indicator"
                             v-show="![undefined, null].includes(hoveredValue)"
-                            :data-value="
-                                applyDataLabel(
-                                    cfgCells.value.formatter,
-                                    checkNaN(hoveredValue),
-                                    dataLabel({
-                                        p: cfgLabels.prefix,
-                                        v: checkNaN(hoveredValue),
-                                        s: cfgLabels.suffix,
-                                        r: FINAL_CONFIG.style.legend
-                                            .roundingValue,
-                                    }),
-                                )
-                            "
+                            :data-value="legendLabels.hovered"
                             :style="{
                                 position: 'absolute',
                                 width: '100%',
@@ -2214,19 +1999,7 @@ watch(
                                 class="vue-ui-heatmap-gauge-indicator-value"
                                 data-cy="gauge-indicator"
                             >
-                                {{
-                                    applyDataLabel(
-                                        cfgCells.value.formatter,
-                                        checkNaN(hoveredValue),
-                                        dataLabel({
-                                            p: cfgLabels.prefix,
-                                            v: checkNaN(hoveredValue),
-                                            s: cfgLabels.suffix,
-                                            r: FINAL_CONFIG.style.legend
-                                                .roundingValue,
-                                        }),
-                                    )
-                                }}
+                                {{ legendLabels.hovered }}
                             </div>
                         </div>
                     </div>
@@ -2241,18 +2014,7 @@ watch(
                         color: FINAL_CONFIG.style.legend.color,
                     }"
                 >
-                    {{
-                        applyDataLabel(
-                            cfgCells.value.formatter,
-                            checkNaN(colorScaleMin),
-                            dataLabel({
-                                p: cfgLabels.prefix,
-                                v: checkNaN(colorScaleMin),
-                                s: cfgLabels.suffix,
-                                r: FINAL_CONFIG.style.legend.roundingValue,
-                            }),
-                        )
-                    }}
+                    {{ legendLabels.min }}
                 </div>
             </div>
 
@@ -2412,7 +2174,7 @@ watch(
                                     <th
                                         align="right"
                                         :style="`outline:${FINAL_CONFIG.table.th.outline};padding-right:6px`"
-                                        v-for="(th, i) in dataset"
+                                        v-for="(th, i) in table.head"
                                         :data-cy="`heatmap-table-col-name-${i}`"
                                     >
                                         {{ th.name }}
@@ -2455,8 +2217,8 @@ watch(
                                     </td>
                                     <td
                                         class="vue-ui-data-table__tbody__td"
-                                        v-for="(trData, j) in dataset"
-                                        :data-cell="dataset[j].name"
+                                        v-for="(trData, j) in table.head"
+                                        :data-cell="trData.name"
                                         :style="`outline:${FINAL_CONFIG.table.td.outline}`"
                                     >
                                         <div
@@ -2469,17 +2231,7 @@ watch(
                                                 padding-right: 3px;
                                             "
                                         >
-                                            {{
-                                                isNaN(trData.values[i])
-                                                    ? '-'
-                                                    : dataLabel({
-                                                          p: cfgLabels.prefix,
-                                                          v: trData.values[i],
-                                                          s: cfgLabels.suffix,
-                                                          r: FINAL_CONFIG.table
-                                                              .td.roundingValue,
-                                                      })
-                                            }}
+                                            {{ formattedTableRows[i][j + 1] }}
                                         </div>
                                     </td>
                                 </tr>
@@ -2588,7 +2340,7 @@ caption {
         text-align: left;
     }
     tr {
-        outline: v-bind(tdo);
+        outline: v-bind(tableOutline);
     }
 
     td:first-child {

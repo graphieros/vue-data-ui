@@ -42,10 +42,8 @@ import {
     calcMarkerOffsetX,
     treeShake,
     createTSpansFromLineBreaksOnX,
-    checkNaN,
 } from '../lib.js';
-import { throttle } from '../canvas-lib';
-import { COMMON_RULES, useHints } from '../useHints';
+import { useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading.js';
 import { usePrinter } from '../usePrinter';
@@ -101,7 +99,6 @@ const isDataset = computed(() => {
 });
 
 const uid = ref(createUid());
-const details = ref(null);
 const step = ref(0);
 const gaugeChart = ref(null);
 const chartTitle = ref(null);
@@ -182,11 +179,6 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-        });
-    },
     skeletonDataset: props.config?.skeletonDataset ?? {
         value: 0,
         series: [
@@ -214,22 +206,13 @@ watch(
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
+        validateDataset();
         titleStep.value += 1;
     },
     { deep: true },
 );
 
-watch(
-    () => props.dataset,
-    (ds) => {
-        prepareChart();
-        if (ds && Object.keys(ds).length > 0) {
-            manualLoading.value = FINAL_CONFIG.value?.loading ?? false;
-        }
-    },
-    { deep: true, immediate: false },
-);
+watch(() => props.dataset, validateDataset, { deep: true });
 
 function prepareConfig() {
     return resolveChartConfigWithPalette(props.config, DEFAULT_CONFIG, themes);
@@ -250,7 +233,10 @@ const customPalette = computed(() => {
 });
 
 const mutableDataset = computed(() => {
-    if (objectIsEmpty(FINAL_DATASET.value.series || {})) {
+    if (
+        !Array.isArray(FINAL_DATASET.value.series) ||
+        !FINAL_DATASET.value.series.length
+    ) {
         return {
             value: 0,
             series: [
@@ -284,114 +270,100 @@ const mutableDataset = computed(() => {
     };
 });
 
-const baseSize = ref(512);
-
-const svg = ref({
-    height: 358.4,
-    width: baseSize.value,
-    top: 0,
-    bottom: 358.4,
-    centerX: 179.2,
-    centerY: baseSize.value / 2,
-    labelFontSize: 18,
-    legendFontSize: cfgChart.value.legend.fontSize,
-    pointerRadius: cfgPointer.value.circle.radius,
-    trackSize: cfgLayout.value.track.size,
-    pointerSize: cfgPointer.value.size,
-    pointerStrokeWidth: cfgPointer.value.strokeWidth,
-    markerOffset: cfgMarkers.value.offsetY + 3,
-    segmentFontSize: cfgSegNames.value.fontSize,
+const baseSize = 512;
+const viewport = ref({ width: 512, height: 358.4 });
+const svg = computed(() => {
+    const responsive = FINAL_CONFIG.value.responsive;
+    const { width, height } = responsive
+        ? viewport.value
+        : { width: 512, height: 358.4 };
+    const size = Math.min(width, height);
+    const scale = (source, relator = size, threshold = 2) =>
+        translateSize({
+            relator,
+            adjuster: baseSize,
+            source,
+            threshold,
+            fallback: threshold,
+        });
+    return {
+        width,
+        height,
+        top: 0,
+        bottom: height,
+        centerX: responsive ? width / 2 : 179.2,
+        centerY: responsive ? (baseSize / 2 / 358.4) * height : baseSize / 2,
+        labelFontSize: responsive ? Math.max(10, (18 / baseSize) * size) : 18,
+        legendFontSize: responsive
+            ? Math.max(14, (cfgChart.value.legend.fontSize / baseSize) * size)
+            : cfgChart.value.legend.fontSize,
+        pointerRadius: responsive
+            ? (cfgPointer.value.circle.radius / baseSize) * size
+            : cfgPointer.value.circle.radius,
+        trackSize: responsive
+            ? (cfgLayout.value.track.size / baseSize) * size
+            : cfgLayout.value.track.size,
+        pointerSize: cfgPointer.value.size,
+        pointerStrokeWidth: responsive
+            ? scale(cfgPointer.value.strokeWidth)
+            : cfgPointer.value.strokeWidth,
+        markerOffset: responsive
+            ? scale(cfgMarkers.value.offsetY + 3, Math.max(width, height))
+            : cfgMarkers.value.offsetY + 3,
+        segmentFontSize: responsive
+            ? scale(cfgSegNames.value.fontSize, size, 8)
+            : cfgSegNames.value.fontSize,
+    };
 });
-
-const max = ref(0);
-const min = ref(0);
-
+const bounds = computed(() => {
+    const values = mutableDataset.value.series.flatMap((s) => [
+        s.from || 0,
+        s.to || 0,
+    ]);
+    return { min: Math.min(...values), max: Math.max(...values) };
+});
+const min = computed(() => bounds.value.min);
+const max = computed(() => bounds.value.max);
 const shouldAnimate = computed(
     () => cfgChart.value.animation.use && !prefersReducedMotion.value,
 );
-
-const activeRating = ref(
-    shouldAnimate.value
-        ? Math.min(...FINAL_DATASET.value.series.map((s) => s.from))
-        : FINAL_DATASET.value.value,
+const targetRating = computed(() =>
+    Number.isFinite(FINAL_DATASET.value.value) ? FINAL_DATASET.value.value : 0,
 );
-
+const activeRating = ref(shouldAnimate.value ? min.value : targetRating.value);
 let animationFrame = null;
-
+let disposed = false;
 function stopAnimation() {
-    if (animationFrame !== null) {
-        cancelAnimationFrame(animationFrame);
-        animationFrame = null;
-    }
+    if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+    animationFrame = null;
 }
-
-watch(shouldAnimate, (animationEnabled) => {
-    if (!animationEnabled) {
-        stopAnimation();
-        activeRating.value = FINAL_DATASET.value.value;
-    }
-});
-
-watch(
-    () => FINAL_DATASET.value.value,
-    () => {
-        useAnimation(FINAL_DATASET.value.value);
-    },
+watch([targetRating, shouldAnimate, () => cfgChart.value.animation.speed], () =>
+    useAnimation(targetRating.value),
 );
-
+const progress = computed(() =>
+    max.value === min.value
+        ? 0
+        : (activeRating.value - min.value) / (max.value - min.value),
+);
+const pointerAngle = computed(() => Math.PI * progress.value + Math.PI);
 const pointer = computed(() => {
-    const x = svg.value.width / 2;
-    const y = arcSizeSource.value.base;
-    const angle =
-        Math.PI *
-            ((activeRating.value + 0 - min.value) / (max.value - min.value)) +
-        Math.PI;
+    const x = svg.value.width / 2,
+        y = arcSizeSource.value.base;
+    const length =
+        arcSizeSource.value.pointerSize * svg.value.pointerSize * 0.9;
     return {
         x1: x,
         y1: y,
-        x2:
-            x +
-            arcSizeSource.value.pointerSize *
-                svg.value.pointerSize *
-                0.9 *
-                Math.cos(angle),
-        y2:
-            y +
-            arcSizeSource.value.pointerSize *
-                svg.value.pointerSize *
-                0.9 *
-                Math.sin(angle),
+        x2: x + length * Math.cos(pointerAngle.value),
+        y2: y + length * Math.sin(pointerAngle.value),
     };
 });
-
 const pointyPointerPath = computed(() => {
-    const centerX = svg.value.width / 2;
-    const centerY = arcSizeSource.value.base;
-    const angle =
-        Math.PI *
-            ((activeRating.value + 0 - min.value) / (max.value - min.value)) +
-        Math.PI;
-    const tipX =
-        centerX +
-        arcSizeSource.value.pointerSize *
-            svg.value.pointerSize *
-            0.9 *
-            Math.cos(angle);
-    const tipY =
-        centerY +
-        arcSizeSource.value.pointerSize *
-            svg.value.pointerSize *
-            0.9 *
-            Math.sin(angle);
-    const baseLength = svg.value.pointerRadius;
-    const baseX1 = centerX + baseLength * Math.cos(angle + Math.PI / 2);
-    const baseY1 = centerY + baseLength * Math.sin(angle + Math.PI / 2);
-    const baseX2 = centerX + baseLength * Math.cos(angle - Math.PI / 2);
-    const baseY2 = centerY + baseLength * Math.sin(angle - Math.PI / 2);
-
-    if (isNaN(tipX)) return null;
-
-    return `M ${tipX},${tipY} ${baseX1},${baseY1} ${baseX2},${baseY2} Z`;
+    const { x1, y1, x2, y2 } = pointer.value;
+    const radius = svg.value.pointerRadius;
+    const dx = radius * Math.cos(pointerAngle.value + Math.PI / 2);
+    const dy = radius * Math.sin(pointerAngle.value + Math.PI / 2);
+    return `M ${x2},${y2} ${x1 + dx},${y1 + dy} ${x1 - dx},${y1 - dy} Z`;
 });
 
 const ratingColor = computed(() => {
@@ -404,25 +376,27 @@ const ratingColor = computed(() => {
     return '#2D353C';
 });
 
-const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
-
-const labels_font_size = computed({
-    get: () => svg.value.segmentFontSize,
-    set: (v) => v,
-});
-
+const labels_font_size = ref(svg.value.segmentFontSize);
 const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
     svgRef,
-    fontSize: svg.value.segmentFontSize,
-    minFontSize: cfgSegNames.value.minFontSize,
+    fontSize: () => svg.value.segmentFontSize,
+    minFontSize: () => cfgSegNames.value.minFontSize,
     sizeRef: labels_font_size,
     labelClass: '.vue-ui-gauge-label-flat',
 });
+watch(
+    [svg, cfgSegNames, mutableDataset],
+    async () => {
+        labels_font_size.value = svg.value.segmentFontSize;
+        await nextTick();
+        if (!disposed) autoSizeLabels();
+    },
+    { deep: true, flush: 'post' },
+);
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
-function prepareChart() {
+function validateDataset() {
     let hasError = false;
 
     if (objectIsEmpty(props.dataset)) {
@@ -431,7 +405,6 @@ function prepareChart() {
             type: 'dataset',
             debug: debug.value,
         });
-        manualLoading.value = true;
         hasError = true;
     } else {
         getMissingDatasetAttributes({
@@ -444,18 +417,19 @@ function prepareChart() {
                 property: attr,
                 debug: debug.value,
             });
-            manualLoading.value = true;
             hasError = true;
         });
         if (Object.hasOwn(props.dataset, 'series')) {
-            if (!props.dataset.series.length) {
+            if (
+                !Array.isArray(props.dataset.series) ||
+                !props.dataset.series.length
+            ) {
                 error({
                     componentName: 'VueUiGauge',
                     type: 'datasetAttributeEmpty',
                     property: 'series',
                     debug: debug.value,
                 });
-                manualLoading.value = true;
                 hasError = true;
             } else {
                 props.dataset.series.forEach((serie, i) => {
@@ -470,7 +444,6 @@ function prepareChart() {
                             index: i,
                             debug: debug.value,
                         });
-                        manualLoading.value = true;
                         hasError = true;
                     });
                 });
@@ -479,120 +452,64 @@ function prepareChart() {
     }
 
     manualLoading.value = hasError;
+}
 
-    useAnimation(FINAL_DATASET.value.value || 0);
-
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
-            let { width, height } = useResponsive({
+const resizeObserver = shallowRef(null);
+let resizeFrame = null;
+function stopResize() {
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+}
+function updateSizing() {
+    stopResize();
+    const parent = gaugeChart.value?.parentNode;
+    if (!FINAL_CONFIG.value.responsive || !parent) return;
+    const resize = () => {
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            resizeFrame = null;
+            if (disposed) return;
+            const { width, height } = useResponsive({
                 chart: gaugeChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
                 legend: chartLegend.value,
                 source: source.value,
                 noTitle: noTitle.value,
             });
-
-            height -= 12;
-
-            requestAnimationFrame(() => {
-                svg.value.width = width;
-                svg.value.height = height;
-                svg.value.centerX = width / 2;
-                svg.value.centerY = (baseSize.value / 2 / 358.4) * height;
-                svg.value.bottom = height;
-                svg.value.labelFontSize =
-                    (18 / baseSize.value) * Math.min(height, width) < 10
-                        ? 10
-                        : (18 / baseSize.value) * Math.min(height, width);
-                svg.value.legendFontSize =
-                    (cfgChart.value.legend.fontSize / baseSize.value) *
-                        Math.min(height, width) <
-                    14
-                        ? 14
-                        : (cfgChart.value.legend.fontSize / baseSize.value) *
-                          Math.min(height, width);
-                svg.value.pointerRadius =
-                    (cfgPointer.value.circle.radius / baseSize.value) *
-                    Math.min(height, width);
-                svg.value.trackSize =
-                    (cfgLayout.value.track.size / baseSize.value) *
-                    Math.min(height, width);
-                svg.value.pointerStrokeWidth = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: baseSize.value,
-                    source: cfgPointer.value.strokeWidth,
-                    threshold: 2,
-                    fallback: 2,
-                });
-                svg.value.markerOffset = translateSize({
-                    relator: Math.max(width, height),
-                    adjuster: baseSize.value,
-                    source: cfgMarkers.value.offsetY + 3,
-                    threshold: 2,
-                    fallback: 2,
-                });
-                svg.value.segmentFontSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: baseSize.value,
-                    source: cfgSegNames.value.fontSize,
-                    threshold: 8,
-                    fallback: 8,
-                });
-            });
-
-            autoSizeLabels();
+            viewport.value = { width, height: height - 12 };
         });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = gaugeChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
-
-    autoSizeLabels();
+    };
+    resizeObserver.value = new ResizeObserver(resize);
+    resizeObserver.value.observe(parent);
+    resize();
 }
-
+watch(() => FINAL_CONFIG.value.responsive, updateSizing, { flush: 'post' });
 onMounted(() => {
-    prepareChart();
+    validateDataset();
+    useAnimation(targetRating.value);
+    updateSizing();
+    autoSizeLabels();
 });
-
 onBeforeUnmount(() => {
+    disposed = true;
     stopAnimation();
-
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    stopResize();
 });
 
 function useAnimation(targetValue) {
-    const arr = [];
-    (mutableDataset.value.series || []).forEach((serie) => {
-        arr.push(serie.from || 0);
-        arr.push(serie.to || 0);
-    });
-    max.value = Math.max(...arr);
-    min.value = Math.min(...arr);
-
     stopAnimation();
 
-    if (!shouldAnimate.value) {
+    const speed = Number(cfgChart.value.animation.speed);
+    if (!shouldAnimate.value || !Number.isFinite(speed) || speed <= 0) {
         activeRating.value = targetValue;
         return;
     }
-
-    const speed = cfgChart.value.animation.speed;
     const chunk = Math.abs(targetValue - activeRating.value) / (speed * 60);
 
     function animate() {
+        if (disposed) return;
         if (!shouldAnimate.value) {
             activeRating.value = targetValue;
             animationFrame = null;
@@ -621,6 +538,13 @@ function useAnimation(targetValue) {
     animate();
 }
 
+const geometrySeries = computed(() =>
+    mutableDataset.value.series.map((s) => ({
+        ...s,
+        value: Math.max(0, (s.to || 0) - (s.from || 0)),
+    })),
+);
+
 const arcSizeSource = computed(() => {
     const src = FINAL_CONFIG.value.responsive
         ? Math.min(svg.value.width, svg.value.height)
@@ -641,39 +565,30 @@ const arcSizeSource = computed(() => {
     };
 });
 
-const arcs = computed(() => {
-    const donut = makeDonut(
-        { series: mutableDataset.value.series },
+function buildArcs(radius, size, amplification = 1, rotation = 109.9495) {
+    return makeDonut(
+        { series: geometrySeries.value },
         svg.value.width / 2,
         arcSizeSource.value.base,
-        arcSizeSource.value.arcs,
-        arcSizeSource.value.arcs,
-        1,
+        radius,
+        radius,
+        amplification,
         1,
         1,
         180,
-        109.9495,
-        40 * svg.value.trackSize,
+        rotation,
+        size,
     );
-    return donut;
-});
-
-const labelArcs = computed(() => {
-    const donut = makeDonut(
-        { series: mutableDataset.value.series },
-        svg.value.width / 2,
-        arcSizeSource.value.base,
+}
+const arcs = computed(() =>
+    buildArcs(arcSizeSource.value.arcs, 40 * svg.value.trackSize),
+);
+const labelArcs = computed(() =>
+    buildArcs(
         arcSizeSource.value.arcs * cfgSegNames.value.offsetRatio,
-        arcSizeSource.value.arcs * cfgSegNames.value.offsetRatio,
-        1,
-        1,
-        1,
-        180,
-        109.9495,
         40 * svg.value.trackSize,
-    );
-    return donut;
-});
+    ),
+);
 
 const pathRadii = computed(() => {
     return arcs.value.map((arc) => {
@@ -685,55 +600,72 @@ const pathRadii = computed(() => {
     });
 });
 
-const firstSeparator = computed(() => {
-    const { x: x1, y: y1 } = offsetFromCenterPoint({
-        initX: arcs.value[0].firstSeparator.x,
-        initY: arcs.value[0].firstSeparator.y,
-        centerX: pointer.value.x1,
-        centerY: pointer.value.y1,
+function separator(inner, outer) {
+    const center = {
+        centerX: svg.value.width / 2,
+        centerY: arcSizeSource.value.base,
+    };
+    const start = offsetFromCenterPoint({
+        ...center,
+        initX: inner.x,
+        initY: inner.y,
         offset: -cfgSegSeparators.value.offsetIn,
     });
-    const { x: x2, y: y2 } = offsetFromCenterPoint({
-        initX: arcs.value[0].startX,
-        initY: arcs.value[0].startY,
-        centerX: pointer.value.x1,
-        centerY: pointer.value.y1,
+    const end = offsetFromCenterPoint({
+        ...center,
+        initX: outer.x,
+        initY: outer.y,
         offset: cfgSegSeparators.value.offsetOut,
     });
-    return { x1, y1, x2, y2 };
-});
-
-const segmentSeparators = computed(() => {
-    return arcs.value.map((arc) => {
-        const { x: x1, y: y1 } = offsetFromCenterPoint({
-            initX: arc.separator.x,
-            initY: arc.separator.y,
-            centerX: pointer.value.x1,
-            centerY: pointer.value.y1,
-            offset: -cfgSegSeparators.value.offsetIn,
-        });
-        const { x: x2, y: y2 } = offsetFromCenterPoint({
-            initX: arc.endX,
-            initY: arc.endY,
-            centerX: pointer.value.x1,
-            centerY: pointer.value.y1,
-            offset: cfgSegSeparators.value.offsetOut,
-        });
-        return { x1, y1, x2, y2 };
+    return { x1: start.x, y1: start.y, x2: end.x, y2: end.y };
+}
+const firstSeparator = computed(() =>
+    separator(arcs.value[0].firstSeparator, {
+        x: arcs.value[0].startX,
+        y: arcs.value[0].startY,
+    }),
+);
+const segmentSeparators = computed(() =>
+    arcs.value.map((arc) =>
+        separator(arc.separator, { x: arc.endX, y: arc.endY }),
+    ),
+);
+function markerPosition(x, y) {
+    return offsetFromCenterPoint({
+        centerX: svg.value.width / 2,
+        centerY: arcSizeSource.value.base,
+        initX: x,
+        initY: y,
+        offset: svg.value.markerOffset,
     });
-});
+}
+const markers = computed(() =>
+    arcs.value.map((arc) => ({
+        ...markerPosition(arc.center.startX, arc.center.startY),
+        value: arc.from,
+        anchor:
+            arc.center.startX < svg.value.width / 2 - 5
+                ? 'end'
+                : arc.center.startX > svg.value.width / 2 + 5
+                  ? 'start'
+                  : 'middle',
+    })),
+);
+const lastMarker = computed(() =>
+    markerPosition(arcs.value.at(-1).endX, arcs.value.at(-1).endY),
+);
 
 function calculateCumulativeHalfCircleOffsets(percentages) {
     const totalPercentage = percentages.reduce((sum, val) => sum + val, 0);
-    if (totalPercentage > 100) {
-        throw new Error('Total % must not exceed 100');
-    }
     const halfCircleLength = 50;
     let cumulative = 0;
     return percentages.map((percentage) => {
         cumulative += percentage;
-        const offset = (cumulative / 100) * halfCircleLength;
-        return `${offset - percentage / 4}%`;
+        const offset = totalPercentage
+            ? ((cumulative - percentage / 2) / totalPercentage) *
+              halfCircleLength
+            : 0;
+        return `${offset}%`;
     });
 }
 
@@ -743,34 +675,22 @@ const curveLabelOffsets = computed(() => {
     );
 });
 
-const gradientArcs = computed(() => {
-    const donut = makeDonut(
-        { series: mutableDataset.value.series },
-        svg.value.width / 2,
-        arcSizeSource.value.base,
+const gradientArcs = computed(() =>
+    buildArcs(
         arcSizeSource.value.gradients,
-        arcSizeSource.value.gradients,
-        0.95,
-        1,
-        1,
-        180,
-        110.02,
         2 * svg.value.trackSize,
-    );
-    return donut;
-});
-
-const gaugeArc = computed(() => {
-    const added = min.value >= 0 ? -min.value : Math.abs(min.value);
-    return createHalfCircleArc({
+        0.95,
+        110.02,
+    ),
+);
+const gaugeArc = computed(() =>
+    createHalfCircleArc({
         radius: cfgLayout.value.indicatorArc.radius * svg.value.trackSize,
         centerX: svg.value.width / 2,
         centerY: arcSizeSource.value.base,
-        percentage: checkNaN(
-            (activeRating.value + added) / (max.value + added),
-        ),
-    });
-});
+        percentage: progress.value,
+    }),
+);
 
 const isFullscreen = ref(false);
 function toggleFullscreen(state) {
@@ -899,7 +819,6 @@ defineExpose({
 
         <!-- OPTIONS -->
         <UserOptions
-            ref="details"
             :key="`user_options_${step}`"
             v-if="
                 FINAL_CONFIG.userOptions.show &&
@@ -1173,33 +1092,11 @@ defineExpose({
             <!-- STEP MARKERS -->
             <g v-if="cfgMarkers.show">
                 <text
-                    v-for="(arc, i) in arcs"
+                    v-for="(marker, i) in markers"
                     data-cy="arc-label-value"
-                    :x="
-                        offsetFromCenterPoint({
-                            centerX: pointer.x1,
-                            centerY: arcSizeSource.base,
-                            initX: arc.center.startX,
-                            initY: arc.center.startY,
-                            offset: svg.markerOffset,
-                        }).x
-                    "
-                    :y="
-                        offsetFromCenterPoint({
-                            centerX: pointer.x1,
-                            centerY: arcSizeSource.base,
-                            initX: arc.center.startX,
-                            initY: arc.center.startY,
-                            offset: svg.markerOffset,
-                        }).y
-                    "
-                    :text-anchor="
-                        arc.center.startX < pointer.x1 - 5
-                            ? 'end'
-                            : arc.center.startX > pointer.x1 + 5
-                              ? 'start'
-                              : 'middle'
-                    "
+                    :x="marker.x"
+                    :y="marker.y"
+                    :text-anchor="marker.anchor"
                     :font-size="svg.labelFontSize * cfgMarkers.fontSizeRatio"
                     :font-weight="`${cfgMarkers.bold ? 'bold' : 'normal'}`"
                     :fill="cfgMarkers.color"
@@ -1207,10 +1104,10 @@ defineExpose({
                     {{
                         applyDataLabel(
                             cfgMarkers.formatter,
-                            arc.from,
+                            marker.value,
                             dataLabel({
                                 p: cfgMarkers.prefix,
-                                v: arc.from,
+                                v: marker.value,
                                 s: cfgMarkers.suffix,
                                 r: cfgMarkers.roundingValue,
                             }),
@@ -1222,24 +1119,8 @@ defineExpose({
             <text
                 v-if="cfgMarkers.show"
                 data-cy="arc-label-value-last"
-                :x="
-                    offsetFromCenterPoint({
-                        centerX: svg.width / 2,
-                        centerY: arcSizeSource.base,
-                        initX: arcs.at(-1).endX,
-                        initY: arcs.at(-1).endY,
-                        offset: svg.markerOffset,
-                    }).x
-                "
-                :y="
-                    offsetFromCenterPoint({
-                        centerX: svg.width / 2,
-                        centerY: arcSizeSource.base,
-                        initX: arcs.at(-1).endX,
-                        initY: arcs.at(-1).endY,
-                        offset: svg.markerOffset,
-                    }).y
-                "
+                :x="lastMarker.x"
+                :y="lastMarker.y"
                 text-anchor="start"
                 :font-size="svg.labelFontSize * cfgMarkers.fontSizeRatio"
                 :font-weight="`${cfgMarkers.bold ? 'bold' : 'normal'}`"
@@ -1407,15 +1288,5 @@ defineExpose({
 .vue-ui-gauge {
     user-select: none;
     position: relative;
-}
-
-.vue-ui-gauge .vue-ui-gauge-label {
-    align-items: center;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    justify-content: center;
-    text-align: center;
-    width: 100%;
 }
 </style>

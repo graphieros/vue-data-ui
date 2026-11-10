@@ -1427,7 +1427,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable.body.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable.body.length"
             :uid="uid"
             :head="a11yTable.head"
             :body="a11yTable.body"

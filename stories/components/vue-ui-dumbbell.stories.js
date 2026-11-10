@@ -40,6 +40,29 @@ function createCases(env) {
                 });
                 {
                     await waitFor(() => {
+                        const gradients = select(
+                            'linearGradient, radialGradient',
+                        );
+                        expect(gradients).toHaveLength(7);
+                        expect(
+                            new Set(gradients.map((gradient) => gradient.id))
+                                .size,
+                        ).toBe(7);
+                        for (const element of select('[fill]')) {
+                            const id = element
+                                .getAttribute('fill')
+                                .match(/^url\(#(.+)\)$/)?.[1];
+                            if (!id) continue;
+                            expect(
+                                element.ownerDocument.getElementById(
+                                    decodeURIComponent(id),
+                                ),
+                            ).not.toBeNull();
+                        }
+                    });
+                }
+                {
+                    await waitFor(() => {
                         const elements = select('[data-cy="grid-line-y"]');
                         expect(elements).not.toHaveLength(0);
                         expect(elements).toHaveLength(9);

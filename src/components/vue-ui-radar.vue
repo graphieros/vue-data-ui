@@ -20,11 +20,9 @@ import {
     onMounted,
     ref,
     shallowRef,
-    toRefs,
     watch,
 } from 'vue';
 import {
-    stringifyChartConfig as stringifyStructuralConfig,
     applyDataLabel,
     checkNaN,
     convertColorToHex,
@@ -35,28 +33,21 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    functionReturnsString,
     getMissingDatasetAttributes,
     isFunction,
     makePath,
-    objectIsEmpty,
     palette,
     setOpacity,
     shiftHue,
-    themePalettes,
     treeShake,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
-import { COMMON_RULES, useHints } from '../useHints';
+import { useHints } from '../useHints';
 import { useConfig } from '../useConfig';
-import { useLoading } from '../useLoading';
+import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
-import { useNestedProp } from '../useNestedProp';
-import { useThemeCheck } from '../useThemeCheck.js';
 import { useChartExport } from '../useChartExport.js';
-import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useAutoSizeLabelsInsideViewbox } from '../useAutoSizeLabelsInsideViewbox.js';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
@@ -86,7 +77,6 @@ const BaseDraggableDialog = defineAsyncComponent(
 );
 
 const { vue_ui_radar: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -103,9 +93,30 @@ const props = defineProps({
     },
 });
 
-const isDataset = computed(() => {
-    return !!props.dataset && Object.keys(props.dataset).length;
-});
+const isDataset = computed(() => isValidDataset(props.dataset));
+
+function isValidDataset(dataset) {
+    return (
+        Array.isArray(dataset?.categories) &&
+        dataset.categories.length > 0 &&
+        Array.from(
+            dataset.categories,
+            (c) => c && Object.keys(c).includes('name'),
+        ).every(Boolean) &&
+        Array.isArray(dataset.series) &&
+        dataset.series.length > 0 &&
+        Array.from(
+            dataset.series,
+            (s) =>
+                s &&
+                Object.keys(s).includes('name') &&
+                Array.isArray(s.values) &&
+                s.values.length === dataset.categories.length &&
+                Array.from(s.values, Number.isFinite).every(Boolean) &&
+                (s.target === undefined || Number.isFinite(s.target)),
+        ).every(Boolean)
+    );
+}
 
 const uid = ref(createUid());
 const isTooltip = ref(false);
@@ -116,9 +127,6 @@ const chartTitle = ref(null);
 const chartLegend = ref(null);
 const source = ref(null);
 const noTitle = ref(null);
-const titleStep = ref(0);
-const tableStep = ref(0);
-const legendStep = ref(0);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
@@ -128,7 +136,57 @@ const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
 const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
-const FINAL_CONFIG = ref(prepareConfig());
+const preparedConfig = ref(prepareConfig());
+
+watch(
+    () => props.config,
+    () => {
+        preparedConfig.value = prepareConfig();
+    },
+    { deep: true },
+);
+
+const loading = computed(() => !!props.config.loading || !isDataset.value);
+
+const FINAL_CONFIG = computed(() =>
+    loading.value
+        ? treeShake({
+              defaultConfig: preparedConfig.value,
+              userConfig: skeletonConfig.value,
+          })
+        : preparedConfig.value,
+);
+
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            useCssAnimation: false,
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        grid: {
+                            stroke: '#6A6A6A90',
+                        },
+                        labels: {
+                            dataLabels: { show: false },
+                        },
+                        outerPolygon: {
+                            stroke: '#6A6A6A',
+                        },
+                    },
+                    legend: {
+                        backgroundColor: 'transparent',
+                    },
+                },
+            },
+        },
+        userConfig: preparedConfig.value.skeletonConfig ?? {},
+    });
+});
+
 const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
 const cfgLabels = computed(() => FINAL_CONFIG.value.style.chart.layout.labels);
 const cfgLayout = computed(() => FINAL_CONFIG.value.style.chart.layout);
@@ -184,187 +242,70 @@ const isCursorPointer = computed(
     () => FINAL_CONFIG.value.userOptions.useCursorPointer,
 );
 
-const skeletonConfig = computed(() => {
-    return treeShake({
-        defaultConfig: {
-            userOptions: { show: false },
-            table: { show: false },
-            useCssAnimation: false,
-            style: {
-                chart: {
-                    backgroundColor: '#99999930',
-                    layout: {
-                        grid: {
-                            stroke: '#6A6A6A90',
-                        },
-                        labels: {
-                            dataLabels: { show: false },
-                        },
-                        outerPolygon: {
-                            stroke: '#6A6A6A',
-                        },
-                    },
-                    legend: {
-                        backgroundColor: 'transparent',
-                    },
-                },
-            },
-        },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
-    });
-});
-
-const { loading, FINAL_DATASET } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        });
-    },
-    skeletonDataset: props.config?.skeletonDataset ?? {
-        categories: [{ name: '_', color: '#6A6A6A' }],
-        series: [
-            { name: '_', values: [0.6], target: 1 },
-            { name: '_', values: [0.6], target: 1 },
-            { name: '_', values: [0.6], target: 1 },
-            { name: '_', values: [0.6], target: 1 },
-            { name: '_', values: [0.6], target: 1 },
-            { name: '_', values: [0.6], target: 1 },
-        ],
-    },
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value,
-    }),
-});
-
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
-    useUserOptionState({ config: FINAL_CONFIG.value });
-const { svgRef } = useChartAccessibility({
-    config: cfgChart.value.title,
-});
-
-function withGridRotateDefault(config) {
-    return {
-        ...config,
-        style: {
-            ...config.style,
-            chart: {
-                ...config.style.chart,
-                layout: {
-                    ...config.style.chart.layout,
-                    grid: {
-                        rotate: 0,
-                        ...config.style.chart.layout.grid,
-                    },
-                    labels: {
-                        ...config.style.chart.layout.labels,
-                        dataLabels: {
-                            offset: 0,
-                            ...config.style.chart.layout.labels.dataLabels,
-                        },
-                    },
-                },
-            },
-        },
-    };
-}
-
-function prepareConfig() {
-    const mergedConfig = withGridRotateDefault(
-        useNestedProp({
-            userConfig: props.config,
-            defaultConfig: DEFAULT_CONFIG,
-        }),
-    );
-
-    const theme = mergedConfig.theme;
-    if (!theme) return mergedConfig;
-
-    if (!isThemeValid.value(mergedConfig)) {
-        warnInvalidTheme(mergedConfig);
-        return mergedConfig;
-    }
-
-    const fused = useNestedProp({
-        userConfig: themes[theme] || props.config,
-        defaultConfig: mergedConfig,
-    });
-
-    const finalConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: fused,
-    });
-
-    return {
-        ...finalConfig,
-        customPalette: finalConfig.customPalette.length
-            ? finalConfig.customPalette
-            : themePalettes[theme] || palette,
-    };
-}
-
-let previousStructuralConfig = stringifyStructuralConfig(props.config);
-
-watch(
-    () => props.config,
-    (newConfig, oldConfig) => {
-        const nextStructuralConfig = stringifyStructuralConfig(newConfig);
-
-        const requiresChartPreparation =
-            nextStructuralConfig !== previousStructuralConfig;
-
-        previousStructuralConfig = nextStructuralConfig;
-
-        const preparedConfig = prepareConfig();
-
-        if (!requiresChartPreparation) {
-            FINAL_CONFIG.value.style.chart.tooltip =
-                preparedConfig.style.chart.tooltip;
-
-            mutableConfig.value.showTooltip =
-                FINAL_CONFIG.value.style.chart.tooltip.show;
-
-            return;
-        }
-
-        FINAL_CONFIG.value = preparedConfig;
-        userOptionsVisible.value =
-            !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
-        titleStep.value += 1;
-        tableStep.value += 1;
-        legendStep.value += 1;
-
-        // Reset mutable config
-        mutableConfig.value.dataLabels.show = cfgLabels.value.dataLabels.show;
-        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip = cfgTooltip.value
-            ? cfgTooltip.value.show
-            : false;
-    },
-    { deep: true },
+const FINAL_DATASET = computed(() =>
+    loading.value
+        ? isValidDataset(props.config.skeletonDataset)
+            ? props.config.skeletonDataset
+            : {
+                  categories: [{ name: '_', color: '#6A6A6A' }],
+                  series: [
+                      { name: '_', values: [0.6], target: 1 },
+                      { name: '_', values: [0.6], target: 1 },
+                      { name: '_', values: [0.6], target: 1 },
+                      { name: '_', values: [0.6], target: 1 },
+                      { name: '_', values: [0.6], target: 1 },
+                      { name: '_', values: [0.6], target: 1 },
+                  ],
+              }
+        : props.dataset,
 );
 
-const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
+const userOptionsVisible = ref(
+    !FINAL_CONFIG.value.userOptions.showOnChartHover,
+);
+const keepUserOptionState = computed(
+    () => FINAL_CONFIG.value.userOptions.keepStateOnChartLeave,
+);
+function setUserOptionsVisibility(value = false) {
+    if (FINAL_CONFIG.value.userOptions.showOnChartHover)
+        userOptionsVisible.value = value;
+}
+watch(
+    () => FINAL_CONFIG.value.userOptions.showOnChartHover,
+    (value) => {
+        userOptionsVisible.value = !value;
+    },
+);
+const { svgRef } = useChartAccessibility({ config: cfgChart.value.title });
 
-const debug = computed(() => FINAL_CONFIG.value.debug);
+function prepareConfig() {
+    return resolveChartConfigWithPalette(props.config, DEFAULT_CONFIG, themes);
+}
+
+const resizeObserver = shallowRef(null);
+const responsiveSize = shallowRef(null);
+let resizeFrame = null;
+let disposed = false;
+const debug = computed(() => preparedConfig.value.debug);
+
+function teardownResponsive() {
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+}
 
 function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiRadar',
-            type: 'dataset',
-            debug: debug.value,
-        });
-    }
-
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = throttle(() => {
+    teardownResponsive();
+    responsiveSize.value = null;
+    if (!FINAL_CONFIG.value.responsive || !radarChart.value?.parentNode) return;
+    const observer = new ResizeObserver(measure);
+    function measure() {
+        if (disposed || resizeObserver.value !== observer) return;
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            if (disposed || resizeObserver.value !== observer) return;
+            resizeFrame = null;
             const { width, height } = useResponsive({
                 chart: radarChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -372,27 +313,39 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value,
             });
-
-            requestAnimationFrame(() => {
-                svg.value.width = width;
-                svg.value.height = height;
-                autoSizeLabels();
-            });
+            responsiveSize.value = {
+                width: Math.max(0.1, width),
+                height: Math.max(0.1, height),
+            };
         });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = radarChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
     }
-    autoSizeLabels();
+    resizeObserver.value = observer;
+    for (const el of [
+        radarChart.value.parentNode,
+        chartTitle.value,
+        chartLegend.value,
+        source.value,
+        noTitle.value,
+    ]) {
+        if (el) observer.observe(el);
+    }
+    measure();
 }
+
+watch(
+    [
+        () => FINAL_CONFIG.value.responsive,
+        chartTitle,
+        chartLegend,
+        source,
+        noTitle,
+        () => cfgChart.value.title.text,
+        () => cfgChart.value.legend.show,
+        () => cfgChart.value.legend.position,
+    ],
+    prepareChart,
+    { flush: 'post' },
+);
 
 onMounted(() => {
     readyTeleport.value = true;
@@ -400,12 +353,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    disposed = true;
+    teardownResponsive();
+    stopLegendAnimation();
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -423,12 +373,23 @@ const customPalette = computed(() => {
 });
 
 const mutableConfig = ref({
-    dataLabels: {
-        show: cfgLabels.value.dataLabels.show,
-    },
-    showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: cfgTooltip.value.show,
+    showTable: preparedConfig.value.table.show,
+    showTooltip: preparedConfig.value.style.chart.tooltip.show,
 });
+
+watch(
+    () => preparedConfig.value.table.show,
+    (value) => {
+        mutableConfig.value.showTable = value;
+    },
+);
+
+watch(
+    () => preparedConfig.value.style.chart.tooltip.show,
+    (value) => {
+        mutableConfig.value.showTooltip = value;
+    },
+);
 
 const sparkBarConfig = computed(() => {
     return {
@@ -452,25 +413,40 @@ const sparkBarConfig = computed(() => {
     };
 });
 
-const svg = ref({
-    height: 312,
-    width: 512,
-});
+const svg = computed(() => responsiveSize.value ?? { height: 312, width: 512 });
+
+// Occurrences keep duplicate names distinct without changing public source indices.
+function itemKeys(items) {
+    const counts = new Map();
+    return items.map((item) => {
+        const name = item.name;
+        const occurrence = counts.get(name) ?? 0;
+        counts.set(name, occurrence + 1);
+        return JSON.stringify([name, occurrence]);
+    });
+}
+
+const categoryKeys = computed(() => itemKeys(datasetCopy.value));
+const axisKeys = computed(() => itemKeys(seriesCopy.value));
 
 const emit = defineEmits(['selectLegend', 'copyAlt']);
 
-const segregated = ref([]);
+const hiddenCategoryKeys = ref([]);
+const segregated = computed(() =>
+    categoryKeys.value.flatMap((key, index) =>
+        hiddenCategoryKeys.value.includes(key) ? [index] : [],
+    ),
+);
+
 const inSegregation = ref(null);
 const isAnimating = ref(false);
 
 function toggleLegend() {
-    if (segregated.value.length) {
-        segregated.value = [];
-    } else {
-        legendSet.value.forEach((_, i) => {
-            segregated.value.push(i);
-        });
-    }
+    if (loading.value) return;
+    stopLegendAnimation();
+    hiddenCategoryKeys.value = segregated.value.length
+        ? []
+        : categoryKeys.value.slice();
     emitSelectLegend();
 }
 
@@ -489,20 +465,26 @@ function emitSelectLegend() {
     );
 }
 
+let legendTimer = null;
+function stopLegendAnimation() {
+    if (legendTimer !== null) clearTimeout(legendTimer);
+    legendTimer = null;
+    isAnimating.value = false;
+    inSegregation.value = null;
+}
+
 function segregate(index) {
-    isAnimating.value = true;
-    if (segregated.value.includes(index)) {
-        inSegregation.value = index;
-        segregated.value = segregated.value.filter((s) => s !== index);
-        setTimeout(() => {
-            isAnimating.value = false;
-            inSegregation.value = null;
-        }, 500);
-    } else {
-        segregated.value.push(index);
-        setTimeout(() => {
-            isAnimating.value = false;
-        }, 500);
+    if (loading.value || !categoryKeys.value[index]) return;
+    stopLegendAnimation();
+    const key = categoryKeys.value[index];
+    const wasHidden = hiddenCategoryKeys.value.includes(key);
+    hiddenCategoryKeys.value = wasHidden
+        ? hiddenCategoryKeys.value.filter((k) => k !== key)
+        : [...hiddenCategoryKeys.value, key];
+    if (FINAL_CONFIG.value.useCssAnimation) {
+        isAnimating.value = true;
+        if (wasHidden) inSegregation.value = index;
+        legendTimer = setTimeout(stopLegendAnimation, 500);
     }
     emitSelectLegend();
 }
@@ -521,7 +503,7 @@ function getData() {
 }
 
 function validateRadarDataset() {
-    const ds = FINAL_DATASET.value;
+    const ds = props.dataset;
 
     if ([null, undefined].includes(ds?.categories)) {
         error({
@@ -539,7 +521,10 @@ function validateRadarDataset() {
         return;
     }
 
-    if (ds.categories.length === 0) {
+    if (!Array.isArray(ds.categories)) {
+        if (debug.value)
+            console.warn('VueUiRadar: dataset.categories must be an array.');
+    } else if (ds.categories.length === 0) {
         error({
             componentName: 'VueUiRadar',
             type: 'datasetAttributeEmpty',
@@ -548,9 +533,9 @@ function validateRadarDataset() {
         });
     } else {
         if (debug.value) {
-            ds.categories.forEach((cat, i) => {
+            Array.from(ds.categories).forEach((cat, i) => {
                 getMissingDatasetAttributes({
-                    datasetObject: cat,
+                    datasetObject: cat ?? {},
                     requiredAttributes: ['name'],
                 }).forEach((attr) => {
                     error({
@@ -569,15 +554,25 @@ function validateRadarDataset() {
             componentName: 'VueUiRadar',
             type: 'datasetAttribute',
             property:
-                'series ({ name: string; values: number[]; color?: string; target: number}[])',
+                'series ({ name: string; values: number[]; color?: string; target?: number}[])',
             debug: debug.value,
         });
+    } else if (!Array.isArray(ds.series)) {
+        if (debug.value)
+            console.warn('VueUiRadar: dataset.series must be an array.');
     } else {
+        if (ds.series.length === 0)
+            error({
+                componentName: 'VueUiRadar',
+                type: 'datasetAttributeEmpty',
+                property: 'series',
+                debug: debug.value,
+            });
         if (debug.value) {
-            ds.series.forEach((serie, i) => {
+            Array.from(ds.series).forEach((serie, i) => {
                 getMissingDatasetAttributes({
-                    datasetObject: serie,
-                    requiredAttributes: ['name', 'values', 'target'],
+                    datasetObject: serie ?? {},
+                    requiredAttributes: ['name', 'values'],
                 }).forEach((attr) => {
                     error({
                         componentName: 'VueUiRadar',
@@ -587,16 +582,39 @@ function validateRadarDataset() {
                         index: i,
                     });
                 });
+                if (!Array.isArray(serie?.values)) {
+                    if (serie && Object.keys(serie).includes('values'))
+                        console.warn(
+                            `VueUiRadar: dataset.series[${i}].values must be an array.`,
+                        );
+                } else {
+                    if (serie.values.length !== ds.categories?.length)
+                        console.warn(
+                            `VueUiRadar: dataset.series[${i}].values must contain one value per category.`,
+                        );
+                    Array.from(serie.values).forEach((value, j) => {
+                        if (!Number.isFinite(value))
+                            console.warn(
+                                `VueUiRadar: dataset.series[${i}].values[${j}] must be a finite number.`,
+                            );
+                    });
+                }
+                if (
+                    serie?.target !== undefined &&
+                    !Number.isFinite(serie.target)
+                )
+                    console.warn(
+                        `VueUiRadar: dataset.series[${i}].target must be a finite number.`,
+                    );
             });
         }
     }
 }
 
-watch(
-    () => FINAL_DATASET.value,
-    () => validateRadarDataset(),
-    { deep: true, immediate: true },
-);
+watch([() => props.dataset, debug], () => validateRadarDataset(), {
+    deep: true,
+    immediate: true,
+});
 
 const datasetCopy = computed(() => {
     const cats = Array.isArray(FINAL_DATASET.value?.categories)
@@ -631,6 +649,14 @@ const seriesCopy = computed(() => {
             absoluteIndex: i,
         };
     });
+});
+
+watch([categoryKeys, () => FINAL_CONFIG.value.useCssAnimation], () => {
+    stopLegendAnimation();
+    if (!loading.value)
+        hiddenCategoryKeys.value = hiddenCategoryKeys.value.filter((key) =>
+            categoryKeys.value.includes(key),
+        );
 });
 
 function validSeriesToToggle(name) {
@@ -681,14 +707,27 @@ function hideSeries(name) {
 }
 
 const max = computed(() =>
-    Math.max(0, ...seriesCopy.value.flatMap((s) => s.values)),
+    seriesCopy.value.reduce(
+        (maximum, s) =>
+            s.values.reduce((m, value) => Math.max(m, value), maximum),
+        0,
+    ),
+);
+const scaleMaxima = computed(() =>
+    seriesCopy.value.map((serie) =>
+        cfgLayout.value.scaleToAxisMax
+            ? serie.values.reduce(
+                  (m, value) => Math.max(m, value),
+                  Math.max(1, serie.target || 0),
+              )
+            : serie.target || max.value || 1,
+    ),
 );
 
-function getScaleMax(serie) {
-    if (cfgLayout.value.scaleToAxisMax) {
-        return Math.max(1, serie.target || 0, ...serie.values);
-    }
-    return serie.target || max.value || 1;
+// Target completion is independent of the selected geometric scale.
+function targetRatio(value, target) {
+    const ratio = value / target;
+    return Number.isFinite(ratio * 100) ? ratio : null;
 }
 
 const targetReference = computed(() => {
@@ -699,7 +738,7 @@ const targetReference = computed(() => {
             centerY: svg.value.height / 2,
             apexX: coordinate.x,
             apexY: coordinate.y,
-            proportion: (serie.target || 0) / getScaleMax(serie),
+            proportion: (serie.target || 0) / scaleMaxima.value[i],
         });
     });
 });
@@ -733,6 +772,11 @@ const outerPolygon = computed(() => {
 
 const innerPolygons = computed(() => {
     const polygons = [];
+    if (
+        !Number.isFinite(cfgLayout.value.grid.graduations) ||
+        cfgLayout.value.grid.graduations <= 0
+    )
+        return polygons;
     for (
         let i = 0;
         i < polygonRadius.value;
@@ -753,7 +797,7 @@ const radar = computed(() => {
                     centerY: svg.value.height / 2,
                     apexX: c.x,
                     apexY: c.y,
-                    proportion: v / getScaleMax(serie),
+                    proportion: v / scaleMaxima.value[i],
                 });
             });
             return {
@@ -763,11 +807,12 @@ const radar = computed(() => {
             };
         })
         .map((r) => {
+            const label = offset(r);
             return {
                 ...r,
-                labelX: offset(r).x,
-                labelY: offset(r).y,
-                labelAnchor: offset(r).anchor,
+                labelX: label.x,
+                labelY: label.y,
+                labelAnchor: label.anchor,
             };
         });
 });
@@ -804,18 +849,34 @@ function offset({ x, y }) {
     };
 }
 
-const labelFontSize = computed({
-    get: () => cfgLabels.value.dataLabels.fontSize,
-    set: (v) => v,
-});
-
 const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
     svgRef,
-    fontSize: cfgLabels.value.dataLabels.fontSize,
+    fontSize: () => cfgLabels.value.dataLabels.fontSize,
     minFontSize: 6,
-    sizeRef: labelFontSize,
     labelClass: '.vue-ui-radar-apex-label',
 });
+
+watch(
+    [
+        radar,
+        () => cfgLabels.value.dataLabels.fontSize,
+        () => cfgLabels.value.dataLabels.show,
+    ],
+    autoSizeLabels,
+    { flush: 'post' },
+);
+
+onMounted(autoSizeLabels);
+
+const polygonPoints = computed(() =>
+    datasetCopy.value.map((_, i) =>
+        makePath(
+            radar.value.map((r) => r.plots[i]),
+            false,
+            true,
+        ),
+    ),
+);
 
 function plot({ centerX, centerY, apexX, apexY, proportion }) {
     return {
@@ -892,10 +953,10 @@ const dataTable = computed(() => {
                         r: FINAL_CONFIG.value.table.td.roundingValue,
                     }),
                 )} (${
-                    isNaN(v / ds.target)
+                    targetRatio(v, ds.target) === null
                         ? ''
                         : dataLabel({
-                              v: (v / ds.target) * 100,
+                              v: targetRatio(v, ds.target) * 100,
                               s: '%',
                               r: FINAL_CONFIG.value.table.td.roundingPercentage,
                           })
@@ -921,16 +982,25 @@ const dataTable = computed(() => {
 });
 
 const selectedIndex = ref(null);
+const selectedAxisKey = ref(null);
 const sparkBarData = ref([]);
 
 const dataTooltipSlot = ref(null);
 
-function onTrapLeave(apex, i) {
+function clearTooltip() {
     isTooltip.value = false;
     selectedIndex.value = null;
     activeTooltipIndex.value = null;
+    selectedAxisKey.value = null;
     tooltipTriggerMode.value = 'pointer';
+    dataTooltipSlot.value = null;
+    sparkBarData.value = [];
+    tooltipContent.value = '';
+}
 
+function onTrapLeave(apex, i) {
+    if (loading.value) return;
+    clearTooltip();
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({
             datapoint: apex,
@@ -940,6 +1010,7 @@ function onTrapLeave(apex, i) {
 }
 
 function onTrapClick(apex, i) {
+    if (loading.value) return;
     if (FINAL_CONFIG.value.events.datapointClick) {
         FINAL_CONFIG.value.events.datapointClick({
             datapoint: apex,
@@ -948,8 +1019,10 @@ function onTrapClick(apex, i) {
     }
 }
 
-function useTooltip(apex, i, triggerMode = 'pointer') {
-    if (FINAL_CONFIG.value.events.datapointEnter) {
+function useTooltip(apex, i, triggerMode = 'pointer', notify = true) {
+    if (loading.value) return;
+    selectedAxisKey.value = axisKeys.value[i];
+    if (notify && FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({
             datapoint: apex,
             seriesIndex: i,
@@ -977,32 +1050,12 @@ function useTooltip(apex, i, triggerMode = 'pointer') {
 
     const customFormat = cfgTooltip.value.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                seriesIndex: i,
-                datapoint: apex,
-                series: {
-                    categories: cats,
-                    datapoints: seriesCopy.value,
-                    radar: radar.value,
-                },
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            seriesIndex: i,
-            datapoint: apex,
-            series: {
-                categories: cats,
-                datapoints: seriesCopy.value,
-                radar: radar.value,
-            },
-            config: FINAL_CONFIG.value,
-        });
-        return;
+    if (isFunction(customFormat)) {
+        const result = customFormat(dataTooltipSlot.value);
+        if (typeof result === 'string') {
+            tooltipContent.value = result;
+            return;
+        }
     }
 
     tooltipContent.value = `<div style="width:100%;text-align:center;border-bottom:1px solid ${cfgTooltip.value.borderColor};padding-bottom:6px;margin-bottom:3px;">${apex.name}</div>`;
@@ -1011,9 +1064,7 @@ function useTooltip(apex, i, triggerMode = 'pointer') {
         if (!segregated.value.includes(k)) {
             const cat = cats[k];
             const rawVal = apex.values[k];
-            const pct = isNaN(rawVal / apex.target)
-                ? 0
-                : (rawVal / apex.target) * 100;
+            const pct = (targetRatio(rawVal, apex.target) ?? 0) * 100;
 
             const valueLabel = applyDataLabel(
                 apex.formatter,
@@ -1046,7 +1097,7 @@ function useTooltip(apex, i, triggerMode = 'pointer') {
 
             sparkBarData.value.push({
                 name: cat?.name ?? `#${k + 1}`,
-                value: (apex.values[k] / apex.target) * 100,
+                value: pct,
                 color: cat?.color,
                 suffix: display,
                 prefix: '',
@@ -1074,7 +1125,12 @@ function generateCsv(callback = null) {
                 s.name,
                 s.target,
                 ...s.values.flatMap((v) => {
-                    return [v, isNaN(v / s.target) ? '' : (v / s.target) * 100];
+                    return [
+                        v,
+                        targetRatio(v, s.target) === null
+                            ? ''
+                            : targetRatio(v, s.target) * 100,
+                    ];
                 }),
             ];
         });
@@ -1132,8 +1188,16 @@ const tableComponent = computed(() =>
 );
 
 watch(
-    () => mutableConfig.value.showTable,
-    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
+    [
+        () => mutableConfig.value.showTable,
+        tableUnit,
+        () => FINAL_CONFIG.value.table.useDialog,
+    ],
+    ([visible]) => {
+        if (tableUnit.value)
+            syncTableVisibility(visible, FINAL_CONFIG, tableUnit);
+    },
+    { flush: 'post' },
 );
 
 function closeTable() {
@@ -1189,15 +1253,12 @@ async function copyAlt() {
  **************************************************************************************************/
 
 function onSvgFocus() {
-    activeTooltipIndex.value = null;
+    clearTooltip();
     isFocus.value = true;
 }
 
 function onSvgBlur() {
-    activeTooltipIndex.value = null;
-    tooltipTriggerMode.value = 'pointer';
-    isTooltip.value = false;
-    selectedIndex.value = null;
+    clearTooltip();
     isFocus.value = false;
 }
 
@@ -1217,7 +1278,7 @@ function setKeyboardTooltipPositionFromIndex(index) {
 }
 
 function onSvgKeydown(event) {
-    if (!svgRef.value || isAnnotator.value) return;
+    if (!svgRef.value || isAnnotator.value || loading.value) return;
     if (document.activeElement !== svgRef.value) return;
     if (!radar.value.length) return;
 
@@ -1233,10 +1294,7 @@ function onSvgKeydown(event) {
     event.stopPropagation();
 
     if (isEscapeKey) {
-        activeTooltipIndex.value = null;
-        tooltipTriggerMode.value = 'pointer';
-        isTooltip.value = false;
-        selectedIndex.value = null;
+        clearTooltip();
         return;
     }
 
@@ -1277,6 +1335,29 @@ function onSvgKeydown(event) {
     useTooltip(apex, nextIndex, 'keyboard');
 }
 
+watch(
+    [
+        radar,
+        axisKeys,
+        datasetCopy,
+        segregated,
+        cfgTooltip,
+        () => FINAL_CONFIG.value,
+    ],
+    () => {
+        if (selectedAxisKey.value === null) return;
+        const index = axisKeys.value.indexOf(selectedAxisKey.value);
+        if (loading.value || index < 0) {
+            clearTooltip();
+            return;
+        }
+        if (tooltipTriggerMode.value === 'keyboard')
+            setKeyboardTooltipPositionFromIndex(index);
+        useTooltip(radar.value[index], index, tooltipTriggerMode.value, false);
+    },
+    { flush: 'post' },
+);
+
 const a11yTable = computed(() => {
     const headers = dataTable.value?.colNames?.map((h) => h.name ?? h) ?? [];
     const rows = dataTable.value?.body ?? [];
@@ -1314,7 +1395,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -1358,7 +1439,6 @@ defineExpose({
             :style="`width:100%;background:transparent;padding-bottom:12px`"
         >
             <Title
-                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'radar-div-title',
@@ -1585,13 +1665,7 @@ defineExpose({
                     <g>
                         <polygon
                             data-cy="polygon-datapoint-wrapper"
-                            :points="
-                                makePath(
-                                    radar.map((r) => r.plots[i]),
-                                    false,
-                                    true,
-                                )
-                            "
+                            :points="polygonPoints[i]"
                             :stroke="cfgChart.backgroundColor"
                             :stroke-width="
                                 cfgLayout.dataPolygon.strokeWidth + 1
@@ -1615,13 +1689,7 @@ defineExpose({
                         />
                         <polygon
                             data-cy="polygon-datapoint"
-                            :points="
-                                makePath(
-                                    radar.map((r) => r.plots[i]),
-                                    false,
-                                    true,
-                                )
-                            "
+                            :points="polygonPoints[i]"
                             :stroke="d.color"
                             :stroke-width="cfgLayout.dataPolygon.strokeWidth"
                             v-if="
@@ -1795,7 +1863,6 @@ defineExpose({
                 <slot name="legend" v-bind:legend="legendSet">
                     <Legend
                         v-if="cfgChart.legend.show"
-                        :key="`legend_${legendStep}`"
                         :legendSet="legendSet"
                         :config="legendConfig"
                         :isCursorPointer="isCursorPointer"
@@ -1973,7 +2040,7 @@ defineExpose({
         </Tooltip>
 
         <component
-            v-if="isDataset && cfgUserOptions.buttons.table"
+            v-if="!loading && isDataset && cfgUserOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
@@ -1997,7 +2064,6 @@ defineExpose({
             </template>
             <template #content>
                 <DataTable
-                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head"
                     :body="dataTable.body"

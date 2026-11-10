@@ -7,6 +7,7 @@ export function commonFeatures(env) {
         title = false,
         subtitle = false,
         dataTable = false,
+        deferredTable = false,
         tooltipCallback = false,
         legend = false,
         slicer = false,
@@ -48,9 +49,12 @@ export function commonFeatures(env) {
             }
         }
         if (dataTable) {
-            await waitFor(() =>
-                expect(currentWrapper().vm.$.setupState.tableUnit).toBeTruthy(),
-            );
+            if (!deferredTable)
+                await waitFor(() =>
+                    expect(
+                        currentWrapper().vm.$.setupState.tableUnit,
+                    ).toBeTruthy(),
+                );
             {
                 let read = () => select('[data-cy="user-options-summary"]');
                 await waitFor(() => expect(read().length).toBeGreaterThan(0));

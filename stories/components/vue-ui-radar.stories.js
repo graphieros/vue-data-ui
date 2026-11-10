@@ -1,4 +1,4 @@
-import { expect, waitFor } from 'storybook/test';
+import { expect, waitFor, fireEvent } from 'storybook/test';
 import {
     scenarioRender,
     runScenario,
@@ -194,6 +194,132 @@ function createCases(env) {
             }
         }
     };
+    cases.LiveUpdates = async () => {
+        let enterCount = 0;
+        let formatCount = 0;
+        const data = {
+            categories: [{ name: 'A' }, { name: 'B' }],
+            series: [
+                { name: 'First', values: [2, 4], target: 10 },
+                { name: 'Second', values: [6, 8], target: 10 },
+                { name: 'Third', values: [8, 2], target: 10 },
+            ],
+        };
+        const cfg = {
+            events: { datapointEnter: () => enterCount++ },
+            style: {
+                chart: {
+                    tooltip: {
+                        customFormat: ({ datapoint }) => {
+                            formatCount++;
+                            return datapoint.name;
+                        },
+                    },
+                },
+            },
+        };
+        const { wrapper } = await mountSubject(VueUiRadar, {
+            props: { dataset: data, config: cfg },
+        });
+        wrapper.vm.hideSeries('B');
+        await waitFor(() =>
+            expect(
+                wrapper.findAll('[data-cy="polygon-datapoint"]'),
+            ).toHaveLength(1),
+        );
+        const svg = wrapper.find('svg').element;
+        svg.focus();
+        await fireEvent.keyDown(svg, { key: 'ArrowRight' });
+        await waitFor(() => expect(formatCount).toBe(1));
+        await fireEvent.keyDown(svg, { key: 'ArrowDown' });
+        await waitFor(() => expect(formatCount).toBe(2));
+        expect(enterCount).toBe(2);
+        await wrapper.setProps({
+            dataset: {
+                categories: [...data.categories].reverse(),
+                series: [data.series[1], data.series[0], data.series[2]].map(
+                    (row) => ({ ...row, values: [...row.values].reverse() }),
+                ),
+            },
+        });
+        await waitFor(() => {
+            const tooltip = wrapper.findComponent({ name: 'Tooltip' });
+            expect(tooltip.props('content')).toBe('Second');
+            const box = svg.getBoundingClientRect();
+            const label = wrapper.find('[data-cy="label-apex"]');
+            expect(tooltip.props('a11yPosition').x).toBeCloseTo(
+                box.left + (Number(label.attributes('x')) / 512) * box.width,
+                1,
+            );
+            expect(tooltip.props('a11yPosition').y).toBeCloseTo(
+                box.top + (Number(label.attributes('y')) / 312) * box.height,
+                1,
+            );
+        });
+        expect(
+            wrapper.find('[data-cy="polygon-datapoint"]').attributes('stroke'),
+        ).toBe(wrapper.vm.getData()[1].color);
+        expect(enterCount).toBe(2);
+        await wrapper.setProps({
+            config: {
+                ...cfg,
+                style: {
+                    chart: {
+                        ...cfg.style.chart,
+                        layout: {
+                            labels: { dataLabels: { fontSize: 24 } },
+                            grid: { rotation: 30 },
+                        },
+                    },
+                },
+            },
+        });
+        await waitFor(() =>
+            expect(
+                wrapper.find('[data-cy="label-apex"]').attributes('font-size'),
+            ).toBe('24'),
+        );
+        expect(enterCount).toBe(2);
+        await wrapper.setProps({
+            dataset: {
+                categories: [...data.categories].reverse(),
+                series: [
+                    data.series[1],
+                    {
+                        ...data.series[0],
+                        name: 'A deliberately long axis label for fitting',
+                    },
+                    data.series[2],
+                ].map((row) => ({ ...row, values: [...row.values].reverse() })),
+            },
+        });
+        await waitFor(() => {
+            const labels = wrapper.findAll('[data-cy="label-apex"]');
+            expect(labels[0].attributes('font-size')).toBe('24');
+            expect(Number(labels[1].attributes('font-size'))).toBeLessThan(24);
+            expect(
+                Number(labels[1].attributes('font-size')),
+            ).toBeGreaterThanOrEqual(6);
+        });
+        for (const polygon of wrapper.findAll(
+            '[data-cy="polygon-datapoint"]',
+        )) {
+            const fill = polygon.attributes('fill');
+            expect(fill).toMatch(/^url\(#/);
+            expect(wrapper.find(`[id="${fill.slice(5, -1)}"]`).exists()).toBe(
+                true,
+            );
+        }
+        await wrapper.setProps({
+            dataset: { ...data, series: [data.series[0], data.series[2]] },
+        });
+        await waitFor(() =>
+            expect(
+                wrapper.findComponent({ name: 'Tooltip' }).props('show'),
+            ).toBe(false),
+        );
+        expect(wrapper.find('svg').html()).not.toMatch(/NaN|Infinity/);
+    };
     return {
         cases,
         hooks,
@@ -210,4 +336,9 @@ export const Renders = {
 export const Emits = {
     name: 'emits',
     play: async (context) => runScenario(context, createCases, 'Emits'),
+};
+
+export const LiveUpdates = {
+    name: 'keeps legend, keyboard tooltips and label fitting synchronized',
+    play: async (context) => runScenario(context, createCases, 'LiveUpdates'),
 };

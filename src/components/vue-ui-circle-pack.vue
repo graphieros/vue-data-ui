@@ -6,7 +6,7 @@ import {
 } from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { createPanZoomAnnotationViewport } from '../utils/annotationViewport';
-import { getTableComponent } from '../tableIntegration';
+import { getTableComponent, syncTableVisibility } from '../tableIntegration';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
@@ -21,6 +21,7 @@ import {
     onBeforeUnmount,
     onMounted,
     ref,
+    shallowRef,
     toRefs,
     watch,
 } from 'vue';
@@ -46,7 +47,6 @@ import {
     themePalettes,
     treeShake,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
@@ -117,7 +117,10 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref('');
-const selectedDatapoint = ref(null);
+const selectedId = ref(null);
+const selectedDatapoint = computed(
+    () => circleById.value.get(selectedId.value) ?? null,
+);
 
 const activeTooltipIndex = ref(null); // a11y
 const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
@@ -243,10 +246,9 @@ watch(
             return;
         }
 
-        FINAL_CONFIG.value = preparedConfig;
+        if (!loading.value) FINAL_CONFIG.value = preparedConfig;
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
 
@@ -288,7 +290,6 @@ watch(
 );
 
 const SIZE = ref({ h: 10, w: 10 });
-const boundValues = ref([0, 0, 100, 100]);
 const initialParentTooltipViewBox = ref({
     x: 0,
     y: 0,
@@ -300,10 +301,14 @@ const debug = computed(() => FINAL_CONFIG.value.debug);
 
 const packingWidth = computed(() => {
     const style = FINAL_CONFIG.value.style?.chart || {};
-    if (style.dimensions && typeof style.dimensions.width === 'number') {
+    if (
+        style.dimensions &&
+        Number.isFinite(style.dimensions.width) &&
+        style.dimensions.width > 0
+    ) {
         return style.dimensions.width;
     }
-    if (typeof style.width === 'number') {
+    if (Number.isFinite(style.width) && style.width > 0) {
         return style.width;
     }
     return 300;
@@ -311,166 +316,123 @@ const packingWidth = computed(() => {
 
 const packingHeight = computed(() => {
     const style = FINAL_CONFIG.value.style?.chart || {};
-    if (style.dimensions && typeof style.dimensions.height === 'number') {
+    if (
+        style.dimensions &&
+        Number.isFinite(style.dimensions.height) &&
+        style.dimensions.height > 0
+    ) {
         return style.dimensions.height;
     }
-    if (typeof style.height === 'number') {
+    if (Number.isFinite(style.height) && style.height > 0) {
         return style.height;
     }
     return 300;
 });
 
-const circles = ref([]);
-const flattenedDataset = ref([]);
-const resizeObserver = ref(null);
-const observedEl = ref(null);
-
-function recomputePacking(targetWidth, targetHeight) {
-    SIZE.value = {
-        w: targetWidth,
-        h: targetHeight,
-    };
-
-    const freshDataset = formattedDataset.value.map(cloneDatapoint);
-
-    if (!freshDataset.length) {
-        const baseViewBox = {
-            x: 0,
-            y: 0,
-            width: targetWidth,
-            height: targetHeight,
-        };
-
-        circles.value = [];
-        flattenedDataset.value = [];
-        boundValues.value = [
-            baseViewBox.x,
-            baseViewBox.y,
-            baseViewBox.width,
-            baseViewBox.height,
-        ];
-        initialParentTooltipViewBox.value = { ...baseViewBox };
-        setInitialViewBox(baseViewBox);
-        return;
+const packedCircles = ref([]);
+let packedSignature = null;
+const formattedById = computed(() => {
+    const map = new Map();
+    function walk(items) {
+        for (const item of items) {
+            map.set(item.id, item);
+            walk(item.children);
+        }
     }
-
-    const packedRoots = pack(freshDataset, targetHeight, targetWidth);
-    const [x0, y0, bw, bh] = bounds(packedRoots, 1);
-
-    const scale = Math.min(
-        bw ? targetWidth / bw : 1,
-        bh ? targetHeight / bh : 1,
-    );
-
-    const offsetX = (targetWidth - bw * scale) / 2;
-    const offsetY = (targetHeight - bh * scale) / 2;
-
-    const roots = packedRoots.map((circle) => {
-        return {
-            ...circle,
-            x: (circle.x - x0) * scale + offsetX,
-            y: (circle.y - y0) * scale + offsetY,
-            r: circle.r * scale,
-        };
-    });
-
-    circles.value = flattenPackedCircles(roots);
-    flattenedDataset.value = circles.value;
-
-    const baseViewBox = {
-        x: 0,
-        y: 0,
-        width: targetWidth,
-        height: targetHeight,
-    };
-
-    const initialViewBox = getViewBoxIncludingParentTooltips(baseViewBox);
-
-    boundValues.value = [
-        initialViewBox.x,
-        initialViewBox.y,
-        initialViewBox.width,
-        initialViewBox.height,
-    ];
-
-    initialParentTooltipViewBox.value = { ...initialViewBox };
-    setInitialViewBox(initialViewBox);
-}
-
-function cloneDatapoint(datapoint) {
+    walk(formattedDataset.value);
+    return map;
+});
+function decoratePackedCircle(circle) {
+    const current = formattedById.value.get(circle.id) || circle;
     return {
-        ...datapoint,
-        children: Array.isArray(datapoint.children)
-            ? datapoint.children.map(cloneDatapoint)
-            : [],
+        ...circle,
+        ...current,
+        ...(Object.hasOwn(circle, 'x') ? { x: circle.x, y: circle.y } : {}),
+        r: circle.r,
+        children: (circle.children || []).map(decoratePackedCircle),
     };
 }
-
-function getDatapointValue(datapoint) {
-    const ownValue = Number(datapoint?.value);
-    if (Number.isFinite(ownValue) && ownValue > 0) {
-        return ownValue;
-    }
-
-    if (!Array.isArray(datapoint?.children)) {
-        return 0;
-    }
-
-    return datapoint.children.reduce((sum, child) => {
-        return sum + getDatapointValue(child);
-    }, 0);
-}
-
-function getDatapointColor(datapoint, colorIndex) {
-    const themePalette =
-        themePalettes[FINAL_CONFIG.value.theme || 'default'] || palette;
-    const resolvedPalette = customPalette.value.length
-        ? customPalette.value
-        : themePalette.length
-          ? themePalette
-          : palette;
-
-    return (
-        convertColorToHex(datapoint.color) ||
-        resolvedPalette[colorIndex % resolvedPalette.length] ||
-        palette[colorIndex % palette.length]
+const circles = computed(() => packedCircles.value.map(decoratePackedCircle));
+const circleById = computed(
+    () => new Map(circles.value.map((circle) => [circle.id, circle])),
+);
+const resizeObserver = shallowRef(null);
+let resizeFrame = null;
+let scheduleResize = null;
+let disposed = false;
+function fitPacking(
+    source,
+    width,
+    height,
+    centerX = width / 2,
+    centerY = height / 2,
+    padding = 1,
+) {
+    const packed = pack(
+        source.map((circle) => ({ ...circle })),
+        height,
+        width,
     );
+    if (!packed.length) return [];
+    const [x, y, bw, bh] = bounds(packed, 1);
+    const scale = Math.min(bw ? width / bw : 1, bh ? height / bh : 1) * padding;
+    return packed.map((circle) => ({
+        ...circle,
+        x: (circle.x - x) * scale + centerX - (bw * scale) / 2,
+        y: (circle.y - y) * scale + centerY - (bh * scale) / 2,
+        r: circle.r * scale,
+    }));
 }
-
-function getLeafCount(datapoint) {
-    if (!Array.isArray(datapoint.children) || !datapoint.children.length) {
-        return 1;
-    }
-
-    return datapoint.children.reduce((sum, child) => {
-        return sum + getLeafCount(child);
-    }, 0);
+function refreshInitialViewBox() {
+    const base = { x: 0, y: 0, width: SIZE.value.w, height: SIZE.value.h };
+    const initial = circles.value.length
+        ? getViewBoxIncludingParentTooltips(base)
+        : base;
+    initialParentTooltipViewBox.value = { ...initial };
+    setInitialViewBox(initial);
 }
-
+function recomputePacking(width, height) {
+    packedSignature = packingSignature.value;
+    SIZE.value = { w: width, h: height };
+    packedCircles.value = flattenPackedCircles(
+        fitPacking(formattedDataset.value, width, height),
+    );
+    refreshInitialViewBox();
+}
+const resolvedPalette = computed(() => {
+    const theme =
+        themePalettes[FINAL_CONFIG.value.theme || 'default'] || palette;
+    return customPalette.value.length
+        ? customPalette.value
+        : theme.length
+          ? theme
+          : palette;
+});
 function normalizeDataset(source, parent = null, depth = 0, path = []) {
-    if (!Array.isArray(source)) {
-        return [];
-    }
-
+    if (!Array.isArray(source)) return [];
+    const seenIds = new Map();
     return source
         .map((datapoint, index) => {
-            const value = getDatapointValue(datapoint);
-
-            if (!Number.isFinite(value) || value <= 0) {
-                return null;
-            }
-
-            const id = createUid();
+            if (!datapoint || typeof datapoint !== 'object') return null;
             const hierarchyPath = [...path, index];
-            const colorIndex = hierarchyPath.reduce((sum, item, i) => {
-                return sum + item + i;
-            }, 0);
-
+            const baseId =
+                datapoint.id == null
+                    ? `circle_pack_${uid.value}_${hierarchyPath.join('_')}`
+                    : `${parent?.id ?? `circle_pack_${uid.value}`}_id_${Array.from(String(datapoint.id), (character) => character.codePointAt(0).toString(16)).join('_')}`;
+            const occurrence = seenIds.get(baseId) || 0;
+            seenIds.set(baseId, occurrence + 1);
+            const id = occurrence
+                ? `${baseId}_duplicate_${occurrence}`
+                : baseId;
+            const colorIndex = hierarchyPath.reduce(
+                (sum, item, i) => sum + item + i,
+                0,
+            );
             const color =
-                datapoint.color || parent?.color
-                    ? convertColorToHex(datapoint.color || parent?.color)
-                    : getDatapointColor(datapoint, colorIndex);
-
+                convertColorToHex(datapoint.color || parent?.color) ||
+                resolvedPalette.value[
+                    colorIndex % resolvedPalette.value.length
+                ];
             const children = normalizeDataset(
                 datapoint.children,
                 {
@@ -482,7 +444,12 @@ function normalizeDataset(source, parent = null, depth = 0, path = []) {
                 depth + 1,
                 hierarchyPath,
             );
-
+            const own = Number(datapoint.value);
+            const value =
+                Number.isFinite(own) && own > 0
+                    ? own
+                    : children.reduce((sum, child) => sum + child.value, 0);
+            if (!Number.isFinite(value) || value <= 0) return null;
             return {
                 ...datapoint,
                 value,
@@ -495,66 +462,32 @@ function normalizeDataset(source, parent = null, depth = 0, path = []) {
                 rootId: parent?.rootId ?? id,
                 hasChildren: children.length > 0,
                 childCount: children.length,
-                leafCount: children.length ? getLeafCount({ children }) : 1,
+                leafCount: children.length
+                    ? children.reduce((sum, child) => sum + child.leafCount, 0)
+                    : 1,
                 hierarchyPath,
                 children,
             };
         })
         .filter(Boolean);
 }
-
-function packNestedChildren(parent) {
-    if (!Array.isArray(parent.children) || !parent.children.length) {
-        return [];
-    }
-
-    const innerPadding = 0.9;
-    const targetSize = parent.r * 2;
-
-    if (!targetSize) {
-        return [];
-    }
-
-    const packed = pack(
-        parent.children.map(cloneDatapoint),
-        targetSize,
-        targetSize,
-    );
-
-    const [x0, y0, width, height] = bounds(packed, 1);
-
-    const scale =
-        Math.min(
-            width ? targetSize / width : 1,
-            height ? targetSize / height : 1,
-        ) * innerPadding;
-
-    const fittedWidth = width * scale;
-    const fittedHeight = height * scale;
-
-    const offsetX = parent.x - fittedWidth / 2;
-    const offsetY = parent.y - fittedHeight / 2;
-
-    return packed.map((child) => ({
-        ...child,
-        x: (child.x - x0) * scale + offsetX,
-        y: (child.y - y0) * scale + offsetY,
-        r: child.r * scale,
-    }));
-}
-
 function flattenPackedCircles(source) {
     const result = [];
-
-    source.forEach((circle) => {
-        const children = packNestedChildren(circle);
-        result.push({
-            ...circle,
-            children,
-        });
-        result.push(...flattenPackedCircles(children));
-    });
-
+    for (const circle of source) {
+        const size = circle.r * 2;
+        const children =
+            circle.children?.length && size
+                ? fitPacking(
+                      circle.children,
+                      size,
+                      size,
+                      circle.x,
+                      circle.y,
+                      0.9,
+                  )
+                : [];
+        result.push({ ...circle, children }, ...flattenPackedCircles(children));
+    }
     return result;
 }
 
@@ -577,90 +510,71 @@ function canShowCircleLabel(circle) {
     return cfgLabels.value.children.show;
 }
 
-function setupResponsiveObserver() {
-    if (!FINAL_CONFIG.value.responsive || !circlePackChart.value) return;
-
-    const handleResize = throttle(() => {
-        const { width, height } = useResponsive({
-            chart: circlePackChart.value,
-            title: cfgChart.value.title.text ? chartTitle.value : null,
-            legend: null,
-            source: source.value,
-            noTitle: noTitle.value,
-        });
-
-        requestAnimationFrame(() => {
-            if (!width || !height) return;
-
-            if (svgRef.value) {
-                svgRef.value.setAttribute('width', width);
-                svgRef.value.setAttribute('height', height);
-            }
-            recomputePacking(width, height);
-        });
-    });
-
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
-
-    resizeObserver.value = new ResizeObserver(handleResize);
-    observedEl.value =
-        circlePackChart.value.parentNode || circlePackChart.value;
-    if (observedEl.value) {
-        resizeObserver.value.observe(observedEl.value);
-    }
-
-    // Initial responsive computation
-    handleResize();
-}
-
 function teardownResponsiveObserver() {
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-        resizeObserver.value = null;
-        observedEl.value = null;
-    }
+    scheduleResize = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    svgRef.value?.removeAttribute('width');
+    svgRef.value?.removeAttribute('height');
 }
-
-async function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
+function setupResponsiveObserver() {
+    teardownResponsiveObserver();
+    const parent = circlePackChart.value?.parentNode || circlePackChart.value;
+    if (!FINAL_CONFIG.value.responsive || !parent) return;
+    const resize = () => {
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            resizeFrame = null;
+            if (disposed) return;
+            const { width, height } = useResponsive({
+                chart: circlePackChart.value,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
+                legend: null,
+                source: source.value,
+                noTitle: noTitle.value,
+            });
+            if (
+                !Number.isFinite(width) ||
+                !Number.isFinite(height) ||
+                width <= 0 ||
+                height <= 0
+            )
+                return;
+            svgRef.value?.setAttribute('width', width);
+            svgRef.value?.setAttribute('height', height);
+            if (
+                width !== SIZE.value.w ||
+                height !== SIZE.value.h ||
+                packedSignature !== packingSignature.value
+            )
+                recomputePacking(width, height);
+        });
+    };
+    scheduleResize = resize;
+    resizeObserver.value = new ResizeObserver(resize);
+    resizeObserver.value.observe(parent);
+    resize();
+}
+function prepareChart() {
+    if (objectIsEmpty(props.dataset))
         error({
             componentName: 'VueUiCirclePack',
             type: 'dataset',
             debug: debug.value,
         });
-    }
-    const baseWidth = packingWidth.value;
-    const baseHeight = packingHeight.value;
-    recomputePacking(baseWidth, baseHeight);
-
-    if (FINAL_CONFIG.value.responsive) {
-        setupResponsiveObserver();
-    } else {
+    if (FINAL_CONFIG.value.responsive) setupResponsiveObserver();
+    else {
         teardownResponsiveObserver();
+        recomputePacking(packingWidth.value, packingHeight.value);
     }
 }
-
 onMounted(prepareChart);
-
 onBeforeUnmount(() => {
+    disposed = true;
     teardownResponsiveObserver();
 });
-
-watch(
-    () => FINAL_DATASET.value,
-    async (_ds) => {
-        await prepareChart();
-    },
-    { deep: true },
-);
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
@@ -689,7 +603,7 @@ function onTrapLeave(datapoint, seriesIndex) {
     )
         return;
     isTooltip.value = false;
-    selectedDatapoint.value = null;
+    selectedId.value = null;
     activeTooltipIndex.value = null;
     tooltipTriggerMode.value = 'pointer';
 }
@@ -704,12 +618,17 @@ function onTrapClick(datapoint, seriesIndex) {
 const dataTooltipSlot = ref(null);
 const useCustomFormat = ref(false);
 
-function onTrapEnter(datapoint, seriesIndex, triggerMode = 'pointer') {
-    selectedDatapoint.value = datapoint;
+function onTrapEnter(
+    datapoint,
+    seriesIndex,
+    triggerMode = 'pointer',
+    notify = true,
+) {
+    selectedId.value = datapoint.id;
     activeTooltipIndex.value = seriesIndex;
     tooltipTriggerMode.value = triggerMode;
 
-    if (FINAL_CONFIG.value.events.datapointEnter) {
+    if (notify && FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
     }
 
@@ -717,7 +636,7 @@ function onTrapEnter(datapoint, seriesIndex, triggerMode = 'pointer') {
         datapoint,
         seriesIndex,
         config: FINAL_CONFIG.value,
-        series: flattenedDataset.value,
+        series: circles.value,
     };
     isTooltip.value = true;
     const customFormat = cfgChart.value.tooltip.customFormat;
@@ -728,7 +647,7 @@ function onTrapEnter(datapoint, seriesIndex, triggerMode = 'pointer') {
             const customFormatString = customFormat({
                 seriesIndex,
                 datapoint,
-                series: flattenedDataset.value,
+                series: circles.value,
                 config: FINAL_CONFIG.value,
             });
             if (typeof customFormatString === 'string') {
@@ -762,7 +681,7 @@ function onTrapEnter(datapoint, seriesIndex, triggerMode = 'pointer') {
     }
 }
 
-function getCircleLabel(circle) {
+function formatCircleLabel(circle) {
     return applyDataLabel(
         cfgLabels.value.value.formatter,
         circle.value,
@@ -775,14 +694,46 @@ function getCircleLabel(circle) {
     );
 }
 
+const circleLabels = computed(
+    () =>
+        new Map(
+            circles.value.map((circle) => {
+                const label = formatCircleLabel(circle);
+                const length = String(label).length || 1;
+                return [
+                    circle.id,
+                    {
+                        label,
+                        fontSize: Math.min(
+                            circle.r / 2.5,
+                            (circle.r / length) * (length === 1 ? 1 : 2),
+                        ),
+                    },
+                ];
+            }),
+        ),
+);
+function getCircleLabel(circle) {
+    return (
+        circleLabels.value.get(circle.id)?.label ?? formatCircleLabel(circle)
+    );
+}
 function getValueFontSize(circle) {
-    if (!circle) {
-        return 0;
-    }
-
-    const label = getCircleLabel(circle);
-    const max = (circle.r / (label.length || 1)) * (label.length === 1 ? 1 : 2);
-    return Math.min(circle.r / 2.5, max);
+    return circleLabels.value.get(circle?.id)?.fontSize ?? 0;
+}
+function getCircleNameColor(circle) {
+    const color = cfgLabels.value.name.color;
+    return !color || color === 'auto'
+        ? adaptColorToBackground(circle.color)
+        : color;
+}
+function circleBounds(circle) {
+    return {
+        x: circle.x - circle.r,
+        y: circle.y - circle.r,
+        width: circle.r * 2,
+        height: circle.r * 2,
+    };
 }
 
 const isFullscreen = ref(false);
@@ -808,7 +759,7 @@ const { viewBox, resetZoom, isZoom, setInitialViewBox } = usePanZoom(
         width: Math.max(10, SIZE.value.w),
         height: Math.max(10, SIZE.value.h),
     },
-    cfgChart.value.zoom?.speed ?? 1,
+    () => cfgChart.value.zoom?.speed ?? 1,
     active,
 );
 
@@ -862,6 +813,16 @@ function getParentTooltipTextLines(circle) {
     return lines.filter(Boolean);
 }
 
+const tooltipDirections = {
+    right: [1, 0],
+    left: [-1, 0],
+    top: [0, -1],
+    bottom: [0, 1],
+    topRight: [1, -1],
+    topLeft: [-1, -1],
+    bottomRight: [1, 1],
+    bottomLeft: [-1, 1],
+};
 function getParentTooltipCandidateRect(
     circle,
     width,
@@ -869,61 +830,22 @@ function getParentTooltipCandidateRect(
     placement,
     distance,
 ) {
-    const centerX = circle.x;
-    const centerY = circle.y;
-
-    const placements = {
-        right: {
-            x: centerX + circle.r + distance,
-            y: centerY - height / 2,
-            anchorX: centerX + circle.r,
-            anchorY: centerY,
-        },
-        left: {
-            x: centerX - circle.r - distance - width,
-            y: centerY - height / 2,
-            anchorX: centerX - circle.r,
-            anchorY: centerY,
-        },
-        top: {
-            x: centerX - width / 2,
-            y: centerY - circle.r - distance - height,
-            anchorX: centerX,
-            anchorY: centerY - circle.r,
-        },
-        bottom: {
-            x: centerX - width / 2,
-            y: centerY + circle.r + distance,
-            anchorX: centerX,
-            anchorY: centerY + circle.r,
-        },
-        topRight: {
-            x: centerX + circle.r * 0.7 + distance,
-            y: centerY - circle.r * 0.7 - distance - height,
-            anchorX: centerX + circle.r * 0.7,
-            anchorY: centerY - circle.r * 0.7,
-        },
-        topLeft: {
-            x: centerX - circle.r * 0.7 - distance - width,
-            y: centerY - circle.r * 0.7 - distance - height,
-            anchorX: centerX - circle.r * 0.7,
-            anchorY: centerY - circle.r * 0.7,
-        },
-        bottomRight: {
-            x: centerX + circle.r * 0.7 + distance,
-            y: centerY + circle.r * 0.7 + distance,
-            anchorX: centerX + circle.r * 0.7,
-            anchorY: centerY + circle.r * 0.7,
-        },
-        bottomLeft: {
-            x: centerX - circle.r * 0.7 - distance - width,
-            y: centerY + circle.r * 0.7 + distance,
-            anchorX: centerX - circle.r * 0.7,
-            anchorY: centerY + circle.r * 0.7,
-        },
+    const [dx, dy] = tooltipDirections[placement];
+    const radius = circle.r * (dx && dy ? 0.7 : 1);
+    const anchorX = circle.x + dx * radius,
+        anchorY = circle.y + dy * radius;
+    return {
+        x:
+            anchorX +
+            dx * distance -
+            (dx < 0 ? width : dx === 0 ? width / 2 : 0),
+        y:
+            anchorY +
+            dy * distance -
+            (dy < 0 ? height : dy === 0 ? height / 2 : 0),
+        anchorX,
+        anchorY,
     };
-
-    return placements[placement];
 }
 
 function getCircleAncestors(circle, circleById) {
@@ -944,57 +866,49 @@ function getParentTooltipExternalCandidateRect(
     placement,
     distance,
 ) {
-    const centerX = circle.x;
-    const centerY = circle.y;
     const container = containerCircle || circle;
-    const diagonalOffset = distance * 0.6;
-
-    const placements = {
-        right: {
-            x: container.x + container.r + distance,
-            y: centerY - height / 2,
-        },
-        left: {
-            x: container.x - container.r - distance - width,
-            y: centerY - height / 2,
-        },
-        top: {
-            x: centerX - width / 2,
-            y: container.y - container.r - distance - height,
-        },
-        bottom: {
-            x: centerX - width / 2,
-            y: container.y + container.r + distance,
-        },
-        topRight: {
-            x: container.x + container.r + distance,
-            y: container.y - container.r - distance - height - diagonalOffset,
-        },
-        topLeft: {
-            x: container.x - container.r - distance - width,
-            y: container.y - container.r - distance - height - diagonalOffset,
-        },
-        bottomRight: {
-            x: container.x + container.r + distance,
-            y: container.y + container.r + distance + diagonalOffset,
-        },
-        bottomLeft: {
-            x: container.x - container.r - distance - width,
-            y: container.y + container.r + distance + diagonalOffset,
-        },
-    };
-
-    const rectangle = placements[placement];
-    const targetX = rectangle.x + width / 2;
-    const targetY = rectangle.y + height / 2;
-    const angle = Math.atan2(targetY - centerY, targetX - centerX);
-
+    const [dx, dy] = tooltipDirections[placement];
+    const diagonalOffset = dx && dy ? distance * 0.6 : 0;
+    const x = dx
+        ? container.x + dx * container.r + dx * distance - (dx < 0 ? width : 0)
+        : circle.x - width / 2;
+    const y = dy
+        ? container.y +
+          dy * container.r +
+          dy * distance -
+          (dy < 0 ? height : 0) +
+          dy * diagonalOffset
+        : circle.y - height / 2;
+    const angle = Math.atan2(
+        y + height / 2 - circle.y,
+        x + width / 2 - circle.x,
+    );
     return {
-        ...rectangle,
-        anchorX: centerX + Math.cos(angle) * circle.r,
-        anchorY: centerY + Math.sin(angle) * circle.r,
+        x,
+        y,
+        anchorX: circle.x + Math.cos(angle) * circle.r,
+        anchorY: circle.y + Math.sin(angle) * circle.r,
     };
 }
+
+const parentTooltipInputs = computed(() =>
+    circles.value
+        .filter((circle) => circle.hasChildren && circle.name)
+        .toSorted((a, b) => b.r - a.r)
+        .map((circle) => {
+            const ancestors = getCircleAncestors(circle, circleById.value);
+            const lines = getParentTooltipTextLines(circle);
+            return {
+                circle,
+                outermostAncestor: ancestors.at(-1),
+                lines,
+                longestLine: lines.reduce(
+                    (max, line) => Math.max(max, String(line).length),
+                    0,
+                ),
+            };
+        }),
+);
 
 function createParentTooltipItems(sourceViewBox, options = {}) {
     const { clamp = true, scale = 1 } = options;
@@ -1022,125 +936,102 @@ function createParentTooltipItems(sourceViewBox, options = {}) {
         Math.min(sourceViewBox.width, sourceViewBox.height) * 0.006,
     );
 
-    const placements = [
-        'right',
-        'left',
-        'top',
-        'bottom',
-        'topRight',
-        'topLeft',
-        'bottomRight',
-        'bottomLeft',
-    ];
+    const placements = Object.keys(tooltipDirections);
 
     const tooltips = [];
-    const circleById = new Map(
-        circles.value.map((circle) => [circle.id, circle]),
-    );
+    parentTooltipInputs.value.forEach(
+        ({ circle, outermostAncestor, lines, longestLine }) => {
+            const width = Math.max(
+                fontSize * 5,
+                longestLine * fontSize * 0.62 + paddingX * 2,
+            );
+            const height = lines.length * lineHeight + paddingY * 2;
 
-    const parentCircles = circles.value
-        .filter((circle) => circle.hasChildren && circle.name)
-        .sort((a, b) => b.r - a.r);
+            const externalCandidates = outermostAncestor
+                ? placements.map((placement) =>
+                      getParentTooltipExternalCandidateRect(
+                          circle,
+                          outermostAncestor,
+                          width,
+                          height,
+                          placement,
+                          distance,
+                      ),
+                  )
+                : [];
 
-    parentCircles.forEach((circle) => {
-        const ancestors = getCircleAncestors(circle, circleById);
-        const outermostAncestor = ancestors.at(-1);
-        const lines = getParentTooltipTextLines(circle);
+            const localCandidates = placements.map((placement) =>
+                getParentTooltipCandidateRect(
+                    circle,
+                    width,
+                    height,
+                    placement,
+                    distance,
+                ),
+            );
 
-        const longestLine = lines.reduce((max, line) => {
-            return Math.max(max, String(line).length);
-        }, 0);
-
-        const width = Math.max(
-            fontSize * 5,
-            longestLine * fontSize * 0.62 + paddingX * 2,
-        );
-        const height = lines.length * lineHeight + paddingY * 2;
-
-        const externalCandidates = outermostAncestor
-            ? placements.map((placement) =>
-                  getParentTooltipExternalCandidateRect(
-                      circle,
-                      outermostAncestor,
-                      width,
-                      height,
-                      placement,
-                      distance,
-                  ),
-              )
-            : [];
-
-        const localCandidates = placements.map((placement) =>
-            getParentTooltipCandidateRect(
-                circle,
-                width,
-                height,
-                placement,
-                distance,
-            ),
-        );
-
-        const candidates = [...externalCandidates, ...localCandidates].map(
-            (raw) => {
-                const rectangle = clamp
-                    ? clampRectangleToViewBox(
-                          {
+            const candidates = [...externalCandidates, ...localCandidates].map(
+                (raw) => {
+                    const rectangle = clamp
+                        ? clampRectangleToViewBox(
+                              {
+                                  x: raw.x,
+                                  y: raw.y,
+                                  width,
+                                  height,
+                              },
+                              sourceViewBox,
+                              scale,
+                          )
+                        : {
                               x: raw.x,
                               y: raw.y,
                               width,
                               height,
-                          },
-                          sourceViewBox,
-                          scale,
-                      )
-                    : {
-                          x: raw.x,
-                          y: raw.y,
-                          width,
-                          height,
-                      };
+                          };
 
-                return {
-                    ...rectangle,
-                    anchorX: raw.anchorX,
-                    anchorY: raw.anchorY,
-                    lineX: rectangle.x + rectangle.width / 2,
-                    lineY: rectangle.y + rectangle.height / 2,
-                };
-            },
-        );
-
-        const validCandidate = candidates.find((candidate) => {
-            const collidesWithPreviousTooltip = tooltips.some((tooltip) =>
-                rectanglesCollide(candidate, tooltip, collisionGap),
+                    return {
+                        ...rectangle,
+                        anchorX: raw.anchorX,
+                        anchorY: raw.anchorY,
+                        lineX: rectangle.x + rectangle.width / 2,
+                        lineY: rectangle.y + rectangle.height / 2,
+                    };
+                },
             );
 
-            if (collidesWithPreviousTooltip) return false;
+            const validCandidate = candidates.find((candidate) => {
+                const collidesWithPreviousTooltip = tooltips.some((tooltip) =>
+                    rectanglesCollide(candidate, tooltip, collisionGap),
+                );
 
-            return !circles.value.some((otherCircle) =>
-                rectangleCollidesWithCircle(
-                    candidate,
-                    otherCircle,
-                    collisionGap,
-                ),
-            );
-        });
+                if (collidesWithPreviousTooltip) return false;
 
-        if (!validCandidate) return;
+                return !circles.value.some((otherCircle) =>
+                    rectangleCollidesWithCircle(
+                        candidate,
+                        otherCircle,
+                        collisionGap,
+                    ),
+                );
+            });
 
-        tooltips.push({
-            ...validCandidate,
-            datapoint: circle,
-            id: `parent_tooltip_${circle.id}`,
-            color: circle.color,
-            lines,
-            fontSize,
-            lineHeight,
-            paddingX,
-            paddingY,
-            scale,
-        });
-    });
+            if (!validCandidate) return;
+
+            tooltips.push({
+                ...validCandidate,
+                datapoint: circle,
+                id: `parent_tooltip_${circle.id}`,
+                color: circle.color,
+                lines,
+                fontSize,
+                lineHeight,
+                paddingX,
+                paddingY,
+                scale,
+            });
+        },
+    );
 
     return tooltips;
 }
@@ -1237,24 +1128,11 @@ function buildHierarchyRows(datapoints) {
     return rows;
 }
 
-const table = computed(() => {
-    const hierarchy = buildHierarchyRows(formattedDataset.value);
-
-    const head = flattenedDataset.value
-        .map((d) => ({
-            name: d.name,
-            value: d.value,
-            color: d.color,
-        }))
-        .toSorted((a, b) => b.value - a.value);
-
-    const body = hierarchy.map((row) => row.value);
-
-    return { head, body, hierarchy };
-});
-
+const hierarchyRows = computed(() =>
+    buildHierarchyRows(formattedDataset.value),
+);
 const csvTable = computed(() => {
-    return buildHierarchyRows(formattedDataset.value).map((row) => ({
+    return hierarchyRows.value.map((row) => ({
         ...row,
         name: `${'- '.repeat(row.depth)}${row.name}`,
     }));
@@ -1276,8 +1154,8 @@ function generateCsv(callback = null) {
             [cfgChart.value.title.subtitle.text],
             [
                 [FINAL_CONFIG.value.table.columnNames.datapoint],
-                ['Parent'],
-                ['Depth'],
+                [FINAL_CONFIG.value.table.columnNames.parent],
+                [FINAL_CONFIG.value.table.columnNames.depth],
                 [FINAL_CONFIG.value.table.columnNames.value],
             ],
         ].concat(labels);
@@ -1303,7 +1181,7 @@ const dataTable = computed(() => {
         FINAL_CONFIG.value.table.columnNames.value,
     ];
 
-    const body = table.value.hierarchy.map((row) => {
+    const body = hierarchyRows.value.map((row) => {
         const label = dataLabel({
             p: cfgLabels.value.value.prefix,
             v: row.value,
@@ -1336,12 +1214,7 @@ const dataTable = computed(() => {
         breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
     };
 
-    const colNames = [
-        FINAL_CONFIG.value.table.columnNames.datapoint,
-        FINAL_CONFIG.value.table.columnNames.parent,
-        FINAL_CONFIG.value.table.columnNames.depth,
-        FINAL_CONFIG.value.table.columnNames.value,
-    ];
+    const colNames = head;
 
     return {
         colNames,
@@ -1394,16 +1267,7 @@ const tableComponent = computed(() =>
 
 watch(
     () => mutableConfig.value.showTable,
-    (v) => {
-        if (FINAL_CONFIG.value.table.show) return;
-        if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
-            tableUnit.value.open();
-        } else {
-            if (tableUnit.value && 'close' in tableUnit.value) {
-                tableUnit.value.close();
-            }
-        }
-    },
+    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
 );
 
 function closeTable() {
@@ -1431,7 +1295,7 @@ async function copyAlt() {
     emit('copyAlt', {
         config: FINAL_CONFIG.value,
         dataset: formattedDataset.value,
-        flattenedDataset: flattenedDataset.value,
+        flattenedDataset: circles.value,
     });
     if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
         console.warn(
@@ -1443,7 +1307,7 @@ async function copyAlt() {
         FINAL_CONFIG.value.userOptions.callbacks.altCopy({
             config: FINAL_CONFIG.value,
             dataset: formattedDataset.value,
-            flattenedDataset: flattenedDataset.value,
+            flattenedDataset: circles.value,
         }),
     );
 }
@@ -1461,6 +1325,13 @@ function setKeyboardTooltipPositionFromIndex(index) {
     tooltipA11yPosition.value = coords;
 }
 
+function clearSelection() {
+    selectedId.value = null;
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    isTooltip.value = false;
+}
+
 function clearKeyboardSelection() {
     if (activeTooltipIndex.value !== null) {
         const currentCircle = circles.value[activeTooltipIndex.value];
@@ -1469,7 +1340,7 @@ function clearKeyboardSelection() {
     activeTooltipIndex.value = null;
     tooltipTriggerMode.value = 'pointer';
     isTooltip.value = false;
-    selectedDatapoint.value = null;
+    selectedId.value = null;
 }
 
 function onSvgFocus() {
@@ -1547,12 +1418,61 @@ function onSvgKeydown(event) {
 const a11yTable = computed(() => {
     const headers = dataTable.value?.colNames ?? [];
     const rows =
-        dataTable.value?.body?.map((row) => [row[0]?.name ?? '', row[1]]) ?? [];
+        dataTable.value?.body?.map((row) => [
+            row[0]?.name ?? '',
+            ...row.slice(1),
+        ]) ?? [];
 
     return { headers, rows };
 });
 
 const textColor = computed(() => cfgChart.value.color);
+
+function packingInput(items) {
+    return items.map(({ id, r, children }) => ({
+        id,
+        r,
+        children: packingInput(children),
+    }));
+}
+const packingSignature = computed(() =>
+    JSON.stringify(packingInput(formattedDataset.value)),
+);
+watch(
+    [packingSignature, packingWidth, packingHeight],
+    () => {
+        if (FINAL_CONFIG.value.responsive) scheduleResize?.();
+        else recomputePacking(packingWidth.value, packingHeight.value);
+    },
+    { flush: 'post' },
+);
+watch(() => FINAL_CONFIG.value.responsive, prepareChart, { flush: 'post' });
+watch(
+    [cfgChart, () => FINAL_CONFIG.value.style.fontFamily],
+    () => scheduleResize?.(),
+    { flush: 'post' },
+);
+watch(
+    [circles, () => cfgChart.value.parentTooltips, cfgLabels],
+    refreshInitialViewBox,
+    { deep: true, flush: 'post' },
+);
+watch(loading, (value) => {
+    if (value) clearSelection();
+});
+watch(circles, (items) => {
+    if (!selectedId.value) return;
+    const index = items.findIndex((circle) => circle.id === selectedId.value);
+    if (index < 0) {
+        selectedId.value = null;
+        activeTooltipIndex.value = null;
+        isTooltip.value = false;
+        return;
+    }
+    if (tooltipTriggerMode.value === 'keyboard')
+        setKeyboardTooltipPositionFromIndex(index);
+    onTrapEnter(items[index], index, tooltipTriggerMode.value, false);
+});
 
 defineExpose({
     getData,
@@ -1590,7 +1510,7 @@ const annotationViewport = computed(() =>
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -1799,10 +1719,7 @@ const annotationViewport = computed(() =>
                     <rect
                         :class="{ 'vue-data-ui-transition': transitionEnabled }"
                         data-cy="datapoint-circle"
-                        :x="circle.x - circle.r"
-                        :y="circle.y - circle.r"
-                        :width="circle.r * 2"
-                        :height="circle.r * 2"
+                        v-bind="circleBounds(circle)"
                         :stroke="cfgCircles.stroke"
                         vector-effect="non-scaling-stroke"
                         :stroke-width="
@@ -1822,10 +1739,7 @@ const annotationViewport = computed(() =>
                     <rect
                         v-if="$slots.pattern"
                         :class="{ 'vue-data-ui-transition': transitionEnabled }"
-                        :x="circle.x - circle.r"
-                        :y="circle.y - circle.r"
-                        :width="circle.r * 2"
-                        :height="circle.r * 2"
+                        v-bind="circleBounds(circle)"
                         :stroke="cfgCircles.stroke"
                         vector-effect="non-scaling-stroke"
                         :stroke-width="
@@ -1843,10 +1757,7 @@ const annotationViewport = computed(() =>
                         v-if="!circle.hasChildren"
                         :class="{ 'vue-data-ui-transition': transitionEnabled }"
                         data-cy="datapoint-circle-overlay"
-                        :x="circle.x - circle.r"
-                        :y="circle.y - circle.r"
-                        :width="circle.r * 2"
-                        :height="circle.r * 2"
+                        v-bind="circleBounds(circle)"
                         stroke="none"
                         :fill="
                             selectedDatapoint &&
@@ -1890,9 +1801,7 @@ const annotationViewport = computed(() =>
                                     getValueFontSize(circle) *
                                     cfgLabels.value.fontSizeRatio,
                             },
-                            color: !cfgLabels.name.color
-                                ? adaptColorToBackground(circle.color)
-                                : cfgLabels.name.color,
+                            color: getCircleNameColor(circle),
                         }"
                     />
 
@@ -1919,11 +1828,7 @@ const annotationViewport = computed(() =>
                             :font-size="
                                 (circle.r / 3) * cfgLabels.name.fontSizeRatio
                             "
-                            :fill="
-                                cfgLabels.name.color === 'auto'
-                                    ? adaptColorToBackground(circle.color)
-                                    : cfgLabels.name.color
-                            "
+                            :fill="getCircleNameColor(circle)"
                             :font-weight="
                                 cfgLabels.name.bold ? 'bold' : 'normal'
                             "
@@ -2181,7 +2086,7 @@ const annotationViewport = computed(() =>
             :smooth="cfgChart.tooltip.smooth"
             :backdropFilter="cfgChart.tooltip.backdropFilter"
             :smoothForce="cfgChart.tooltip.smoothForce"
-            :smoothSnapThreshold="cfgChart.tooltip.smoothSnapThrehsold"
+            :smoothSnapThreshold="cfgChart.tooltip.smoothSnapThreshold"
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >

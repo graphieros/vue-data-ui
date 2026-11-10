@@ -16,6 +16,7 @@ export class Timer {
 
                 switch(action) {
                     case 'start':
+                        clearInterval(interval);
                         startTime = Date.now();
                         tickInterval = data.interval;
                         elapsed = 0;
@@ -71,7 +72,28 @@ export class Timer {
 
         const blob = new Blob([workerCode], { type: 'application/javascript' });
         const workerUrl = URL.createObjectURL(blob);
-        const worker = new Worker(workerUrl);
+        let worker;
+        try {
+            worker = new Worker(workerUrl);
+        } finally {
+            URL.revokeObjectURL(workerUrl);
+        }
+        let disposed = false;
+        const lapListeners = new Set();
+        const postMessage = (message) => {
+            if (!disposed) worker.postMessage(message);
+        };
+        this.destroy = () => {
+            if (disposed) return;
+            disposed = true;
+            lapListeners.forEach((listener) =>
+                worker.removeEventListener('message', listener),
+            );
+            lapListeners.clear();
+            worker.onmessage = null;
+            worker.onerror = null;
+            worker.terminate();
+        };
 
         function formatTime(milliseconds) {
             let totalSeconds = Math.floor(milliseconds / 1000);
@@ -99,7 +121,7 @@ export class Timer {
 
         this.start = () => {
             this.isPaused = false;
-            worker.postMessage({
+            postMessage({
                 action: 'start',
                 data: { interval: this.interval },
             });
@@ -110,24 +132,24 @@ export class Timer {
                 this.resume();
             } else {
                 this.isPaused = true;
-                worker.postMessage({ action: 'pause' });
+                postMessage({ action: 'pause' });
             }
         };
 
         this.resume = () => {
             if (this.isPaused) {
-                worker.postMessage({ action: 'resume' });
+                postMessage({ action: 'resume' });
                 this.isPaused = false;
             }
         };
 
         this.stop = () => {
-            worker.postMessage({ action: 'stop' });
+            postMessage({ action: 'stop' });
             this.isPaused = false;
         };
 
         this.reset = () => {
-            worker.postMessage({ action: 'reset' });
+            postMessage({ action: 'reset' });
             this.elapsed = 0;
             this.isPaused = false;
         };
@@ -139,8 +161,10 @@ export class Timer {
 
         this.lap = () => {
             return new Promise((resolve) => {
-                worker.postMessage({ action: 'lap' });
+                postMessage({ action: 'lap' });
                 const handleLap = (event) => {
+                    lapListeners.delete(handleLap);
+                    if (disposed) return;
                     const { elapsed, timestamp, action } = event.data;
                     if (action === 'lap') {
                         const formattedTime = formatTime(elapsed);
@@ -152,11 +176,14 @@ export class Timer {
                         resolve(lapData);
                     }
                 };
+                if (disposed) return;
+                lapListeners.add(handleLap);
                 worker.addEventListener('message', handleLap, { once: true });
             });
         };
 
         worker.onmessage = (event) => {
+            if (disposed) return;
             const { elapsed, timestamp } = event.data;
             this.elapsed = elapsed;
             callback({
@@ -167,6 +194,7 @@ export class Timer {
         };
 
         worker.onerror = (e) => {
+            if (disposed) return;
             !!error && error(e);
         };
     }

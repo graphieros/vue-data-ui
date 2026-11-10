@@ -1,7 +1,8 @@
 import { catalogArgs } from '../support/catalog.js';
 import VueDataUi from '../../src/components/vue-data-ui.vue';
 import { components } from '../fixtures/components.js';
-import { expect, waitFor } from 'storybook/test';
+import { expect } from 'storybook/test';
+import { expectWrappedChart } from '../support/wrappedChart.js';
 export default {
     title: 'Utilities/VueDataUi',
     component: VueDataUi,
@@ -25,11 +26,7 @@ export const VueUiHill = {
         config: catalogArgs(components[0].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[0].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[0]);
     },
 };
 export const VueUiBump = {
@@ -39,11 +36,7 @@ export const VueUiBump = {
         config: catalogArgs(components[1].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[1].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[1]);
     },
 };
 export const VueUiGeo = {
@@ -53,11 +46,7 @@ export const VueUiGeo = {
         config: catalogArgs(components[2].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[2].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[2]);
     },
 };
 export const VueUiDag = {
@@ -67,11 +56,7 @@ export const VueUiDag = {
         config: catalogArgs(components[3].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[3].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[3]);
     },
 };
 export const VueUiChord = {
@@ -81,11 +66,7 @@ export const VueUiChord = {
         config: catalogArgs(components[4].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[4].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[4]);
     },
 };
 export const VueUiRidgeline = {
@@ -95,11 +76,7 @@ export const VueUiRidgeline = {
         config: catalogArgs(components[5].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[5].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[5]);
     },
 };
 export const VueUiWorld = {
@@ -109,11 +86,7 @@ export const VueUiWorld = {
         config: catalogArgs(components[6].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[6].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[6]);
     },
 };
 export const VueUi3dBar = {
@@ -123,11 +96,7 @@ export const VueUi3dBar = {
         config: catalogArgs(components[7].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[7].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[7]);
     },
 };
 export const VueUiAgePyramid = {
@@ -137,11 +106,7 @@ export const VueUiAgePyramid = {
         config: catalogArgs(components[8].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[8].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[8]);
     },
 };
 export const VueUiAnnotator = {
@@ -151,11 +116,7 @@ export const VueUiAnnotator = {
         config: catalogArgs(components[9].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[9].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[9]);
     },
 };
 export const VueUiCandlestick = {
@@ -165,11 +126,7 @@ export const VueUiCandlestick = {
         config: catalogArgs(components[10].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[10].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[10]);
     },
 };
 export const VueUiChestnut = {
@@ -179,11 +136,7 @@ export const VueUiChestnut = {
         config: catalogArgs(components[11].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[11].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[11]);
     },
 };
 export const VueUiDashboard = {
@@ -193,11 +146,7 @@ export const VueUiDashboard = {
         config: catalogArgs(components[12].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[12].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[12]);
     },
 };
 export const VueUiDigits = {
@@ -207,11 +156,7 @@ export const VueUiDigits = {
         config: catalogArgs(components[13].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[13].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[13]);
     },
 };
 export const VueUiDonut = {
@@ -221,11 +166,7 @@ export const VueUiDonut = {
         config: catalogArgs(components[14].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[14].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[14]);
     },
 };
 export const VueUiDonutEvolution = {
@@ -235,11 +176,7 @@ export const VueUiDonutEvolution = {
         config: catalogArgs(components[15].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[15].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[15]);
     },
 };
 export const VueUiGalaxy = {
@@ -249,11 +186,7 @@ export const VueUiGalaxy = {
         config: catalogArgs(components[16].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[16].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[16]);
     },
 };
 export const VueUiGauge = {
@@ -263,11 +196,7 @@ export const VueUiGauge = {
         config: catalogArgs(components[17].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[17].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[17]);
     },
 };
 export const VueUiHeatmap = {
@@ -277,11 +206,7 @@ export const VueUiHeatmap = {
         config: catalogArgs(components[18].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[18].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[18]);
     },
 };
 export const VueUiKpi = {
@@ -291,11 +216,7 @@ export const VueUiKpi = {
         config: catalogArgs(components[19].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[19].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[19]);
     },
 };
 export const VueUiMiniLoader = {
@@ -305,11 +226,7 @@ export const VueUiMiniLoader = {
         config: catalogArgs(components[20].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[20].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[20]);
     },
 };
 export const VueUiMolecule = {
@@ -319,11 +236,7 @@ export const VueUiMolecule = {
         config: catalogArgs(components[21].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[21].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[21]);
     },
 };
 export const VueUiMoodRadar = {
@@ -333,11 +246,7 @@ export const VueUiMoodRadar = {
         config: catalogArgs(components[22].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[22].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[22]);
     },
 };
 export const VueUiNestedDonuts = {
@@ -347,11 +256,7 @@ export const VueUiNestedDonuts = {
         config: catalogArgs(components[23].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[23].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[23]);
     },
 };
 export const VueUiOnion = {
@@ -361,11 +266,7 @@ export const VueUiOnion = {
         config: catalogArgs(components[24].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[24].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[24]);
     },
 };
 export const VueUiQuadrant = {
@@ -375,11 +276,7 @@ export const VueUiQuadrant = {
         config: catalogArgs(components[25].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[25].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[25]);
     },
 };
 export const VueUiRadar = {
@@ -389,11 +286,7 @@ export const VueUiRadar = {
         config: catalogArgs(components[26].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[26].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[26]);
     },
 };
 export const VueUiRating = {
@@ -403,11 +296,7 @@ export const VueUiRating = {
         config: catalogArgs(components[27].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[27].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[27]);
     },
 };
 export const VueUiRelationCircle = {
@@ -417,11 +306,7 @@ export const VueUiRelationCircle = {
         config: catalogArgs(components[28].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[28].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[28]);
     },
 };
 export const VueUiRings = {
@@ -431,11 +316,7 @@ export const VueUiRings = {
         config: catalogArgs(components[29].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[29].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[29]);
     },
 };
 export const VueUiScatter = {
@@ -445,11 +326,7 @@ export const VueUiScatter = {
         config: catalogArgs(components[30].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[30].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[30]);
     },
 };
 export const VueUiSkeleton = {
@@ -459,11 +336,7 @@ export const VueUiSkeleton = {
         config: catalogArgs(components[31].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[31].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[31]);
     },
 };
 export const VueUiSmiley = {
@@ -473,11 +346,7 @@ export const VueUiSmiley = {
         config: catalogArgs(components[32].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[32].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[32]);
     },
 };
 export const VueUiSparkbar = {
@@ -487,11 +356,7 @@ export const VueUiSparkbar = {
         config: catalogArgs(components[33].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[33].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[33]);
     },
 };
 export const VueUiSparkgauge = {
@@ -501,11 +366,7 @@ export const VueUiSparkgauge = {
         config: catalogArgs(components[34].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[34].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[34]);
     },
 };
 export const VueUiSparkHistogram = {
@@ -515,11 +376,7 @@ export const VueUiSparkHistogram = {
         config: catalogArgs(components[35].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[35].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[35]);
     },
 };
 export const VueUiSparkline = {
@@ -529,11 +386,7 @@ export const VueUiSparkline = {
         config: catalogArgs(components[36].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[36].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[36]);
     },
 };
 export const VueUiSparkStackbar = {
@@ -543,11 +396,7 @@ export const VueUiSparkStackbar = {
         config: catalogArgs(components[37].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[37].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[37]);
     },
 };
 export const VueUiTable = {
@@ -557,11 +406,7 @@ export const VueUiTable = {
         config: catalogArgs(components[38].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[38].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[38]);
     },
 };
 export const VueUiTableSparkline = {
@@ -571,11 +416,7 @@ export const VueUiTableSparkline = {
         config: catalogArgs(components[39].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[39].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[39]);
     },
 };
 export const VueUiThermometer = {
@@ -585,11 +426,7 @@ export const VueUiThermometer = {
         config: catalogArgs(components[40].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[40].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[40]);
     },
 };
 export const VueUiTiremarks = {
@@ -599,11 +436,7 @@ export const VueUiTiremarks = {
         config: catalogArgs(components[41].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[41].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[41]);
     },
 };
 export const VueUiTreemap = {
@@ -613,11 +446,7 @@ export const VueUiTreemap = {
         config: catalogArgs(components[42].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[42].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[42]);
     },
 };
 export const VueUiHorizontalBar = {
@@ -627,11 +456,7 @@ export const VueUiHorizontalBar = {
         config: catalogArgs(components[43].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[43].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[43]);
     },
 };
 export const VueUiWaffle = {
@@ -641,11 +466,7 @@ export const VueUiWaffle = {
         config: catalogArgs(components[44].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[44].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[44]);
     },
 };
 export const VueUiWheel = {
@@ -655,11 +476,7 @@ export const VueUiWheel = {
         config: catalogArgs(components[45].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[45].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[45]);
     },
 };
 export const VueUiXy = {
@@ -669,11 +486,7 @@ export const VueUiXy = {
         config: catalogArgs(components[46].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[46].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[46]);
     },
 };
 export const VueUiQuickChart = {
@@ -683,11 +496,7 @@ export const VueUiQuickChart = {
         config: catalogArgs(components[47].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[47].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[47]);
     },
 };
 export const VueUiSparkTrend = {
@@ -697,11 +506,7 @@ export const VueUiSparkTrend = {
         config: catalogArgs(components[48].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[48].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[48]);
     },
 };
 export const VueUiStripPlot = {
@@ -711,11 +516,7 @@ export const VueUiStripPlot = {
         config: catalogArgs(components[49].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[49].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[49]);
     },
 };
 export const VueUiDumbbell = {
@@ -725,11 +526,7 @@ export const VueUiDumbbell = {
         config: catalogArgs(components[50].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[50].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[50]);
     },
 };
 export const VueUiWordCloud = {
@@ -739,11 +536,7 @@ export const VueUiWordCloud = {
         config: catalogArgs(components[51].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[51].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[51]);
     },
 };
 export const VueUiXyCanvas = {
@@ -753,11 +546,7 @@ export const VueUiXyCanvas = {
         config: catalogArgs(components[52].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[52].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[52]);
     },
 };
 export const VueUiFlow = {
@@ -767,11 +556,7 @@ export const VueUiFlow = {
         config: catalogArgs(components[53].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[53].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[53]);
     },
 };
 export const VueUiParallelCoordinatePlot = {
@@ -781,11 +566,7 @@ export const VueUiParallelCoordinatePlot = {
         config: catalogArgs(components[54].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[54].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[54]);
     },
 };
 export const VueUiTimer = {
@@ -795,11 +576,7 @@ export const VueUiTimer = {
         config: catalogArgs(components[55].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[55].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[55]);
     },
 };
 export const VueUiCarouselTable = {
@@ -809,11 +586,7 @@ export const VueUiCarouselTable = {
         config: catalogArgs(components[56].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[56].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[56]);
     },
 };
 export const VueUiGizmo = {
@@ -823,11 +596,7 @@ export const VueUiGizmo = {
         config: catalogArgs(components[57].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[57].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[57]);
     },
 };
 export const VueUiStackbar = {
@@ -837,11 +606,7 @@ export const VueUiStackbar = {
         config: catalogArgs(components[58].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[58].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[58]);
     },
 };
 export const VueUiStackline = {
@@ -851,11 +616,7 @@ export const VueUiStackline = {
         config: catalogArgs(components[59].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[59].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[59]);
     },
 };
 export const VueUiBullet = {
@@ -865,11 +626,7 @@ export const VueUiBullet = {
         config: catalogArgs(components[60].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[60].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[60]);
     },
 };
 export const VueUiFunnel = {
@@ -879,11 +636,7 @@ export const VueUiFunnel = {
         config: catalogArgs(components[61].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[61].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[61]);
     },
 };
 export const VueUiHistoryPlot = {
@@ -893,11 +646,7 @@ export const VueUiHistoryPlot = {
         config: catalogArgs(components[62].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[62].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[62]);
     },
 };
 export const VueUiCirclePack = {
@@ -907,10 +656,6 @@ export const VueUiCirclePack = {
         config: catalogArgs(components[63].config || {}),
     },
     play: async ({ canvasElement }) => {
-        await waitFor(() =>
-            expect(
-                canvasElement.querySelector(components[63].wrapperClass),
-            ).toBeVisible(),
-        );
+        await expectWrappedChart(canvasElement, components[63]);
     },
 };

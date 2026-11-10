@@ -8,6 +8,7 @@ import {
 } from '../support/scenario.js';
 import { commonFeatures } from '../support/common.js';
 import VueUiXy from '../../src/components/vue-ui-xy.vue';
+import SlicerPreview from '../../src/atoms/SlicerPreview.vue';
 import { components } from '../fixtures/components.js';
 function createCases(env) {
     const { aliases, select, mountSubject, fixtures } = env;
@@ -15,6 +16,369 @@ function createCases(env) {
     const hooks = [];
     const testCommonFeatures = commonFeatures(env);
     const { config, dataset } = components.find((c) => c.name === 'VueUiXy');
+    cases.LogarithmicY = async () => {
+        const values = [0.1, 1, 10, 100, 1000, 100, 10, 1, 0.1];
+        const makeConfig = (reverse = false, scale = 'log') => ({
+            useCssAnimation: false,
+            chart: {
+                zoom: { show: true, minimap: { show: true, compact: true } },
+                grid: { labels: { yAxis: { scale, reverse } } },
+            },
+        });
+        const { wrapper } = await mountSubject(VueUiXy, {
+            props: {
+                dataset: [{ name: 'Values', type: 'bar', series: values }],
+                config: makeConfig(),
+            },
+        });
+        const state = wrapper.vm.$.setupState;
+        for (const [reverse, scale] of [
+            [false, 'log'],
+            [true, 'log'],
+            [false, 'linear'],
+            [true, 'linear'],
+        ]) {
+            await wrapper.setProps({ config: makeConfig(reverse, scale) });
+            state.setZoomState({ start: 0, end: values.length });
+            await waitFor(() => {
+                const bars = [
+                    ...wrapper.element.querySelectorAll(
+                        '[data-cy="datapoint-bar"]',
+                    ),
+                ];
+                expect(bars).toHaveLength(values.length);
+                const heights = bars.map((bar) =>
+                    Number(bar.getAttribute('height')),
+                );
+                if (scale === 'log')
+                    expect(heights[2] - heights[1]).toBeCloseTo(
+                        heights[3] - heights[2],
+                    );
+                const baseline = state.globalAreaBaselineY;
+                bars.forEach((bar, index) => {
+                    const plot = state.barSet[0].plots[index];
+                    expect(Number(bar.getAttribute('y'))).toBeCloseTo(
+                        Math.min(plot.y, baseline),
+                    );
+                    expect(Number(bar.getAttribute('height'))).toBeCloseTo(
+                        Math.max(0.00001, Math.abs(plot.y - baseline)),
+                    );
+                });
+                const preview = wrapper.findComponent(SlicerPreview);
+                expect(preview.exists()).toBe(true);
+                const points =
+                    preview.vm.$.setupState.allMinimapLines[0].points;
+                if (scale === 'log')
+                    expect(points[0].y - points[1].y).toBeCloseTo(
+                        points[1].y - points[2].y,
+                    );
+                expect(points[1].y > points[0].y).toBe(reverse);
+                const miniBars = [
+                    ...preview.element.querySelectorAll(
+                        '[data-cy="minimap-bar"]',
+                    ),
+                ];
+                expect(miniBars.length).toBeGreaterThan(0);
+                miniBars.forEach((bar, index) => {
+                    const point = points[index % points.length];
+                    expect(Number(bar.getAttribute('y'))).toBeCloseTo(
+                        Math.min(point.y, point.y0),
+                    );
+                    expect(Number(bar.getAttribute('height'))).toBeCloseTo(
+                        Math.abs(point.y0 - point.y),
+                    );
+                    expect(
+                        Number(bar.getAttribute('height')),
+                    ).toBeGreaterThanOrEqual(0);
+                });
+                expect(wrapper.element.innerHTML).not.toContain('NaN');
+            });
+            state.setZoomState({ start: 1, end: 6 });
+            await waitFor(() => expect(state.slicer.start).toBe(1));
+            expect(
+                state.barSet[0].plots.every((plot) => Number.isFinite(plot.y)),
+            ).toBe(true);
+        }
+        for (const scale of ['log', 'linear']) {
+            await wrapper.setProps({
+                dataset: [
+                    {
+                        name: 'Area',
+                        type: 'line',
+                        series: values,
+                        useArea: true,
+                    },
+                ],
+                config: makeConfig(true, scale),
+            });
+            await waitFor(() => {
+                const area = wrapper.element.querySelector(
+                    '[data-cy="datapoint-line-area-straight"]',
+                );
+                expect(area).toBeTruthy();
+                const coordinates = area
+                    .getAttribute('d')
+                    .match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/gi)
+                    .map(Number);
+                expect(coordinates[1]).toBeCloseTo(state.drawingArea.top);
+                expect(coordinates.at(-1)).toBeCloseTo(state.drawingArea.top);
+                const preview = wrapper.findComponent(SlicerPreview);
+                const points =
+                    preview.vm.$.setupState.allMinimapLines[0].points;
+                expect(preview.props('yReverse')).toBe(true);
+                expect(points[1].y).toBeGreaterThan(points[0].y);
+            });
+        }
+    };
+    cases.LogarithmicNonpositiveArea = async () => {
+        const { wrapper } = await mountSubject(VueUiXy, {
+            props: {
+                dataset: [
+                    {
+                        name: 'Area',
+                        type: 'line',
+                        useArea: true,
+                        series: [1, 0, 10, -5, 100, 1000, 100, 10],
+                    },
+                ],
+                config: {
+                    line: { cutNullValues: true },
+                    chart: {
+                        grid: { labels: { yAxis: { scale: 'log' } } },
+                        zoom: {
+                            show: true,
+                            minimap: { show: true, compact: true },
+                        },
+                    },
+                },
+            },
+        });
+        await waitFor(() => {
+            expect(
+                wrapper.element.querySelectorAll(
+                    '[data-cy="datapoint-line-area-straight"]',
+                ),
+            ).toHaveLength(1);
+            const preview = wrapper.findComponent(SlicerPreview);
+            expect(preview.exists()).toBe(true);
+            expect(
+                preview.vm.$.setupState.allMinimapLines[0].fullSet.match(
+                    /M/g,
+                ) || [],
+            ).toHaveLength(0);
+        });
+    };
+    cases.InterlineColorsOnReverse = async () => {
+        const config = (scale, reverse) => ({
+            line: {
+                interLine: {
+                    pairs: [['A', 'B']],
+                    colors: [['#ff0000', '#0000ff']],
+                },
+            },
+            chart: { grid: { labels: { yAxis: { scale, reverse } } } },
+        });
+        const { wrapper } = await mountSubject(VueUiXy, {
+            props: {
+                dataset: [
+                    { name: 'A', type: 'line', series: [1, 100, 1] },
+                    { name: 'B', type: 'line', series: [10, 10, 10] },
+                ],
+                config: config('log', false),
+            },
+        });
+        for (const scale of ['linear', 'log']) {
+            for (const reverse of [false, true]) {
+                await wrapper.setProps({ config: config(scale, reverse) });
+                await waitFor(() => {
+                    const colors = [
+                        ...wrapper.element.querySelectorAll(
+                            '[data-cy="interline-area"]',
+                        ),
+                    ].map((path) => path.getAttribute('fill'));
+                    expect(colors[0]).toBe('#0000ff');
+                    expect(colors).toContain('#ff0000');
+                    expect(colors.at(-1)).toBe('#0000ff');
+                });
+            }
+        }
+    };
+    cases.SymlogMixed = async () => {
+        const values = [-1000, -100, -10, 0, 1, 10, 100, 1000];
+        const config = (reverse = false, individual = false, constant = 1) => ({
+            useCssAnimation: false,
+            transitions: { enable: false },
+            chart: {
+                grid: {
+                    labels: {
+                        yAxis: {
+                            scale: 'symlog',
+                            symlogConstant: constant,
+                            reverse,
+                            useIndividualScale: individual,
+                        },
+                    },
+                },
+                zoom: { show: true, minimap: { show: true, compact: true } },
+            },
+        });
+        const { wrapper } = await mountSubject(VueUiXy, {
+            props: {
+                dataset: [
+                    {
+                        name: 'Line',
+                        type: 'line',
+                        useArea: true,
+                        series: values,
+                    },
+                    { name: 'Bar', type: 'bar', series: values },
+                    { name: 'Plot', type: 'plot', series: values },
+                    { name: 'Single', type: 'line', series: [100] },
+                    { name: 'Empty', type: 'line', series: [] },
+                ],
+                config: config(),
+            },
+        });
+        const state = wrapper.vm.$.setupState;
+        for (const individual of [false, true])
+            for (const reverse of [false, true]) {
+                await wrapper.setProps({ config: config(reverse, individual) });
+                await waitFor(() => {
+                    const bars = [
+                        ...wrapper.element.querySelectorAll(
+                            '[data-cy="datapoint-bar"]',
+                        ),
+                    ];
+                    expect(bars).toHaveLength(values.length);
+                    const middle =
+                        (state.drawingArea.top + state.drawingArea.bottom) / 2;
+                    const plots = state.barSet[0].plots;
+                    expect(plots.map((plot) => plot.value)).toEqual(values);
+                    expect(plots[3].y).toBeCloseTo(middle);
+                    expect(plots[0].y > plots.at(-1).y).toBe(!reverse);
+                    bars.forEach((bar, index) => {
+                        expect(Number(bar.getAttribute('y'))).toBeCloseTo(
+                            Math.min(plots[index].y, middle),
+                        );
+                        expect(Number(bar.getAttribute('height'))).toBeCloseTo(
+                            Math.max(
+                                0.00001,
+                                Math.abs(plots[index].y - middle),
+                            ),
+                        );
+                    });
+                    const preview = wrapper.findComponent(SlicerPreview);
+                    expect(preview.props('yScale')).toBe('symlog');
+                    expect(preview.props('yReverse')).toBe(reverse);
+                    const miniPlots =
+                        preview.vm.$.setupState.allMinimapLines[1].points;
+                    expect(miniPlots.map((point) => point.value)).toEqual(
+                        values,
+                    );
+                    expect(miniPlots[0].y > miniPlots.at(-1).y).toBe(!reverse);
+                    expect(wrapper.element.innerHTML).not.toContain('NaN');
+                });
+            }
+        await wrapper.setProps({ config: config(false, false, 10) });
+        state.setZoomState({ start: 1, end: 7 });
+        await waitFor(() => expect(state.slicer.start).toBe(1));
+        expect(
+            state.barSet[0].plots.every((plot) => Number.isFinite(plot.y)),
+        ).toBe(true);
+    };
+    cases.SymlogTickSpacing = async () => {
+        const config = (height, fontSize, reverse) => ({
+            useCssAnimation: false,
+            chart: {
+                height,
+                width: 600,
+                grid: {
+                    showHorizontalLines: true,
+                    labels: { fontSize, yAxis: { scale: 'symlog', reverse } },
+                },
+            },
+        });
+        const { wrapper } = await mountSubject(VueUiXy, {
+            props: {
+                dataset: [
+                    {
+                        name: 'Values',
+                        type: 'line',
+                        series: [-1000, -10, -1, -0.1, 0, 0.1, 1, 10, 1000],
+                    },
+                ],
+                config: config(300, 30, false),
+            },
+        });
+        for (const [height, fontSize, reverse] of [
+            [300, 30, false],
+            [300, 30, true],
+            [800, 30, false],
+            [300, 50, false],
+        ]) {
+            await wrapper.setProps({
+                config: config(height, fontSize, reverse),
+            });
+            await waitFor(() => {
+                const labels = [
+                    ...wrapper.element.querySelectorAll(
+                        '[data-cy="axis-y-label"]',
+                    ),
+                ];
+                expect(
+                    labels.some((label) => label.textContent.trim() === '0'),
+                ).toBe(true);
+                const bounds = labels
+                    .map((label) => label.getBoundingClientRect())
+                    .sort((a, b) => a.top - b.top);
+                expect(bounds.length).toBeGreaterThan(1);
+                for (let i = 1; i < bounds.length; i++)
+                    expect(bounds[i].top).toBeGreaterThanOrEqual(
+                        bounds[i - 1].bottom - 0.5,
+                    );
+                expect(
+                    wrapper.element.querySelectorAll('[data-cy="axis-y-tick"]'),
+                ).toHaveLength(labels.length);
+                expect(
+                    wrapper.element.querySelectorAll(
+                        '[data-cy="xy-grid-horizontal-line"]',
+                    ),
+                ).toHaveLength(labels.length);
+            });
+        }
+    };
+    cases.LogInterlineZeroBridge = async () => {
+        const { wrapper } = await mountSubject(VueUiXy, {
+            props: {
+                dataset: [
+                    { name: 'A', type: 'line', series: [1, 0, 10, 100] },
+                    { name: 'B', type: 'line', series: [2, 0, 20, 200] },
+                ],
+                config: {
+                    chart: { grid: { labels: { yAxis: { scale: 'log' } } } },
+                    line: { interLine: { pairs: [['A', 'B']] } },
+                },
+            },
+        });
+        await waitFor(() => {
+            const areas = [
+                ...wrapper.element.querySelectorAll(
+                    '[data-cy="interline-area"]',
+                ),
+            ];
+            expect(areas.length).toBeGreaterThan(0);
+            const xs = areas.flatMap((area) =>
+                area
+                    .getAttribute('d')
+                    .match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/gi)
+                    .map(Number)
+                    .filter((_, index) => index % 2 === 0),
+            );
+            const plots = wrapper.vm.$.setupState.lineSet[0].plots;
+            expect(Math.min(...xs)).toBeCloseTo(plots[0].x);
+            expect(Math.max(...xs)).toBeCloseTo(plots.at(-1).x);
+        });
+    };
     function generateDayTimestamps(length) {
         const result = [];
         const start = new Date(2026, 0, 1);
@@ -653,6 +1017,34 @@ export const RendersDefault = {
     name: 'renders default',
     play: async (context) =>
         runScenario(context, createCases, 'RendersDefault'),
+};
+export const LogarithmicY = {
+    name: 'logarithmic Y keeps bars and minimap aligned',
+    play: async (context) => runScenario(context, createCases, 'LogarithmicY'),
+};
+export const LogarithmicNonpositiveArea = {
+    name: 'log areas bridge nonpositive values without treating them as nulls',
+    play: async (context) =>
+        runScenario(context, createCases, 'LogarithmicNonpositiveArea'),
+};
+export const InterlineColorsOnReverse = {
+    name: 'interline colors retain value ordering when Y is reversed',
+    play: async (context) =>
+        runScenario(context, createCases, 'InterlineColorsOnReverse'),
+};
+export const LogInterlineZeroBridge = {
+    name: 'log interline fills bridge zero values like line paths',
+    play: async (context) =>
+        runScenario(context, createCases, 'LogInterlineZeroBridge'),
+};
+export const SymlogMixed = {
+    name: 'symlog mixed series preserve signed data, zero, baselines and minimap reversal',
+    play: async (context) => runScenario(context, createCases, 'SymlogMixed'),
+};
+export const SymlogTickSpacing = {
+    name: 'symlog ticks avoid overlaps after reversal, font changes and resizing',
+    play: async (context) =>
+        runScenario(context, createCases, 'SymlogTickSpacing'),
 };
 export const Emits = {
     name: 'emits',

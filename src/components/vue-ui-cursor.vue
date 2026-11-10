@@ -52,6 +52,9 @@ function setVisibility(isTrue) {
 }
 
 const isClicked = ref(false);
+let disposed = false;
+const showCursor = () => setVisibility(true);
+const hideCursor = () => setVisibility(false);
 const timeoutReference = ref(null);
 
 function setClicked() {
@@ -60,6 +63,7 @@ function setClicked() {
         clearTimeout(timeoutReference.value);
     }
     nextTick(() => {
+        if (disposed) return;
         isClicked.value = true;
         timeoutReference.value = setTimeout(() => {
             isClicked.value = false;
@@ -82,8 +86,8 @@ function addEventListeners(element) {
     if (!element) return;
     element.addEventListener('mousemove', setClientPosition);
     element.addEventListener('touchmove', setFingerPosition);
-    element.addEventListener('mouseleave', () => setVisibility(false));
-    element.addEventListener('mouseenter', () => setVisibility(true));
+    element.addEventListener('mouseleave', hideCursor);
+    element.addEventListener('mouseenter', showCursor);
     element.addEventListener('click', setClicked);
 }
 
@@ -91,8 +95,8 @@ function removeEventListeners(element) {
     if (!element) return;
     element.removeEventListener('mousemove', setClientPosition);
     element.removeEventListener('touchmove', setFingerPosition);
-    element.removeEventListener('mouseleave', () => setVisibility(false));
-    element.removeEventListener('mouseenter', () => setVisibility(true));
+    element.removeEventListener('mouseleave', hideCursor);
+    element.removeEventListener('mouseenter', showCursor);
     element.removeEventListener('click', setClicked);
 }
 
@@ -124,6 +128,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    disposed = true;
+    clearTimeout(timeoutReference.value);
     if (domObserver.value) {
         domObserver.value.disconnect();
         domObserver.value = null;

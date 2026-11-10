@@ -108,6 +108,7 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    TIMER.destroy();
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);

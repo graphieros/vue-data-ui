@@ -39,6 +39,7 @@ export function useConfig(options = {}) {
     const COLOR_BORDER = options.colorBorder ?? COLOR_GREY_LIGHT;
 
     const A11Y = {
+        includeTable: false,
         translations: {
             keyboardNavigation:
                 'Use the left and right arrow keys to move between data points.',
@@ -759,6 +760,8 @@ export function useConfig(options = {}) {
                         stroke: COLOR_WHITE,
                     },
                     dot: {
+                        show: true,
+                        showOnHover: true,
                         hideAboveMaxSerieLength: 62,
                         useSerieColor: true,
                         fill: COLOR_WHITE,
@@ -1336,6 +1339,8 @@ export function useConfig(options = {}) {
                         reverse: false, // continuous mode only
                     },
                     yAxis: {
+                        scale: 'linear', // or 'log', 'symlog'
+                        symlogConstant: 1,
                         reverse: false,
                         position: 'left', // or 'right'
                         showBaseline: true,
@@ -6640,6 +6645,7 @@ export function useConfig(options = {}) {
     const vue_ui_dashboard = {
         devHints: DEV_HINTS,
         locked: false,
+        allowPrint: false,
         style: {
             board: {
                 backgroundColor: COLOR_BACKGROUND,
@@ -6656,6 +6662,7 @@ export function useConfig(options = {}) {
             },
         },
         userOptions: {
+            annotatorPalette: COLOR_PICKER_PALETTE,
             annotator: {
                 showGroupActions: true,
                 useOutline: true,
@@ -7024,6 +7031,7 @@ export function useConfig(options = {}) {
                     bar: {
                         fill: COLOR_BLUE,
                         stroke: COLOR_WHITE,
+                        strokeWidth: 0,
                     },
                     line: {
                         smooth: true,

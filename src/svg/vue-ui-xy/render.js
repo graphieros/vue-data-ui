@@ -1,3 +1,5 @@
+import { filterSymlogTicks } from '../../xyScaleTicks.js';
+import { createNonlinearScale, createScaleProjector } from '../../xyScales.js';
 import {
     applyDataLabel,
     assignStackRatios,
@@ -8,12 +10,10 @@ import {
     convertColorToHex,
     createIndividualArea,
     createIndividualAreaWithCuts,
-    createPolygonPath,
     createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathWithCuts,
     createSmoothPathWithCutsSegments,
-    createStar,
     createStepperPath,
     createStraightPath,
     createStraightPathWithCuts,
@@ -22,7 +22,6 @@ import {
     createUid,
     dataLabel,
     escapeXml,
-    escapeXmlAttr,
     hasDeepProperty,
     getEffectiveTimeLabelModulo,
     setGradientOffset,
@@ -43,10 +42,56 @@ import {
     textElement,
 } from '../utils';
 
-import { useConfig } from '../../useConfig.js';
 import { useTimeLabels } from '../../useTimeLabels.js';
-import themes from '../../themes/vue_ui_xy.json';
 import { renderVueDataUiVersion } from '../utils/render-common.js';
+
+function isLogScale(config) {
+    return (
+        getConfigValue(config, 'chart.grid.labels.yAxis.scale', 'linear') ===
+        'log'
+    );
+}
+
+function isNonlinearScale(config) {
+    return ['log', 'symlog'].includes(
+        getConfigValue(config, 'chart.grid.labels.yAxis.scale', 'linear'),
+    );
+}
+function selectYAxisTicks(config, labels) {
+    return getConfigValue(config, 'chart.grid.labels.yAxis.scale', 'linear') ===
+        'symlog'
+        ? filterSymlogTicks(labels, getFontSizes(config).dataLabels)
+        : labels;
+}
+function yRatio(config, value, scale) {
+    const ratio = isNonlinearScale(config)
+        ? scale.project(value)
+        : (value - scale.min) / (scale.max - scale.min || 1);
+    return getConfigValue(config, 'chart.grid.labels.yAxis.reverse', false)
+        ? 1 - ratio
+        : ratio;
+}
+
+function buildNonlinearScale(config, values, min, max) {
+    const scale = createNonlinearScale(values, {
+        mode: config.chart.grid.labels.yAxis.scale,
+        constant: config.chart.grid.labels.yAxis.symlogConstant,
+        min,
+        max,
+        nice: getConfigValue(
+            config,
+            'chart.grid.labels.yAxis.useNiceScale',
+            false,
+        ),
+    });
+    return {
+        ...scale,
+        project: createScaleProjector(scale.min, scale.max, {
+            mode: config.chart.grid.labels.yAxis.scale,
+            constant: config.chart.grid.labels.yAxis.symlogConstant,
+        }),
+    };
+}
 
 function usesIndividualScale(config) {
     return Boolean(
@@ -84,12 +129,20 @@ function getScaleValuesFromSeries(series) {
 
 function buildGlobalScaleFromSeries(config, fallbackScale, series) {
     const values = getScaleValuesFromSeries(series);
+    if (isNonlinearScale(config))
+        return buildNonlinearScale(
+            config,
+            values,
+            config.chart.grid.labels.yAxis.scaleMin,
+            config.chart.grid.labels.yAxis.scaleMax,
+        );
 
     const configScaleMin = getConfigValue(
         config,
         'chart.grid.labels.yAxis.scaleMin',
         null,
     );
+
     const configScaleMax = getConfigValue(
         config,
         'chart.grid.labels.yAxis.scaleMax',
@@ -204,15 +257,6 @@ function getScaleForSerie(
     );
 }
 
-function formatTick(tick, config) {
-    return dataLabel({
-        v: tick,
-        r: getConfigValue(config, 'chart.labels.rounding', 0),
-        p: getConfigValue(config, 'chart.labels.prefix', ''),
-        s: getConfigValue(config, 'chart.labels.suffix', ''),
-    });
-}
-
 function normalizeSerieType(type) {
     if (type === 'bar' || type === 'line' || type === 'plot') {
         return type;
@@ -235,8 +279,14 @@ function getSeries(state) {
 
 function getZeroY(state) {
     const { drawingArea, scale } = state;
+    if (isLogScale(state.config)) {
+        return (
+            drawingArea.bottom -
+            yRatio(state.config, scale.min, scale) * drawingArea.height
+        );
+    }
 
-    const ratio = (0 - scale.min) / (scale.max - scale.min || 1);
+    const ratio = yRatio(state.config, 0, scale);
     return drawingArea.bottom - ratio * drawingArea.height;
 }
 
@@ -515,12 +565,14 @@ function yAxisLabelsAreRight(config) {
 }
 
 function formatYAxisTick(tick, config) {
-    const fallback = dataLabel({
-        p: getConfigValue(config, 'chart.labels.prefix', ''),
-        v: tick,
-        s: getConfigValue(config, 'chart.labels.suffix', ''),
-        r: getConfigValue(config, 'chart.grid.labels.yAxis.rounding', 0),
-    });
+    const fallback = isNonlinearScale(config)
+        ? `${getConfigValue(config, 'chart.labels.prefix', '')}${tick}${getConfigValue(config, 'chart.labels.suffix', '')}`
+        : dataLabel({
+              p: getConfigValue(config, 'chart.labels.prefix', ''),
+              v: tick,
+              s: getConfigValue(config, 'chart.labels.suffix', ''),
+              r: getConfigValue(config, 'chart.grid.labels.yAxis.rounding', 0),
+          });
 
     return applyDataLabel(
         getConfigValue(config, 'chart.grid.labels.yAxis.formatter', null),
@@ -543,6 +595,8 @@ function hasUserScaleValue(value) {
 }
 
 function buildScale(config, min, max, steps) {
+    if (isNonlinearScale(config))
+        return buildNonlinearScale(config, [min, max]);
     const useNiceScale = getConfigValue(
         config,
         'chart.grid.labels.yAxis.useNiceScale',
@@ -552,41 +606,6 @@ function buildScale(config, min, max, steps) {
     return useNiceScale
         ? calculateNiceScale(min, max, steps)
         : calculateNiceScaleWithExactExtremes(min, max, steps);
-}
-
-function getGlobalScale(config, scale) {
-    const configScaleMin = getConfigValue(
-        config,
-        'chart.grid.labels.yAxis.scaleMin',
-        null,
-    );
-    const configScaleMax = getConfigValue(
-        config,
-        'chart.grid.labels.yAxis.scaleMax',
-        null,
-    );
-
-    if (
-        !hasUserScaleValue(configScaleMin) &&
-        !hasUserScaleValue(configScaleMax)
-    ) {
-        return scale;
-    }
-
-    const min = hasUserScaleValue(configScaleMin)
-        ? Number(configScaleMin)
-        : safeNumber(scale.min, 0);
-
-    const max = hasUserScaleValue(configScaleMax)
-        ? Number(configScaleMax)
-        : safeNumber(scale.max, 1);
-
-    const steps = safeNumber(
-        getConfigValue(config, 'chart.grid.labels.yAxis.commonScaleSteps', 6),
-        6,
-    );
-
-    return buildScale(config, min, max === min ? min + 1 : max, steps);
 }
 
 function getSerieScale(config, serie) {
@@ -604,6 +623,15 @@ function getSerieScale(config, serie) {
         'chart.grid.labels.yAxis.scaleMax',
         null,
     );
+
+    if (isNonlinearScale(config)) {
+        return buildNonlinearScale(
+            config,
+            values,
+            serie.scaleMin ?? configScaleMin,
+            serie.scaleMax ?? configScaleMax,
+        );
+    }
 
     const min = hasUserScaleValue(configScaleMin)
         ? Number(configScaleMin)
@@ -822,16 +850,6 @@ function createLayoutAdjustedState(state, series) {
 
     drawingArea.height = Math.max(1, drawingArea.bottom - drawingArea.top);
 
-    function remapX(x) {
-        const ratio = (x - originalArea.left) / (originalArea.width || 1);
-        return drawingArea.left + ratio * drawingArea.width;
-    }
-
-    function remapY(y) {
-        const ratio = (originalArea.bottom - y) / (originalArea.height || 1);
-        return drawingArea.bottom - ratio * drawingArea.height;
-    }
-
     const stacked = isYAxisStacked(config);
     const stackSeries = stacked ? assignStackRatios(series) : series;
     const totalSeries = Math.max(1, stackSeries.length);
@@ -912,13 +930,11 @@ function createLayoutAdjustedState(state, series) {
             : drawingArea.height;
 
         function getYFromValue(value) {
-            const ratio =
-                (value - serieScale.min) /
-                (serieScale.max - serieScale.min || 1);
+            const ratio = yRatio(config, value, serieScale);
             return drawingArea.bottom - yOffset - ratio * individualHeight;
         }
 
-        const zeroY = getYFromValue(0);
+        const zeroY = getYFromValue(isLogScale(config) ? serieScale.min : 0);
 
         return {
             ...serie,
@@ -926,11 +942,14 @@ function createLayoutAdjustedState(state, series) {
             __yOffset: yOffset,
             __individualHeight: individualHeight,
             __zeroY: zeroY,
-            __scaleYLabels: safeArray(serieScale.ticks).map((tick) => ({
-                value: tick,
-                y: getYFromValue(tick),
-                serie,
-            })),
+            __scaleYLabels: selectYAxisTicks(
+                config,
+                safeArray(serieScale.ticks).map((tick) => ({
+                    value: tick,
+                    y: getYFromValue(tick),
+                    serie,
+                })),
+            ),
             plots: serie.plots.map((plot, i) => {
                 const value =
                     plot.value === null || plot.value === undefined
@@ -942,7 +961,9 @@ function createLayoutAdjustedState(state, series) {
                     value,
                     x: remapPlotX(plot, i),
                     y:
-                        value === null || !Number.isFinite(value)
+                        value === null ||
+                        !Number.isFinite(value) ||
+                        (isLogScale(config) && !(value > 0))
                             ? null
                             : getYFromValue(value),
                 };
@@ -994,16 +1015,7 @@ function renderScaleLabels(state) {
     const color = getConfigValue(config, 'chart.grid.labels.color', '#2A2A2A');
     const stroke = getConfigValue(config, 'chart.grid.stroke', '#CCCCCC');
 
-    const labels = stacked
-        ? series.flatMap((serie) => safeArray(serie.__scaleYLabels))
-        : safeArray(scale.ticks).map((tick) => {
-              const ratio = (tick - scale.min) / (scale.max - scale.min || 1);
-
-              return {
-                  value: tick,
-                  y: drawingArea.bottom - ratio * drawingArea.height,
-              };
-          });
+    const labels = getGridHorizontalLabels(state);
 
     const output = [];
 
@@ -1156,12 +1168,14 @@ function renderIndividualScaleLabels(state) {
             }),
         );
 
-        safeArray(group.scale.ticks).forEach((tick) => {
-            const ratio =
-                (tick - group.scale.min) /
-                (group.scale.max - group.scale.min || 1);
-            const y = bottom - ratio * (bottom - top);
-
+        const labels = selectYAxisTicks(
+            config,
+            safeArray(group.scale.ticks).map((tick) => ({
+                value: tick,
+                y: bottom - yRatio(config, tick, group.scale) * (bottom - top),
+            })),
+        );
+        labels.forEach(({ value: tick, y }) => {
             if (!Number.isFinite(y)) return;
 
             if (showCrosshairs) {
@@ -1544,14 +1558,17 @@ function getGridHorizontalLabels(state) {
         return series.flatMap((serie) => safeArray(serie.__scaleYLabels));
     }
 
-    return safeArray(scale.ticks).map((tick) => {
-        const ratio = (tick - scale.min) / (scale.max - scale.min || 1);
+    return selectYAxisTicks(
+        config,
+        safeArray(scale.ticks).map((tick) => {
+            const ratio = yRatio(config, tick, scale);
 
-        return {
-            value: tick,
-            y: drawingArea.bottom - ratio * drawingArea.height,
-        };
-    });
+            return {
+                value: tick,
+                y: drawingArea.bottom - ratio * drawingArea.height,
+            };
+        }),
+    );
 }
 
 function getHorizontalBandX(state, index, maxSeries) {
@@ -2422,51 +2439,6 @@ function renderLegend(state, series) {
     return element('g', { 'data-layer': 'legend' }, output.join(''));
 }
 
-function getVisibleBarSeries(series) {
-    return series.filter((serie) => serie.type === 'bar');
-}
-
-function getMaxSeriesLength(series) {
-    return Math.max(1, ...series.map((serie) => safeArray(serie.plots).length));
-}
-
-function getBarLayout(state, series) {
-    const { config, drawingArea } = state;
-    const barSeries = getVisibleBarSeries(series);
-    const maxSeries = getMaxSeriesLength(series);
-    const barSeriesCount = Math.max(1, barSeries.length);
-
-    const slotLine = drawingArea.width / maxSeries;
-    const slotBar = drawingArea.width / maxSeries / barSeriesCount;
-    const barPeriodGap =
-        slotLine * safeNumber(getConfigValue(config, 'bar.periodGap', 0), 0);
-
-    const barSlot =
-        drawingArea.width / maxSeries / barSeriesCount -
-        barPeriodGap * barSeriesCount;
-
-    const barWidth = Math.max(0.00001, slotBar - barPeriodGap);
-
-    const barInnerGap =
-        barWidth *
-        Math.min(
-            Math.abs(safeNumber(getConfigValue(config, 'bar.innerGap', 0), 0)),
-            0.95,
-        );
-
-    return {
-        barSeries,
-        maxSeries,
-        barSeriesCount,
-        slotLine,
-        slotBar,
-        barSlot,
-        barPeriodGap,
-        barWidth,
-        barInnerGap,
-    };
-}
-
 function getBarPlotX(state, serieIndex, plotIndex, layout) {
     return (
         state.drawingArea.left +
@@ -2475,80 +2447,6 @@ function getBarPlotX(state, serieIndex, plotIndex, layout) {
         layout.barSlot / 2 -
         serieIndex * layout.barPeriodGap
     );
-}
-
-function getBarRectX(state, serieIndex, plotIndex, layout) {
-    return (
-        getBarPlotX(state, serieIndex, plotIndex, layout) +
-        layout.slotBar / 2 +
-        layout.barInnerGap / 2
-    );
-}
-
-function getBarBaselineY(state) {
-    const { config, drawingArea, scale } = state;
-
-    const scaleMin = getConfigValue(
-        config,
-        'chart.grid.labels.yAxis.scaleMin',
-        null,
-    );
-
-    if (
-        scaleMin !== null &&
-        scaleMin !== undefined &&
-        scaleMin > 0 &&
-        scale.min >= 0
-    ) {
-        return drawingArea.bottom;
-    }
-
-    if (scale.min <= 0 && scale.max >= 0) {
-        return getZeroY(state);
-    }
-
-    return scale.min > 0 ? drawingArea.bottom : drawingArea.top;
-}
-
-function getBarY(state, plot, zeroY) {
-    if (plot.value >= 0) {
-        return plot.y;
-    }
-
-    return Number.isFinite(zeroY) ? zeroY : state.drawingArea.bottom;
-}
-
-function getBarHeight(plot, zeroY) {
-    if (plot.value >= 0) {
-        return Math.max(0.00001, zeroY - plot.y);
-    }
-
-    return Math.max(0.00001, plot.y - zeroY);
-}
-
-function splitLineSegments(plots) {
-    const segments = [];
-    let currentSegment = [];
-
-    safeArray(plots).forEach((plot) => {
-        if (
-            plot &&
-            isFiniteNumber(plot.value) &&
-            isFiniteNumber(plot.x) &&
-            isFiniteNumber(plot.y)
-        ) {
-            currentSegment.push(plot);
-        } else if (currentSegment.length) {
-            segments.push(currentSegment);
-            currentSegment = [];
-        }
-    });
-
-    if (currentSegment.length) {
-        segments.push(currentSegment);
-    }
-
-    return segments;
 }
 
 function getAreaGradientId(state, serieIndex) {
@@ -2611,7 +2509,9 @@ function renderLineAreas(state, series) {
     series
         .filter((serie) => serie.type === 'line' && serie.useArea)
         .forEach((serie, serieIndex) => {
-            const plots = safeArray(serie.plots);
+            const plots = safeArray(serie.plots).filter(
+                (plot) => !plot.logOmitted,
+            );
             const validPlots = plots.filter(
                 (plot) => plot && plot.value !== null,
             );
@@ -2702,9 +2602,12 @@ function renderLines(state, series) {
     const output = [];
 
     lineSeries.forEach((serie, serieIndex) => {
+        const drawablePlots = safeArray(serie.plots).filter(
+            (plot) => !plot.logOmitted,
+        );
         const plots = cutNullValues
-            ? safeArray(serie.plots)
-            : safeArray(serie.plots).filter((plot) => plot.value !== null);
+            ? drawablePlots
+            : drawablePlots.filter((plot) => plot.value !== null);
 
         const validPoints = plots.filter((plot) => plot.value !== null);
 
@@ -2960,12 +2863,24 @@ function renderInterLineAreas(state, series) {
         const colorLineB = colors?.[pairIndex]?.[1] ?? lineB.color;
 
         const areas = buildInterLineAreas({
-            lineA: safeArray(lineA.plots),
-            lineB: safeArray(lineB.plots),
+            lineA: safeArray(lineA.plots).filter((plot) => !plot.logOmitted),
+            lineB: safeArray(lineB.plots).filter((plot) => !plot.logOmitted),
             smoothA: Boolean(lineA.smooth),
             smoothB: Boolean(lineB.smooth),
-            colorLineA,
-            colorLineB,
+            colorLineA: getConfigValue(
+                config,
+                'chart.grid.labels.yAxis.reverse',
+                false,
+            )
+                ? colorLineB
+                : colorLineA,
+            colorLineB: getConfigValue(
+                config,
+                'chart.grid.labels.yAxis.reverse',
+                false,
+            )
+                ? colorLineA
+                : colorLineB,
             sampleStepPx: 2,
             cutNullValues,
         });
@@ -3495,6 +3410,16 @@ function renderHighlightAreas(state, series) {
 function getAnnotationY(state, value) {
     if (value == null) return null;
     const { drawingArea, scale } = state;
+    if (
+        isNonlinearScale(state.config) ||
+        getConfigValue(state.config, 'chart.grid.labels.yAxis.reverse', false)
+    ) {
+        if (isLogScale(state.config) && !(value > 0)) return null;
+        return (
+            drawingArea.bottom -
+            yRatio(state.config, Number(value), scale) * drawingArea.height
+        );
+    }
     const zeroY = getZeroY(state);
     const range = scale.max - scale.min || 1;
     const ratio = (Number(value) - 0) / range;

@@ -26,6 +26,23 @@ function createCases(env) {
             });
             let read = () => mounted;
             {
+                await waitFor(() => {
+                    const markers = select('marker');
+                    const arrows = select('[marker-end]');
+                    expect(markers.length).toBeGreaterThan(0);
+                    const ids = markers.map((marker) => marker.id);
+                    expect(new Set(ids).size).toBe(ids.length);
+                    for (const path of arrows) {
+                        expect(ids).toContain(
+                            path.getAttribute('marker-end').slice(5, -1),
+                        );
+                    }
+                    for (const marker of markers) {
+                        expect(
+                            getComputedStyle(marker.querySelector('path')).fill,
+                        ).not.toBe('none');
+                    }
+                });
                 await testCommonFeatures({
                     userOptions: true,
                     title: true,
@@ -54,6 +71,10 @@ function createCases(env) {
                         const elements = select('[data-cy-tooltip-node]');
                         expect(elements.length).toBeGreaterThan(0);
                         expect(elements.some(visible)).toBe(true);
+                        expect(
+                            getComputedStyle(elements[0]).backgroundColor,
+                        ).not.toBe('rgba(0, 0, 0, 0)');
+
                         expect(
                             elements.map((e) => e.textContent).join(''),
                         ).toContain(String('AAA'));

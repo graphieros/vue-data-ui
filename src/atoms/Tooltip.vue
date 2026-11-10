@@ -1,9 +1,9 @@
 <script setup>
-import { computed, ref, watch, onUnmounted, nextTick } from 'vue';
+import { computed, ref, shallowRef, watch } from 'vue';
+import { useAnimationFrame } from '../useAnimationFrame';
 import { calcTooltipPosition } from '../calcTooltipPosition';
 import { useMouse } from '../useMouse';
 import { setOpacity } from '../lib';
-import { debounce } from '../canvas-lib';
 
 const props = defineProps({
     teleportTo: {
@@ -102,33 +102,138 @@ const props = defineProps({
 
 const tooltip = ref(null);
 
-const { x, y } = useMouse(props.parent);
+const { x, y, setPosition } = useMouse(() => props.show && !props.isA11yMode);
 const targetPosition = ref({ x: 0, y: 0 });
 const displayPosition = ref({ x: 0, y: 0 });
 
 // containing block detection (first ancestor with transform/filter/perspective/contain:paint, etc)
-const containingBlock = ref(null);
+const containingBlock = shallowRef(null);
 
-const cbRectSnapshot = ref(null);
-const cbScaleSnapshot = ref({ scaleX: 1, scaleY: 1 });
-const chartRectSnapshot = ref(null);
+const cbRectSnapshot = shallowRef(null);
+const cbScaleSnapshot = shallowRef({ scaleX: 1, scaleY: 1 });
+const chartRectSnapshot = shallowRef(null);
+const tooltipRectSnapshot = shallowRef(null);
 
-// One time snapshot of the layout geometry when the tooltip becomes visible.
+// Refresh only when geometry is invalidated, independently of pointer animation.
 function snapshotGeometry() {
     const cb = findContainingBlock(tooltip.value);
     containingBlock.value = cb;
+    tooltipRectSnapshot.value = tooltip.value?.getBoundingClientRect() || null;
+    chartRectSnapshot.value = props.parent?.getBoundingClientRect?.() || null;
 
     if (!cb) {
         cbRectSnapshot.value = null;
         cbScaleSnapshot.value = { scaleX: 1, scaleY: 1 };
-        chartRectSnapshot.value = null;
         return;
     }
 
     cbRectSnapshot.value = cb.getBoundingClientRect();
     cbScaleSnapshot.value = getScaleFromTransform(cb);
-    chartRectSnapshot.value = props.parent?.getBoundingClientRect?.() || null;
 }
+
+const geometryFrame = useAnimationFrame();
+let scheduleGeometry = () => {};
+watch(
+    [
+        () => props.show,
+        tooltip,
+        () => props.parent,
+        () => props.teleportTo,
+        () => props.isFullscreen,
+    ],
+    ([show, element, parent], _, onCleanup) => {
+        geometryFrame.cancel();
+        if (!show || !element) return;
+        let active = true;
+        const ancestors = new Set();
+        for (const start of [parent, element.parentElement]) {
+            for (let node = start; node; node = node.parentElement)
+                ancestors.add(node);
+        }
+        function measure() {
+            if (!active || !props.show) return;
+            snapshotGeometry();
+            // Keep bounds current during an ancestor's CSS layout animation,
+            // while keeping ordinary pointer smoothing free of DOM measurements.
+            if (
+                [...ancestors].some((node) =>
+                    node
+                        .getAnimations?.()
+                        .some(
+                            (animation) =>
+                                animation.playState === 'running' &&
+                                animation.effect
+                                    ?.getKeyframes()
+                                    .some((frame) =>
+                                        Object.keys(frame).some((key) =>
+                                            /^(transform|translate|rotate|scale|width|height|left|right|top|bottom|margin|padding)/.test(
+                                                key,
+                                            ),
+                                        ),
+                                    ),
+                        ),
+                )
+            )
+                geometryFrame.request(measure);
+        }
+        const schedule = () => {
+            if (active) geometryFrame.request(measure);
+        };
+        scheduleGeometry = schedule;
+        const onMotion = (event) => {
+            if (ancestors.has(event.target)) schedule();
+        };
+        const resizeObserver =
+            typeof ResizeObserver === 'undefined'
+                ? null
+                : new ResizeObserver(schedule);
+        resizeObserver?.observe(element, { box: 'border-box' });
+        ancestors.forEach((node) =>
+            resizeObserver?.observe(node, { box: 'border-box' }),
+        );
+        const mutationObserver = new MutationObserver(schedule);
+        ancestors.forEach((node) =>
+            mutationObserver.observe(node, {
+                attributes: true,
+                attributeFilter: ['style', 'class', 'hidden', 'open', 'dir'],
+                childList: true,
+            }),
+        );
+        window.addEventListener('resize', schedule, { passive: true });
+        window.addEventListener('scroll', schedule, {
+            capture: true,
+            passive: true,
+        });
+        window.addEventListener('transitionrun', onMotion, true);
+        window.addEventListener('animationstart', onMotion, true);
+        measure();
+        onCleanup(() => {
+            active = false;
+            scheduleGeometry = () => {};
+            geometryFrame.cancel();
+            resizeObserver?.disconnect();
+            mutationObserver.disconnect();
+            window.removeEventListener('resize', schedule);
+            window.removeEventListener('scroll', schedule, true);
+            window.removeEventListener('transitionrun', onMotion, true);
+            window.removeEventListener('animationstart', onMotion, true);
+        });
+    },
+    { immediate: true, flush: 'post' },
+);
+watch(
+    () => [
+        props.content,
+        props.fontSize,
+        props.maxWidth,
+        props.borderWidth,
+        props.isCustom,
+    ],
+    () => {
+        if (props.show && tooltip.value) scheduleGeometry();
+    },
+    { flush: 'post' },
+);
 
 // Detect whether a style creates a containing block for `position: fixed`, which can change the reference coordinate system used
 // by the tooltip when it is rendered inside transformed ancestors.
@@ -189,14 +294,14 @@ function getScaleFromTransform(el) {
 
 function placeTooltip({ x: _x, y: _y }) {
     if (props.isA11yMode) return;
-    x.value = _x;
-    y.value = _y;
+    setPosition({ x: _x, y: _y });
 }
 
-let animationFrameId = null;
+const animation = useAnimationFrame();
+let animationRunning = false;
 
 function stepAnimation() {
-    if (!props.show) {
+    if (!props.show || props.isA11yMode || animation.isDisposed()) {
         cancelAnimation();
         return;
     }
@@ -224,23 +329,34 @@ function stepAnimation() {
     displayPosition.value.x += dx * props.smoothForce;
     displayPosition.value.y += dy * props.smoothForce;
 
-    animationFrameId = requestAnimationFrame(stepAnimation);
+    animation.request(stepAnimation);
 }
 
 function ensureAnimationRunning() {
-    if (animationFrameId == null && props.show && props.smooth) {
-        animationFrameId = requestAnimationFrame(stepAnimation);
+    if (
+        !animationRunning &&
+        props.show &&
+        props.smooth &&
+        !props.isA11yMode &&
+        !animation.isDisposed()
+    ) {
+        if (
+            displayPosition.value.x === targetPosition.value.x &&
+            displayPosition.value.y === targetPosition.value.y
+        )
+            return;
+        animationRunning = true;
+        animation.request(stepAnimation);
     }
 }
 
 function cancelAnimation() {
-    if (animationFrameId != null) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-    }
+    animationRunning = false;
+    animation.cancel();
 }
 
 watch([x, y], ([newX, newY]) => {
+    if (!props.show || props.isA11yMode) return;
     targetPosition.value.x = newX;
     targetPosition.value.y = newY;
 
@@ -253,30 +369,15 @@ watch([x, y], ([newX, newY]) => {
 });
 
 watch(
-    () => props.show,
-    async (show) => {
-        if (!show) {
-            cancelAnimation();
-            return;
-        }
-
-        const initialX = x.value;
-        const initialY = y.value;
-
-        targetPosition.value.x = initialX;
-        targetPosition.value.y = initialY;
-        displayPosition.value.x = initialX;
-        displayPosition.value.y = initialY;
-
-        await nextTick();
-        snapshotGeometry();
-        ensureAnimationRunning();
+    [() => props.show, () => props.isA11yMode, () => props.smooth],
+    ([show, isA11yMode]) => {
+        cancelAnimation();
+        if (!show || isA11yMode) return;
+        targetPosition.value = { x: x.value, y: y.value };
+        displayPosition.value = { x: x.value, y: y.value };
     },
+    { immediate: true },
 );
-
-onUnmounted(() => {
-    cancelAnimation();
-});
 
 const effectiveClientPosition = computed(() => {
     if (
@@ -333,12 +434,12 @@ const chartProxyForCalc = computed(() => {
     const cbRect = cbRectSnapshot.value;
     const chartRect = chartRectSnapshot.value;
 
-    if (!cbRect || !chartRect) return props.parent;
+    if (!chartRect) return null;
+    if (!cbRect) return { getBoundingClientRect: () => chartRect };
 
     const { scaleX, scaleY } = cbScaleSnapshot.value;
 
     return {
-        ...props.parent,
         getBoundingClientRect() {
             const r = chartRect;
             return {
@@ -355,9 +456,15 @@ const chartProxyForCalc = computed(() => {
     };
 });
 
+const tooltipProxyForCalc = computed(() =>
+    tooltipRectSnapshot.value
+        ? { getBoundingClientRect: () => tooltipRectSnapshot.value }
+        : null,
+);
+
 const pixelPosition = computed(() => {
     const pos = calcTooltipPosition({
-        tooltip: tooltip.value,
+        tooltip: tooltipProxyForCalc.value,
         chart: chartProxyForCalc.value,
         clientPosition: normalizedClientPosition.value,
         positionPreference: props.position,

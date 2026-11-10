@@ -1,4 +1,12 @@
 <script setup>
+import { filterSymlogTicks } from '../xyScaleTicks';
+import {
+    createNonlinearScale,
+    createScaleProjector,
+    nonlinearRatio,
+    transformY,
+    normalizeSymlogConstant,
+} from '../xyScales';
 import {
     getUserOptionsProps,
     getUserOptionSlots,
@@ -73,7 +81,6 @@ import {
     downloadCsv,
     error,
     forceValidValue,
-    functionReturnsString,
     getEffectiveTimeLabelModulo,
     getImageDimensions,
     hasDeepProperty,
@@ -208,7 +215,6 @@ const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 const slicerStep = ref(0);
 const selectedScale = ref(null);
-const useSafeValues = ref(true);
 const height = ref(600);
 const width = ref(1000);
 const viewBox = ref('0 0 1000 600');
@@ -542,16 +548,6 @@ function prepareConfig() {
     });
 
     // ------------------------------ OVERRIDES -----------------------------------
-
-    if (props.config && hasDeepProperty(props.config, 'chart.highlightArea')) {
-        if (!Array.isArray(props.config.chart.highlightArea)) {
-            mergedConfig.chart.highlightArea = [
-                props.config.chart.highlightArea,
-            ]; // FIXME: should be sanitized using useNestedPropToo
-        } else {
-            mergedConfig.chart.highlightArea = props.config.chart.highlightArea;
-        }
-    }
 
     if (
         props.config &&
@@ -1071,6 +1067,9 @@ function captureChartZoomYScale() {
         bottom,
         height,
         reversed: isYAxisReversed.value,
+        logarithmic: isLogScale.value,
+        mode: gridLabels.value.yAxis.scale,
+        constant: symlogConstant.value,
     };
 }
 
@@ -1082,7 +1081,15 @@ function getChartZoomYForValue(value, scale) {
         return scale.bottom;
     }
 
-    let ratio = (value - scale.min) / range;
+    let ratio = ['log', 'symlog'].includes(scale.mode)
+        ? nonlinearRatio(
+              value,
+              scale.min,
+              scale.max,
+              scale.mode,
+              scale.constant,
+          )
+        : (value - scale.min) / range;
     if (scale.reversed) ratio = 1 - ratio;
 
     return scale.bottom - scale.height * ratio;
@@ -1111,11 +1118,16 @@ const annotationViewport = computed(() => {
     const originX =
         getChartZoomXForValue(range.start, range) - range.start * unitX;
     const yScale = captureChartZoomYScale();
+    // Nonlinear freehand anchors store transformed values. This keeps zoom
+    // projection affine while configured annotations keep raw coordinates.
     const unitY = yScale
         ? ((yScale.reversed ? 1 : -1) * yScale.height) /
-          (yScale.max - yScale.min)
+          (transformY(yScale.max, yScale.mode, yScale.constant) -
+              transformY(yScale.min, yScale.mode, yScale.constant))
         : -area.height;
-    const originY = yScale ? getChartZoomYForValue(0, yScale) : area.bottom;
+    const originY = yScale
+        ? getChartZoomYForValue(yScale.logarithmic ? 1 : 0, yScale)
+        : area.bottom;
     const matrix = chartZoomVisualTransform.value
         .match(/matrix\(([^)]+)\)/)?.[1]
         .split(',')
@@ -1569,6 +1581,7 @@ const globalAreaBaselineY = computed(() => {
 
     return getYFromScaleValue({
         value: baselineValue,
+        project: commonYAxisProjector.value,
         scaleMin,
         scaleMax,
         individualHeight: drawingArea.value.height,
@@ -1641,7 +1654,43 @@ const max = computed(() => {
     return normalizeRange(expandedMin, expandedMax).max;
 });
 
+const isLogScale = computed(() => gridLabels.value.yAxis.scale === 'log');
+const isSymlogScale = computed(() => gridLabels.value.yAxis.scale === 'symlog');
+const isNonlinearScale = computed(
+    () => isLogScale.value || isSymlogScale.value,
+);
+const symlogConstant = computed(() =>
+    normalizeSymlogConstant(gridLabels.value.yAxis.symlogConstant),
+);
+function prepareYAxisProjector(scale) {
+    return isNonlinearScale.value
+        ? createScaleProjector(scale.min, scale.max, {
+              mode: gridLabels.value.yAxis.scale,
+              constant: symlogConstant.value,
+          })
+        : null;
+}
+function createYAxisScale(values, options) {
+    return createNonlinearScale(values, {
+        ...options,
+        mode: gridLabels.value.yAxis.scale,
+        constant: symlogConstant.value,
+    });
+}
+
 const niceScale = computed(() => {
+    if (isNonlinearScale.value) {
+        const values = safeDataset.value
+            .filter((serie) => !segregatedSeriesSet.value.has(serie.id))
+            .flatMap((serie) =>
+                serie.series.map((point) => getValueFromPoint(point)),
+            );
+        return createYAxisScale(values, {
+            min: parsedScaleMin.value,
+            max: parsedScaleMax.value,
+            nice: gridLabels.value.yAxis.useNiceScale,
+        });
+    }
     return gridLabels.value.yAxis.useNiceScale
         ? calculateNiceScale(
               min.value,
@@ -1655,7 +1704,12 @@ const niceScale = computed(() => {
           );
 });
 
+const commonYAxisProjector = computed(() =>
+    prepareYAxisProjector(niceScale.value),
+);
+
 const relativeZero = computed(() => {
+    if (isNonlinearScale.value) return 0;
     if (![null, undefined].includes(gridLabels.value.yAxis.scaleMin)) {
         return -niceScale.value.min;
     }
@@ -1774,10 +1828,6 @@ function getValueFromPoint(point) {
 }
 
 const normalizedDataset = computed(() => {
-    if (!useSafeValues.value && !isContinuousScale.value) {
-        return FINAL_DATASET.value;
-    }
-
     return FINAL_DATASET.value.map((datapoint, i) => {
         const id = `uniqueId_${i}`;
         const canUseContinuousSeries = canUseSeriesInContinuousMode(datapoint);
@@ -1827,9 +1877,6 @@ const continuousWindowSelectors = computed(() =>
 );
 
 const safeDataset = computed(() => {
-    if (!useSafeValues.value && !isContinuousScale.value) {
-        return normalizedDataset.value;
-    }
     const { start, end } = slicer.value;
     return normalizedDataset.value.map((datapoint, index) => ({
         ...datapoint,
@@ -1840,47 +1887,36 @@ const safeDataset = computed(() => {
     }));
 });
 
-const absoluteDataset = computed(() => {
-    return safeDataset.value.map((datapoint, i) => {
+const preparedDataset = computed(() =>
+    safeDataset.value.map((datapoint) => ({
+        ...datapoint,
+        series: isContinuousScale.value
+            ? datapoint.series.map((point) => ({
+                  ...point,
+                  y: point.y === null ? null : point.y + relativeZero.value,
+              }))
+            : datapoint.series.map((plot) => plot + relativeZero.value),
+        absoluteValues: isContinuousScale.value
+            ? datapoint.series.map((point) => point.y)
+            : datapoint.series,
+    })),
+);
+
+const absoluteDataset = computed(() =>
+    preparedDataset.value.map((datapoint, i) => {
+        const sourceDatapoint = safeDataset.value[i];
         return {
             absoluteIndex: i,
             ...datapoint,
-            series: isContinuousScale.value
-                ? datapoint.series.map((point) => ({
-                      ...point,
-                      y: point.y === null ? null : point.y + relativeZero.value,
-                  }))
-                : datapoint.series.map((plot) => plot + relativeZero.value),
-            absoluteValues: isContinuousScale.value
-                ? datapoint.series.map((point) => point.y)
-                : datapoint.series,
-            segregate: () => segregate(datapoint),
+            segregate: () => segregate(sourceDatapoint),
             isSegregated: segregatedSeriesSet.value.has(datapoint.id),
         };
-    });
-});
+    }),
+);
 
-const relativeDataset = computed(() => {
-    return safeDataset.value
-        .map((datapoint) => {
-            return {
-                ...datapoint,
-                series: isContinuousScale.value
-                    ? datapoint.series.map((point) => ({
-                          ...point,
-                          y:
-                              point.y === null
-                                  ? null
-                                  : point.y + relativeZero.value,
-                      }))
-                    : datapoint.series.map((plot) => plot + relativeZero.value),
-                absoluteValues: isContinuousScale.value
-                    ? datapoint.series.map((point) => point.y)
-                    : datapoint.series,
-            };
-        })
-        .filter((s) => !segregatedSeriesSet.value.has(s.id));
-});
+const relativeDataset = computed(() =>
+    preparedDataset.value.filter((s) => !segregatedSeriesSet.value.has(s.id)),
+);
 
 const allSegregated = computed(
     () => segregatedSeries.value.length === absoluteDataset.value.length,
@@ -2767,6 +2803,7 @@ async function refreshSlicer() {
 const absoluteMax = computed(() => niceScale.value.max + relativeZero.value);
 
 function ratioToMax(v) {
+    if (isNonlinearScale.value) return commonYAxisProjector.value(v);
     return v / (canShowValue(absoluteMax.value) ? absoluteMax.value : 1);
 }
 
@@ -2784,26 +2821,19 @@ function getYFromRatio({ ratio, yOffset = 0, individualHeight }) {
     return drawingArea.value?.bottom - yOffset - individualHeight * finalRatio;
 }
 
-function getIndividualScaleYFromRatio({
-    ratio,
-    zeroPosition,
-    individualHeight,
-}) {
-    if (!isYAxisReversed.value) {
-        return zeroPosition - individualHeight * ratio;
-    }
-
-    return zeroPosition + individualHeight * ratio;
-}
-
 function getYFromScaleValue({
     value,
     scaleMin,
     scaleMax,
     yOffset = 0,
     individualHeight,
+    project,
 }) {
-    const ratio = (value - scaleMin) / (scaleMax - scaleMin || 1);
+    const ratio = isNonlinearScale.value
+        ? (project ?? prepareYAxisProjector({ min: scaleMin, max: scaleMax }))(
+              value,
+          )
+        : (value - scaleMin) / (scaleMax - scaleMin || 1);
 
     return getYFromRatio({
         ratio,
@@ -2821,6 +2851,19 @@ function applyXAxisReverseRatio(ratio) {
 }
 
 const zero = computed(() => {
+    if (isSymlogScale.value)
+        return getYFromScaleValue({
+            value: 0,
+            project: commonYAxisProjector.value,
+            scaleMin: niceScale.value.min,
+            scaleMax: niceScale.value.max,
+            individualHeight: drawingArea.value.height,
+        });
+    if (isLogScale.value)
+        return getYFromRatio({
+            ratio: 0,
+            individualHeight: drawingArea.value.height,
+        });
     if (isNaN(ratioToMax(relativeZero.value))) {
         return drawingArea.value?.bottom;
     } else {
@@ -2832,6 +2875,14 @@ const zero = computed(() => {
 });
 
 function valueToDrawingAreaY(value) {
+    if (isNonlinearScale.value)
+        return getYFromScaleValue({
+            value,
+            project: commonYAxisProjector.value,
+            scaleMin: niceScale.value.min,
+            scaleMax: niceScale.value.max,
+            individualHeight: drawingArea.value.height,
+        });
     const minimum = niceScale.value.min;
     const maximum = niceScale.value.max;
     const range = maximum - minimum;
@@ -2859,40 +2910,13 @@ const visibleZeroOrBaseline = computed(() => {
 });
 
 function calcRectHeight(plot) {
-    const zeroForPositiveValuesOnly =
-        ![null, undefined].includes(gridLabels.value.yAxis.scaleMin) &&
-        gridLabels.value.yAxis.scaleMin > 0 &&
-        min.value >= 0
-            ? drawingArea.value?.bottom
-            : zero.value;
-
-    if (plot.value >= 0) {
-        return checkNaN(
-            zeroForPositiveValuesOnly - plot.y <= 0
-                ? 0.00001
-                : zeroForPositiveValuesOnly - plot.y,
-        );
-    } else {
-        return checkNaN(
-            plot.y - zero.value <= 0 ? 0.00001 : plot.y - zero.value,
-        );
-    }
+    return checkNaN(
+        Math.max(0.00001, Math.abs(globalAreaBaselineY.value - plot.y)),
+    );
 }
 
 function calcIndividualHeight(plot) {
-    if (plot.value >= 0) {
-        return checkNaN(
-            plot.zeroPosition - plot.y <= 0
-                ? 0.00001
-                : plot.zeroPosition - plot.y,
-        );
-    } else {
-        return checkNaN(
-            plot.y - plot.zeroPosition <= 0
-                ? 0.00001
-                : plot.zeroPosition - plot.y,
-        );
-    }
+    return checkNaN(Math.max(0.00001, Math.abs(plot.zeroPosition - plot.y)));
 }
 
 const slot = computed(() => {
@@ -2944,19 +2968,11 @@ function getBarCenterX(plot) {
 }
 
 function calcRectY(plot) {
-    if (plot.value >= 0) return plot.y;
-    return [null, undefined, NaN, Infinity, -Infinity].includes(zero.value)
-        ? drawingArea?.bottom.value
-        : zero.value;
+    return Math.min(plot.y, globalAreaBaselineY.value);
 }
 
 function calcIndividualRectY(plot) {
-    if (plot.value >= 0) return plot.y;
-    return [null, undefined, NaN, Infinity, -Infinity].includes(
-        plot.zeroPosition,
-    )
-        ? 0
-        : plot.zeroPosition;
+    return Math.min(plot.y, plot.zeroPosition);
 }
 
 const hoveredIndex = ref(null);
@@ -3810,7 +3826,6 @@ const highlightAreas = computed(() => {
 });
 
 const datasetWithIds = computed(() => {
-    if (!useSafeValues.value) return FINAL_DATASET.value;
     return FINAL_DATASET.value.map((datapoint, i) => {
         return {
             ...datapoint,
@@ -4054,6 +4069,11 @@ const scaleGroups = computed(() => {
             ) {
                 const rawValue = values[valueIndex];
                 const value = rawValue === null ? 0 : Number(rawValue);
+                if (
+                    isLogScale.value &&
+                    (!(value > 0) || !Number.isFinite(value))
+                )
+                    continue;
 
                 if (Number.isNaN(value)) {
                     minimum = NaN;
@@ -4079,8 +4099,8 @@ const scaleGroups = computed(() => {
         }
 
         result[group] = {
-            min: hasValue ? minimum : 0,
-            max: hasValue ? maximum : 1,
+            min: hasValue ? minimum : isLogScale.value ? 1 : 0,
+            max: hasValue ? maximum : isLogScale.value ? 10 : 1,
             groupId: createStableIdentifier('scale_group', [group]),
         };
     }
@@ -4189,7 +4209,9 @@ const minimap = computed(() => {
             seriesIndex < sourceDataset.length;
             seriesIndex += 1
         ) {
-            sum += sourceDataset[seriesIndex].series[index] || 0;
+            const value = sourceDataset[seriesIndex].series[index];
+            if (!isLogScale.value || (Number.isFinite(value) && value > 0))
+                sum += value || 0;
         }
 
         sumAllSeries.push(sum);
@@ -4199,45 +4221,34 @@ const minimap = computed(() => {
     const minimum = range.min;
 
     return sumAllSeries.map((datapoint) => {
-        return datapoint + (minimum < 0 ? Math.abs(minimum) : 0);
+        return isLogScale.value
+            ? datapoint > 0
+                ? datapoint
+                : null
+            : isSymlogScale.value
+              ? datapoint
+              : datapoint + (minimum < 0 ? Math.abs(minimum) : 0);
     });
 });
-
-function getMirroredScaleValue(value) {
-    if ([null, undefined].includes(value)) return value;
-    const numericValue = Number(value);
-    return Number.isFinite(numericValue) ? -numericValue : value;
-}
 
 const allMinimaps = computed(() => {
     if (!cfgChart.value.zoom.minimap.show) return [];
 
     const reverseContinuousX = isContinuousScale.value && isXAxisReversed.value;
-    const reverseContinuousY = isContinuousScale.value && isYAxisReversed.value;
-
     return datasetWithIds.value.map((ds) => {
-        const mirroredScaleBounds = reverseContinuousY
-            ? {
-                  scaleMin: getMirroredScaleValue(ds.scaleMax),
-                  scaleMax: getMirroredScaleValue(ds.scaleMin),
-              }
-            : {};
-
         return {
             ...ds,
-            ...mirroredScaleBounds,
-            series:
-                reverseContinuousX || reverseContinuousY
-                    ? ds.series.map((point) => {
-                          if (!isCoordinatePoint(point)) return point;
+            series: reverseContinuousX
+                ? ds.series.map((point) => {
+                      if (!isCoordinatePoint(point)) return point;
 
-                          return {
-                              ...point,
-                              x: reverseContinuousX ? -point.x : point.x,
-                              y: reverseContinuousY ? -point.y : point.y,
-                          };
-                      })
-                    : ds.series,
+                      return {
+                          ...point,
+                          x: reverseContinuousX ? -point.x : point.x,
+                          y: point.y,
+                      };
+                  })
+                : ds.series,
             isVisible: !segregatedSeriesSet.value.has(ds.id),
         };
     });
@@ -4283,23 +4294,8 @@ const minimapSelectedXValue = computed(() => {
         : Number(selectedMinimapXValue.value);
 });
 
-const minimapScaleMin = computed(() => {
-    const scaleMin = gridLabels.value.yAxis.scaleMin;
-    const scaleMax = gridLabels.value.yAxis.scaleMax;
-    if (!isContinuousScale.value || !isYAxisReversed.value) {
-        return scaleMin;
-    }
-    return getMirroredScaleValue(scaleMax);
-});
-
-const minimapScaleMax = computed(() => {
-    const scaleMin = gridLabels.value.yAxis.scaleMin;
-    const scaleMax = gridLabels.value.yAxis.scaleMax;
-    if (!isContinuousScale.value || !isYAxisReversed.value) {
-        return scaleMax;
-    }
-    return getMirroredScaleValue(scaleMin);
-});
+const minimapScaleMin = computed(() => gridLabels.value.yAxis.scaleMin);
+const minimapScaleMax = computed(() => gridLabels.value.yAxis.scaleMax);
 
 const minimapLabelLeft = computed(() => {
     if (!timeLabels.value.length) return '';
@@ -4358,23 +4354,44 @@ const selectedSeries = computed(() => {
     });
 });
 
-const yLabels = computed(() => {
-    return niceScale.value.ticks.map((t) => {
-        const y =
-            t >= 0
-                ? zero.value - drawingArea.value.height * ratioToMax(t)
-                : zero.value +
-                  drawingArea.value.height * ratioToMax(Math.abs(t));
-
-        return {
-            y: isYAxisReversed.value
-                ? drawingArea.value.top + drawingArea.value.bottom - y
-                : y,
-            value: t,
-            prefix: cfgChart.value.labels.prefix,
-            suffix: cfgChart.value.labels.suffix,
-        };
+function formatYAxisTickFallback(label) {
+    if (isNonlinearScale.value)
+        return `${label.prefix || ''}${label.value}${label.suffix || ''}`;
+    return dataLabel({
+        p: label.prefix,
+        v: label.value,
+        s: label.suffix,
+        r: gridLabels.value.yAxis.rounding,
     });
+}
+
+function selectYAxisTicks(labels) {
+    return isSymlogScale.value
+        ? filterSymlogTicks(labels, fontSizes.value.dataLabels)
+        : labels;
+}
+
+const yLabels = computed(() => {
+    return selectYAxisTicks(
+        niceScale.value.ticks.map((t) => {
+            const y = isNonlinearScale.value
+                ? drawingArea.value.bottom -
+                  drawingArea.value.height * ratioToMax(t)
+                : t >= 0
+                  ? zero.value - drawingArea.value.height * ratioToMax(t)
+                  : zero.value +
+                    drawingArea.value.height * ratioToMax(Math.abs(t));
+
+            return {
+                y: isYAxisReversed.value
+                    ? drawingArea.value.top + drawingArea.value.bottom - y
+                    : y,
+                value: t,
+                prefix: cfgChart.value.labels.prefix,
+                suffix: cfgChart.value.labels.suffix,
+            };
+        }),
+    );
 });
 
 const annotationsY = computed(() => {
@@ -4391,6 +4408,10 @@ const annotationsY = computed(() => {
     const visibleAnnotations = annotations.filter((annotation) => {
         return (
             annotation.show &&
+            (!isLogScale.value ||
+                [annotation.yAxis.yTop, annotation.yAxis.yBottom].every(
+                    (value) => value == null || value > 0,
+                )) &&
             (annotation.yAxis.yTop != null || annotation.yAxis.yBottom != null)
         );
     });
@@ -4407,6 +4428,7 @@ const annotationsY = computed(() => {
     const range = scaleMaximum - scaleMinimum;
 
     const toY = (value) => {
+        if (isNonlinearScale.value) return valueToDrawingAreaY(value);
         const ratio = (value - 0) / range;
         return zeroY - ratio * height;
     };
@@ -4802,10 +4824,16 @@ function getSerieVerticalGeometry({
         datapoint.scaleSteps || gridLabels.value.yAxis.commonScaleSteps;
     const corrector = 1.0000001;
 
-    const scaleBuilder =
-        forceExactScale || !gridLabels.value.yAxis.useNiceScale
-            ? calculateNiceScaleWithExactExtremes
-            : calculateNiceScale;
+    const scaleBuilder = isNonlinearScale.value
+        ? (min, max) =>
+              createYAxisScale([], {
+                  min,
+                  max,
+                  nice: gridLabels.value.yAxis.useNiceScale,
+              })
+        : forceExactScale || !gridLabels.value.yAxis.useNiceScale
+          ? calculateNiceScaleWithExactExtremes
+          : calculateNiceScale;
 
     const safeIndividualMax =
         individualExtremes.max === individualExtremes.min
@@ -4829,8 +4857,14 @@ function getSerieVerticalGeometry({
         scaleSteps,
     );
 
-    const individualZero =
-        individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
+    const individualProjector = prepareYAxisProjector(individualScale);
+    const autoScaleProjector = prepareYAxisProjector(autoScaleSteps);
+
+    const individualZero = isLogScale.value
+        ? 0
+        : individualScale.min >= 0
+          ? 0
+          : Math.abs(individualScale.min);
     const autoScaleZero = 0;
 
     const individualMax = individualScale.max + Math.abs(individualZero);
@@ -4848,17 +4882,31 @@ function getSerieVerticalGeometry({
         ? usableHeight * datapoint.stackRatio
         : drawingArea.value.height;
 
-    const zeroPosition =
-        drawingArea.value?.bottom -
-        yOffset -
-        (individualHeight * individualZero) / individualMax;
-    const autoScaleZeroPosition =
-        drawingArea.value?.bottom -
-        yOffset -
-        (individualHeight * autoScaleZero) / autoScaleMax;
+    const zeroPosition = getYFromScaleValue({
+        value: isLogScale.value
+            ? individualScale.min
+            : Math.max(individualScale.min, Math.min(individualScale.max, 0)),
+        project: individualProjector,
+        scaleMin: individualScale.min,
+        scaleMax: individualScale.max,
+        yOffset,
+        individualHeight,
+    });
+    const autoScaleZeroPosition = getYFromScaleValue({
+        value: isLogScale.value
+            ? autoScaleSteps.min
+            : Math.max(autoScaleSteps.min, Math.min(autoScaleSteps.max, 0)),
+        project: autoScaleProjector,
+        scaleMin: autoScaleSteps.min,
+        scaleMax: autoScaleSteps.max,
+        yOffset,
+        individualHeight,
+    });
 
     return {
         scaleSteps,
+        individualProjector,
+        autoScaleProjector,
         individualScale,
         autoScaleSteps,
         individualZero,
@@ -4911,6 +4959,12 @@ function createIndividualExtremes({
 
     const minimumRange = scanMathMinMax(minimumValues, 0, 1);
     const minimum = minimumRange.min;
+    if (isNonlinearScale.value)
+        return createYAxisScale(datapoint.absoluteValues, {
+            min: datapoint.scaleMin,
+            max: datapoint.scaleMax,
+            nice: gridLabels.value.yAxis.useNiceScale,
+        });
 
     return {
         max: datapoint.scaleMax || maximumRange.max || 1,
@@ -4922,8 +4976,9 @@ function createIndividualExtremes({
     };
 }
 
-function createAutoScaleRatiosToNiceScale({ values, autoScaleSteps }) {
+function createAutoScaleRatiosToNiceScale({ values, autoScaleSteps, project }) {
     return values.map((value) => {
+        if (isNonlinearScale.value) return project(value);
         if (autoScaleSteps.min >= 0) {
             return (
                 (value - Math.abs(autoScaleSteps.min)) /
@@ -4941,49 +4996,57 @@ function createAutoScaleRatiosToNiceScale({ values, autoScaleSteps }) {
 function createIndividualScaleYLabels({
     datapoint,
     individualScale,
+    project,
     yOffset,
     individualHeight,
 }) {
-    return individualScale.ticks.map((tick) => {
-        return {
-            y: getYFromScaleValue({
+    return selectYAxisTicks(
+        individualScale.ticks.map((tick) => {
+            return {
+                y: getYFromScaleValue({
+                    value: tick,
+                    project,
+                    scaleMin: individualScale.min,
+                    scaleMax: individualScale.max,
+                    yOffset,
+                    individualHeight,
+                }),
                 value: tick,
-                scaleMin: individualScale.min,
-                scaleMax: individualScale.max,
-                yOffset,
-                individualHeight,
-            }),
-            value: tick,
-            prefix: datapoint.prefix || cfgChart.value.labels.prefix,
-            suffix: datapoint.suffix || cfgChart.value.labels.suffix,
-            datapoint,
-        };
-    });
+                prefix: datapoint.prefix || cfgChart.value.labels.prefix,
+                suffix: datapoint.suffix || cfgChart.value.labels.suffix,
+                datapoint,
+            };
+        }),
+    );
 }
 
 function createAutoScaleYLabels({
     datapoint,
     autoScaleSteps,
+    project,
     yOffset,
     individualHeight,
 }) {
-    return autoScaleSteps.ticks.map((tick) => {
-        const ratio =
-            (tick - autoScaleSteps.min) /
-            (autoScaleSteps.max - autoScaleSteps.min || 1);
+    return selectYAxisTicks(
+        autoScaleSteps.ticks.map((tick) => {
+            const ratio = isNonlinearScale.value
+                ? project(tick)
+                : (tick - autoScaleSteps.min) /
+                  (autoScaleSteps.max - autoScaleSteps.min || 1);
 
-        return {
-            y: getYFromRatio({
-                ratio,
-                yOffset,
-                individualHeight,
-            }),
-            value: tick,
-            prefix: datapoint.prefix || cfgChart.value.labels.prefix,
-            suffix: datapoint.suffix || cfgChart.value.labels.suffix,
-            datapoint,
-        };
-    });
+            return {
+                y: getYFromRatio({
+                    ratio,
+                    yOffset,
+                    individualHeight,
+                }),
+                value: tick,
+                prefix: datapoint.prefix || cfgChart.value.labels.prefix,
+                suffix: datapoint.suffix || cfgChart.value.labels.suffix,
+                datapoint,
+            };
+        }),
+    );
 }
 
 function createSeriesVerticalContext({
@@ -5023,6 +5086,7 @@ function createSeriesVerticalContext({
     const scaleYLabels = createIndividualScaleYLabels({
         datapoint,
         individualScale: geometry.individualScale,
+        project: geometry.individualProjector,
         yOffset: geometry.yOffset,
         individualHeight: geometry.individualHeight,
     });
@@ -5030,6 +5094,7 @@ function createSeriesVerticalContext({
     const autoScaleYLabels = createAutoScaleYLabels({
         datapoint,
         autoScaleSteps: geometry.autoScaleSteps,
+        project: geometry.autoScaleProjector,
         yOffset: geometry.yOffset,
         individualHeight: geometry.individualHeight,
     });
@@ -5038,6 +5103,7 @@ function createSeriesVerticalContext({
         ? createAutoScaleRatiosToNiceScale({
               values: datapoint.absoluteValues,
               autoScaleSteps: geometry.autoScaleSteps,
+              project: geometry.autoScaleProjector,
           })
         : [];
 
@@ -5093,15 +5159,23 @@ function createPointPlots(context, autoScaling, getSourceIndex) {
         zeroPosition,
     } = context;
     return datapoint.series.map((point, index) => {
-        const source = getSourceIndex
-            ? { sourceIndex: getSourceIndex(point, index) }
-            : {};
+        const source = {
+            ...(getSourceIndex
+                ? { sourceIndex: getSourceIndex(point, index) }
+                : {}),
+            ...(isLogScale.value &&
+            Number.isFinite(datapoint.absoluteValues[index]) &&
+            datapoint.absoluteValues[index] <= 0
+                ? { logOmitted: true }
+                : {}),
+        };
         const comment = comments[index] || '';
         const isGap =
-            isContinuousScale.value &&
-            (autoScaling
-                ? point.x === null || point.y === null
-                : point.x == null || point.y == null);
+            (isLogScale.value && !(datapoint.absoluteValues[index] > 0)) ||
+            (isContinuousScale.value &&
+                (autoScaling
+                    ? point.x === null || point.y === null
+                    : point.x == null || point.y == null));
         if (isGap) {
             if (getSourceIndex)
                 return autoScaling
@@ -5125,6 +5199,7 @@ function createPointPlots(context, autoScaling, getSourceIndex) {
                       };
             return {
                 index,
+                ...source,
                 x: null,
                 datasetXValue: getDatasetXValue(point),
                 y: null,
@@ -5147,11 +5222,16 @@ function createPointPlots(context, autoScaling, getSourceIndex) {
                 comment,
             };
         }
-        const ratio = autoScaling
-            ? autoScaleRatiosToNiceScale[index] || 0
-            : mutableConfig.value.useIndividualScale
-              ? (value + Math.abs(individualZero)) / individualMax
-              : ratioToMax(getValueFromPoint(point));
+        const ratio =
+            isNonlinearScale.value &&
+            !autoScaling &&
+            mutableConfig.value.useIndividualScale
+                ? context.individualProjector(value)
+                : autoScaling
+                  ? autoScaleRatiosToNiceScale[index] || 0
+                  : mutableConfig.value.useIndividualScale
+                    ? (value + Math.abs(individualZero)) / individualMax
+                    : ratioToMax(getValueFromPoint(point));
         return {
             index,
             ...source,
@@ -5198,69 +5278,51 @@ const barSet = computed(() => {
 
         const comments = getSlicedComments(datapoint.comments);
 
-        const plots = !datapoint.autoScaling
-            ? datapoint.series.map((plot, j) => {
-                  const yRatio = mutableConfig.value.useIndividualScale
-                      ? (datapoint.absoluteValues[j] + individualZero) /
+        const plots = datapoint.series.map((plot, j) => {
+            const yRatio = datapoint.autoScaling
+                ? autoScaleRatiosToNiceScale[j] || 0
+                : mutableConfig.value.useIndividualScale
+                  ? isNonlinearScale.value
+                      ? verticalContext.individualProjector(
+                            datapoint.absoluteValues[j],
+                        )
+                      : (datapoint.absoluteValues[j] + individualZero) /
                         individualMax
-                      : ratioToMax(plot);
-                  const x =
-                      mutableConfig.value.useIndividualScale &&
-                      mutableConfig.value.isStacked
-                          ? drawingArea.value?.left +
-                            (drawingArea.value.width / maxSeries.value) * j
-                          : drawingArea.value?.left +
-                            slot.value.bar * i +
-                            slot.value.bar * j * barLen -
-                            barSlot.value / 2 -
-                            i * barPeriodGap.value;
+                  : ratioToMax(plot);
+            const x =
+                mutableConfig.value.useIndividualScale &&
+                mutableConfig.value.isStacked
+                    ? drawingArea.value?.left +
+                      (drawingArea.value.width / maxSeries.value) * j
+                    : datapoint.autoScaling
+                      ? drawingArea.value?.left -
+                        slot.value.bar / 2 +
+                        slot.value.bar * i +
+                        slot.value.bar * j * barLen
+                      : drawingArea.value?.left +
+                        slot.value.bar * i +
+                        slot.value.bar * j * barLen -
+                        barSlot.value / 2 -
+                        i * barPeriodGap.value;
+            const y = getYFromRatio({
+                ratio: yRatio,
+                yOffset: datapoint.autoScaling ? checkNaN(yOffset) : yOffset,
+                individualHeight: datapoint.autoScaling
+                    ? checkNaN(individualHeight)
+                    : individualHeight,
+            });
 
-                  return {
-                      yOffset: checkNaN(yOffset),
-                      individualHeight: checkNaN(individualHeight),
-                      x: checkNaN(x),
-                      y: getYFromRatio({
-                          ratio: yRatio,
-                          yOffset,
-                          individualHeight,
-                      }),
-                      value: datapoint.absoluteValues[j],
-                      zeroPosition: checkNaN(zeroPosition),
-                      individualMax: checkNaN(individualMax),
-                      comment: comments[j] || '',
-                  };
-              })
-            : [];
-
-        const autoScalePlots = datapoint.autoScaling
-            ? datapoint.series.map((_, j) => {
-                  const x =
-                      mutableConfig.value.useIndividualScale &&
-                      mutableConfig.value.isStacked
-                          ? drawingArea.value?.left +
-                            (drawingArea.value.width / maxSeries.value) * j
-                          : drawingArea.value?.left -
-                            slot.value.bar / 2 +
-                            slot.value.bar * i +
-                            slot.value.bar * j * barLen;
-                  return {
-                      yOffset: checkNaN(yOffset),
-                      individualHeight: checkNaN(individualHeight),
-                      x: checkNaN(x),
-                      y: checkNaN(
-                          getYFromRatio({
-                              ratio: autoScaleRatiosToNiceScale[j] || 0,
-                              yOffset: checkNaN(yOffset),
-                              individualHeight: checkNaN(individualHeight),
-                          }),
-                      ),
-                      value: datapoint.absoluteValues[j],
-                      zeroPosition: checkNaN(zeroPosition),
-                      individualMax: checkNaN(individualMax),
-                      comment: comments[j] || '',
-                  };
-              })
-            : [];
+            return {
+                yOffset: checkNaN(yOffset),
+                individualHeight: checkNaN(individualHeight),
+                x: checkNaN(x),
+                y: datapoint.autoScaling ? checkNaN(y) : y,
+                value: datapoint.absoluteValues[j],
+                zeroPosition: checkNaN(zeroPosition),
+                individualMax: checkNaN(individualMax),
+                comment: comments[j] || '',
+            };
+        });
 
         const scaleGroup = createScaleGroupEntry({
             datapoint,
@@ -5277,7 +5339,7 @@ const barSet = computed(() => {
         return {
             ...datapoint,
             ...getSeriesScaleProps(datapoint, verticalContext),
-            plots: datapoint.autoScaling ? autoScalePlots : plots,
+            plots: plots.filter((plot) => !isLogScale.value || plot.value > 0),
             scaleGroup,
             groupId: scaleGroup.groupId,
         };
@@ -5348,6 +5410,8 @@ const lineSet = computed(() => {
                           individualZero,
                           individualMax,
                           autoScaleRatiosToNiceScale,
+                          individualProjector:
+                              verticalContext.individualProjector,
                           yOffset,
                           individualHeight,
                           zeroPosition,
@@ -5365,6 +5429,7 @@ const lineSet = computed(() => {
                       individualZero,
                       individualMax,
                       autoScaleRatiosToNiceScale,
+                      individualProjector: verticalContext.individualProjector,
                       yOffset,
                       individualHeight,
                       zeroPosition,
@@ -5374,16 +5439,21 @@ const lineSet = computed(() => {
               )
             : [];
 
+        // Nonpositive log values have no coordinate, but are not null gaps.
+        const drawablePlots = plots.filter((plot) => !plot.logOmitted);
+        const drawableAutoScalePlots = autoScalePlots.filter(
+            (plot) => !plot.logOmitted,
+        );
         const cutNullValues = FINAL_CONFIG.value.line.cutNullValues;
         const showNullDashes =
             !cutNullValues && FINAL_CONFIG.value.line.nullDashes?.show === true;
 
         const linePlots = cutNullValues
-            ? plots
-            : plots.filter((p) => p.value !== null);
+            ? drawablePlots
+            : drawablePlots.filter((p) => p.value !== null);
         const autoScaleLinePlots = cutNullValues
-            ? autoScalePlots
-            : autoScalePlots.filter((p) => p.value !== null);
+            ? drawableAutoScalePlots
+            : drawableAutoScalePlots.filter((p) => p.value !== null);
 
         const userDashedPointIndices = Array.isArray(datapoint.dashIndices)
             ? datapoint.dashIndices
@@ -5397,7 +5467,7 @@ const lineSet = computed(() => {
             : linePlots;
 
         const visibleDashIndices = (
-            datapoint.autoScaling ? autoScalePlots : plots
+            datapoint.autoScaling ? drawableAutoScalePlots : drawablePlots
         ).reduce((indices, plot, localIndex) => {
             if (userDashedPointIndexSet.has(plot.sourceIndex)) {
                 indices.push(localIndex);
@@ -5459,6 +5529,22 @@ const lineSet = computed(() => {
                     Number.isFinite(sourceIndex) &&
                     Math.abs(sourceIndex - previousSourceIndex) > 1
                 ) {
+                    if (
+                        isLogScale.value &&
+                        !(datapoint.autoScaling ? autoScalePlots : plots).some(
+                            (plot) =>
+                                plot.value == null &&
+                                !plot.logOmitted &&
+                                plot.sourceIndex >
+                                    Math.min(
+                                        previousSourceIndex,
+                                        sourceIndex,
+                                    ) &&
+                                plot.sourceIndex <
+                                    Math.max(previousSourceIndex, sourceIndex),
+                        )
+                    )
+                        continue;
                     dashedStarts.add(i - 1);
                 }
             }
@@ -5484,25 +5570,25 @@ const lineSet = computed(() => {
         const curve = datapoint.autoScaling
             ? ''
             : cutNullValues
-              ? createSmoothPathWithCuts(plots)
+              ? createSmoothPathWithCuts(drawablePlots)
               : createSmoothPath(linePlots);
 
         const autoScaleCurve = !datapoint.autoScaling
             ? ''
             : cutNullValues
-              ? createSmoothPathWithCuts(autoScalePlots)
+              ? createSmoothPathWithCuts(drawableAutoScalePlots)
               : createSmoothPath(autoScaleLinePlots);
 
         const straight = datapoint.autoScaling
             ? ''
             : cutNullValues
-              ? createStraightPathWithCuts(plots)
+              ? createStraightPathWithCuts(drawablePlots)
               : createStraightPath(linePlots);
 
         const autoScaleStraight = !datapoint.autoScaling
             ? ''
             : cutNullValues
-              ? createStraightPathWithCuts(autoScalePlots)
+              ? createStraightPathWithCuts(drawableAutoScalePlots)
               : createStraightPath(autoScaleLinePlots);
 
         const stepper = datapoint.autoScaling
@@ -5555,25 +5641,25 @@ const lineSet = computed(() => {
             individualHeight,
         });
 
-        const areaZeroPosition = mutableConfig.value.useIndividualScale
-            ? datapoint.autoScaling
-                ? autoScaleZeroPosition
-                : zeroPosition
+        const areaScale = datapoint.autoScaling
+            ? verticalContext.autoScaleSteps
+            : verticalContext.individualScale;
+        const areaBaselineValue = isLogScale.value
+            ? areaScale.min
+            : Math.max(areaScale.min, Math.min(areaScale.max, 0));
+        const adjustedAreaZeroPosition = mutableConfig.value.useIndividualScale
+            ? getYFromScaleValue({
+                  value: areaBaselineValue,
+                  scaleMin: areaScale.min,
+                  scaleMax: areaScale.max,
+                  yOffset,
+                  individualHeight,
+              })
             : globalAreaBaselineY.value;
 
-        const adustedAreaZeroPosition = Math.max(
-            Math.max(
-                datapoint.autoScaling
-                    ? autoScaleZeroPosition
-                    : scaleYLabels.at(-1)
-                      ? scaleYLabels.at(-1).y
-                      : 0,
-                drawingArea.value?.top,
-            ),
-            areaZeroPosition,
-        );
-
-        const stepperAreaPlots = datapoint.autoScaling ? autoScalePlots : plots;
+        const stepperAreaPlots = datapoint.autoScaling
+            ? drawableAutoScalePlots
+            : drawablePlots;
 
         const visibleValues = datapoint.absoluteValues.filter(
             (value) => ![null, undefined, NaN].includes(value),
@@ -5582,6 +5668,18 @@ const lineSet = computed(() => {
         const isFlatTemperatureLine =
             !!datapoint.temperatureColors && new Set(visibleValues).size <= 1;
 
+        const selectedStepper = datapoint.autoScaling
+            ? autoScaleStepper
+            : stepper;
+        const selectedCurve = datapoint.autoScaling ? autoScaleCurve : curve;
+        const selectedStraight = datapoint.autoScaling
+            ? autoScaleStraight
+            : straight;
+        const stepperArea =
+            datapoint.useArea && datapoint.useStepper
+                ? createStepperPath(stepperAreaPlots, adjustedAreaZeroPosition)
+                : '';
+
         return {
             ...datapoint,
             isFlatTemperatureLine,
@@ -5589,13 +5687,7 @@ const lineSet = computed(() => {
                 ? datapoint.temperatureColors.map((c) => convertColorToHex(c))
                 : null,
             ...getSeriesScaleProps(datapoint, verticalContext),
-            curve: datapoint.useStepper
-                ? datapoint.autoScaling
-                    ? autoScaleStepper
-                    : stepper
-                : datapoint.autoScaling
-                  ? autoScaleCurve
-                  : curve,
+            curve: datapoint.useStepper ? selectedStepper : selectedCurve,
             plots: datapoint.autoScaling ? autoScalePlots : plots,
             dashedStraight,
             dashedSmooth,
@@ -5604,35 +5696,29 @@ const lineSet = computed(() => {
             area: !datapoint.useArea
                 ? ''
                 : datapoint.useStepper
-                  ? createStepperPath(stepperAreaPlots, adustedAreaZeroPosition)
+                  ? stepperArea
                   : mutableConfig.value.useIndividualScale
                     ? createIndividualAreaWithCuts(
-                          datapoint.autoScaling ? autoScalePlots : plots,
-                          adustedAreaZeroPosition,
+                          stepperAreaPlots,
+                          adjustedAreaZeroPosition,
                       )
                     : createIndividualAreaWithCuts(
-                          plots,
-                          adustedAreaZeroPosition,
+                          drawablePlots,
+                          adjustedAreaZeroPosition,
                       ),
             curveAreas: !datapoint.useArea
                 ? []
                 : datapoint.useStepper
-                  ? createStepperPath(stepperAreaPlots, adustedAreaZeroPosition)
+                  ? stepperArea
                         .split(';')
                         .filter(Boolean)
                         .map((d) => `M${d}Z`)
                   : createSmoothAreaSegments(
-                        datapoint.autoScaling ? autoScalePlots : plots,
-                        adustedAreaZeroPosition,
+                        stepperAreaPlots,
+                        adjustedAreaZeroPosition,
                         true,
                     ),
-            straight: datapoint.useStepper
-                ? datapoint.autoScaling
-                    ? autoScaleStepper
-                    : stepper
-                : datapoint.autoScaling
-                  ? autoScaleStraight
-                  : straight,
+            straight: datapoint.useStepper ? selectedStepper : selectedStraight,
             scaleGroup,
             groupId: scaleGroup.groupId,
         };
@@ -5678,6 +5764,7 @@ const plotSet = computed(() => {
                       individualZero,
                       individualMax,
                       autoScaleRatiosToNiceScale,
+                      individualProjector: verticalContext.individualProjector,
                       yOffset,
                       individualHeight,
                       zeroPosition,
@@ -5694,6 +5781,7 @@ const plotSet = computed(() => {
                       individualZero,
                       individualMax,
                       autoScaleRatiosToNiceScale,
+                      individualProjector: verticalContext.individualProjector,
                       yOffset,
                       individualHeight,
                       zeroPosition,
@@ -5855,20 +5943,21 @@ const allScales = computed(() => {
             yOffset: el.yOffset,
             individualHeight: el.individualHeight,
             x,
-            yLabels:
+            yLabels: selectYAxisTicks(
                 el.scaleYLabels ||
-                el.scale.ticks.map((t) => {
-                    return {
-                        y: getYFromScaleValue({
+                    el.scale.ticks.map((t) => {
+                        return {
+                            y: getYFromScaleValue({
+                                value: t,
+                                scaleMin: el.scale.min,
+                                scaleMax: el.scale.max,
+                                yOffset: el.yOffset || 0,
+                                individualHeight: el.individualHeight,
+                            }),
                             value: t,
-                            scaleMin: el.scale.min,
-                            scaleMax: el.scale.max,
-                            yOffset: el.yOffset || 0,
-                            individualHeight: el.individualHeight,
-                        }),
-                        value: t,
-                    };
-                }),
+                        };
+                    }),
+            ),
         };
     });
 });
@@ -5893,14 +5982,16 @@ const interLineAreas = computed(() => {
         const colorLineB = colors?.[i]?.[1] ?? B.color;
 
         const areas = buildInterLineAreas({
-            lineA: A.plots,
-            lineB: B.plots,
+            lineA: A.plots.filter((plot) => !plot.logOmitted),
+            lineB: B.plots.filter((plot) => !plot.logOmitted),
             smoothA: !!A.smooth,
             smoothB: !!B.smooth,
             stepperA: !!A.useStepper,
             stepperB: !!B.useStepper,
-            colorLineA,
-            colorLineB,
+            // The geometry helper compares SVG positions; reversal flips
+            // screen ordering, but must not flip the value-based colors.
+            colorLineA: isYAxisReversed.value ? colorLineB : colorLineA,
+            colorLineB: isYAxisReversed.value ? colorLineA : colorLineB,
             sampleStepPx: 2,
             cutNullValues: true,
         });
@@ -6129,6 +6220,12 @@ function getTooltipMarkerShape(seriesItem) {
             break;
     }
 
+    // Marker markup is reproducible; bound retention across changing styles/data.
+    if (tooltipMarkerShapeCache.size >= 128) {
+        tooltipMarkerShapeCache.delete(
+            tooltipMarkerShapeCache.keys().next().value,
+        );
+    }
     tooltipMarkerShapeCache.set(cacheKey, shape);
 
     return shape;
@@ -6606,7 +6703,10 @@ function toggleFullscreen(state) {
 }
 
 function convertSizes() {
-    if (!FINAL_CONFIG.value.responsiveProportionalSizing) {
+    if (
+        !FINAL_CONFIG.value.responsive ||
+        !FINAL_CONFIG.value.responsiveProportionalSizing
+    ) {
         fontSizes.value.dataLabels = gridLabels.value.fontSize;
         fontSizes.value.yAxis = gridLabels.value.axis.fontSize;
         fontSizes.value.xAxis = gridLabels.value.xAxisLabels.fontSize;
@@ -6734,111 +6834,60 @@ function prepareChart() {
             observedEl.value = null;
         }
 
-        const { height: _height, width: _width } =
-            parent.getBoundingClientRect();
-
-        // Title height to substract
-        let title = null;
-        let titleHeight = 0;
-        if (cfgChart.value.title.show && chartTitle.value) {
-            title = chartTitle.value;
-            titleHeight = title.getBoundingClientRect().height;
+        function measureLayoutHeight(initial = false) {
+            const titleHeight =
+                cfgChart.value.title.show && chartTitle.value
+                    ? chartTitle.value.getBoundingClientRect().height
+                    : 0;
+            const showSlicer =
+                !initial ||
+                (cfgChart.value.zoom.show && maxX.value > 6 && isDataset.value);
+            const slicerHeight =
+                showSlicer && chartSlicer.value?.$el
+                    ? chartSlicer.value.$el.getBoundingClientRect().height
+                    : 0;
+            const legendHeight =
+                (!initial || cfgChart.value.legend.show) && chartLegend.value
+                    ? chartLegend.value.getBoundingClientRect().height
+                    : 0;
+            const sourceHeight =
+                source.value?.getBoundingClientRect().height || 0;
+            const noTitleHeight =
+                noTitle.value?.getBoundingClientRect().height || 0;
+            return (
+                titleHeight +
+                slicerHeight +
+                legendHeight +
+                sourceHeight +
+                noTitleHeight +
+                additionalPad
+            );
         }
 
-        // Slicer height to substract
-        let slicer = null;
-        let slicerHeight = 0;
-        if (
-            cfgChart.value.zoom.show &&
-            maxX.value > 6 &&
-            isDataset.value &&
-            chartSlicer.value &&
-            chartSlicer.value.$el
+        function applyDimensions(
+            containerWidth,
+            containerHeight,
+            layoutHeight,
         ) {
-            slicer = chartSlicer.value.$el;
-            slicerHeight = slicer.getBoundingClientRect().height;
+            height.value = containerHeight - layoutHeight;
+            width.value = containerWidth;
+            viewBox.value = `0 0 ${width.value < 0 ? 10 : width.value} ${height.value < 0 ? 10 : height.value}`;
+            convertSizes();
         }
 
-        // Legend height to substract
-        let legend = null;
-        let legendHeight = 0;
-        if (cfgChart.value.legend.show && chartLegend.value) {
-            legend = chartLegend.value;
-            legendHeight = legend.getBoundingClientRect().height;
-        }
-
-        // Source height to substract
-        let sourceHeight = 0;
-        if (source.value) {
-            sourceHeight = source.value.getBoundingClientRect().height;
-        }
-
-        // NoTitle height to substract
-        let noTitleHeight = 0;
-        if (noTitle.value) {
-            noTitleHeight = noTitle.value.getBoundingClientRect().height;
-        }
-
-        height.value =
-            _height -
-            titleHeight -
-            legendHeight -
-            slicerHeight -
-            sourceHeight -
-            noTitleHeight -
-            additionalPad;
-
-        width.value = _width;
-        viewBox.value = `0 0 ${width.value < 0 ? 10 : width.value} ${height.value < 0 ? 10 : height.value}`;
-        convertSizes();
+        const bounds = parent.getBoundingClientRect();
+        applyDimensions(bounds.width, bounds.height, measureLayoutHeight(true));
 
         const ro = new ResizeObserver((entries) => {
             for (const entry of entries) {
-                if (cfgChart.value.title.show && chartTitle.value) {
-                    titleHeight =
-                        chartTitle.value.getBoundingClientRect().height;
-                } else {
-                    titleHeight = 0;
-                }
-                if (chartSlicer.value && chartSlicer.value.$el) {
-                    slicerHeight =
-                        chartSlicer.value.$el.getBoundingClientRect().height;
-                } else {
-                    slicerHeight = 0;
-                }
-                if (chartLegend.value) {
-                    legendHeight =
-                        chartLegend.value.getBoundingClientRect().height;
-                } else {
-                    legendHeight = 0;
-                }
-                if (source.value) {
-                    sourceHeight = source.value.getBoundingClientRect().height;
-                } else {
-                    sourceHeight = 0;
-                }
-                if (noTitle.value) {
-                    noTitleHeight =
-                        noTitle.value.getBoundingClientRect().height;
-                } else {
-                    noTitleHeight = 0;
-                }
-
+                const layoutHeight = measureLayoutHeight();
                 requestAnimationFrame(() => {
-                    height.value =
-                        entry.contentRect.height -
-                        titleHeight -
-                        legendHeight -
-                        slicerHeight -
-                        sourceHeight -
-                        noTitleHeight -
-                        additionalPad;
-
-                    width.value =
+                    applyDimensions(
                         entry.contentBoxSize[0].inlineSize ??
-                        entry.contentRect.width;
-                    viewBox.value = `0 0 ${width.value < 0 ? 10 : width.value} ${height.value < 0 ? 10 : height.value}`;
-                    convertSizes();
+                            entry.contentRect.width,
+                        entry.contentRect.height,
+                        layoutHeight,
+                    );
                     queueParentStableLayoutRefresh();
                 });
             }
@@ -6851,14 +6900,7 @@ function prepareChart() {
     } else {
         height.value = cfgChart.value.height;
         width.value = cfgChart.value.width;
-        fontSizes.value.dataLabels = gridLabels.value.fontSize;
-        fontSizes.value.yAxis = gridLabels.value.axis.fontSize;
-        fontSizes.value.xAxis = gridLabels.value.xAxisLabels.fontSize;
-        fontSizes.value.plotLabels = cfgChart.value.labels.fontSize;
-        plotRadii.value.plot = FINAL_CONFIG.value.plot.radius;
-        plotRadii.value.line = FINAL_CONFIG.value.line.radius;
-        plotRadii.value.selectedLine =
-            FINAL_CONFIG.value.line.dot.selectedRadius;
+        convertSizes();
         viewBox.value = `0 0 ${width.value} ${height.value}`;
     }
     queueParentStableLayoutRefresh();
@@ -7832,7 +7874,6 @@ watch(
         prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
-        seedMutableFromConfig();
 
         if (cfgChart.value.zoom.keepState) {
             if (
@@ -8483,7 +8524,7 @@ watch(
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uniqueId"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -9719,13 +9760,9 @@ watch(
                                                 applyDataLabel(
                                                     gridLabels.yAxis.formatter,
                                                     yLabel.value,
-                                                    dataLabel({
-                                                        p: yLabel.prefix,
-                                                        v: yLabel.value,
-                                                        s: yLabel.suffix,
-                                                        r: grid.labels.yAxis
-                                                            .rounding,
-                                                    }),
+                                                    formatYAxisTickFallback(
+                                                        yLabel,
+                                                    ),
                                                     {
                                                         datapoint:
                                                             yLabel.datapoint,
@@ -9809,14 +9846,9 @@ watch(
                                                           grid.labels.yAxis
                                                               .formatter,
                                                           yLabel.value,
-                                                          dataLabel({
-                                                              p: yLabel.prefix,
-                                                              v: yLabel.value,
-                                                              s: yLabel.suffix,
-                                                              r: cfgChart.grid
-                                                                  .labels.yAxis
-                                                                  .rounding,
-                                                          }),
+                                                          formatYAxisTickFallback(
+                                                              yLabel,
+                                                          ),
                                                       )
                                                     : ''
                                             }}
@@ -10194,6 +10226,7 @@ watch(
                                             <path
                                                 v-for="area in interLineAreas"
                                                 :key="area.key"
+                                                data-cy="interline-area"
                                                 :d="area.d"
                                                 :fill="area.color"
                                                 :fill-opacity="
@@ -11588,6 +11621,10 @@ watch(
             v-if="cfgChart.zoom.show && maxX > 6 && isDataset && slicerReady"
             :uuid="uniqueId"
             :allMinimaps="allMinimaps"
+            :yScale="gridLabels.yAxis.scale"
+            :symlogConstant="symlogConstant"
+            :yReverse="isYAxisReversed"
+            :yUseNiceScale="gridLabels.yAxis.useNiceScale"
             :background="cfgChart.zoom.color"
             :borderColor="cfgChart.backgroundColor"
             :customFormat="cfgChart.zoom.customFormat"

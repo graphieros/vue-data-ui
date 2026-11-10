@@ -34,7 +34,6 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    functionReturnsString,
     getEffectiveTimeLabelModulo,
     getImageDimensions,
     hasDeepProperty,
@@ -129,7 +128,9 @@ const isDataset = computed(() => {
 const isLoaded = ref(false);
 const responsiveSizeReady = ref(false);
 let resizeFrame = 0;
-const to = ref(null);
+let loadedTimer = null;
+let chartDisposed = false;
+let clickSuppressionTimer = null;
 const uid = ref(createUid());
 const isTooltip = ref(false);
 const tooltipContent = ref('');
@@ -292,8 +293,6 @@ function prepareConfig() {
         defaultConfig: DEFAULT_CONFIG,
     });
 
-    let finalConfig = {};
-
     if (
         props.config &&
         hasDeepProperty(
@@ -307,28 +306,16 @@ function prepareConfig() {
 
     const theme = mergedConfig.theme;
 
-    if (theme) {
-        if (!isThemeValid.value(mergedConfig)) {
-            warnInvalidTheme(mergedConfig);
-            finalConfig = mergedConfig;
-        } else {
-            const fused = useNestedProp({
-                userConfig: themes[theme] || props.config,
-                defaultConfig: mergedConfig,
-            });
-
-            finalConfig = {
-                ...useNestedProp({
-                    userConfig: props.config,
-                    defaultConfig: fused,
-                }),
-            };
-        }
-    } else {
-        finalConfig = mergedConfig;
+    if (!theme) return mergedConfig;
+    if (!isThemeValid.value(mergedConfig)) {
+        warnInvalidTheme(mergedConfig);
+        return mergedConfig;
     }
-
-    return finalConfig;
+    const fused = useNestedProp({
+        userConfig: themes[theme] || props.config,
+        defaultConfig: mergedConfig,
+    });
+    return useNestedProp({ userConfig: props.config, defaultConfig: fused });
 }
 
 let previousStructuralConfig = stringifyStructuralConfig(props.config);
@@ -355,7 +342,7 @@ watch(
         }
 
         if (!loading.value) {
-            FINAL_CONFIG.value = prepareConfig();
+            FINAL_CONFIG.value = preparedConfig;
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
@@ -400,7 +387,15 @@ onMounted(() => {
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
+function scheduleLoaded() {
+    clearTimeout(loadedTimer);
+    loadedTimer = setTimeout(() => {
+        isLoaded.value = true;
+    }, 10);
+}
+
 function prepareChart() {
+    if (chartDisposed) return;
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiCandlestick',
@@ -415,9 +410,7 @@ function prepareChart() {
         manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
-    setTimeout(() => {
-        isLoaded.value = true;
-    }, 10);
+    scheduleLoaded();
 
     if (FINAL_CONFIG.value.responsive) {
         const additionalPad = 12;
@@ -461,10 +454,7 @@ function prepareChart() {
                     svg.value.yAxisFontSize =
                         gridCfg.value.yAxis.dataLabels.fontSize;
                 }
-                if (to.value) clearTimeout(to.value);
-                to.value = setTimeout(() => {
-                    isLoaded.value = true;
-                }, 10);
+                scheduleLoaded();
             });
         };
 
@@ -483,6 +473,9 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    chartDisposed = true;
+    clearTimeout(loadedTimer);
+    clearTimeout(clickSuppressionTimer);
     cancelAnimationFrame(resizeFrame);
     if (resizeObserver.value) {
         if (observedEl.value) {
@@ -541,18 +534,12 @@ function getScaleLabelX() {
 
     const crosshair = 13;
 
-    const yAxisNameWidth = gridCfg.value.yAxis.axisName?.show
-        ? gridCfg.value.yAxis.axisName.fontSize +
-          gridCfg.value.yAxis.axisName.offsetX
-        : 0;
-
-    const total = scaleLabelsWidth + crosshair + yAxisNameWidth;
+    const total = scaleLabelsWidth + crosshair;
 
     return {
         left: yAxisLabelsAreRight.value ? 0 : total,
         right: yAxisLabelsAreRight.value ? total : 0,
         scaleLabelsWidth,
-        yAxisNameWidth,
         crosshair,
     };
 }
@@ -576,7 +563,6 @@ const drawingArea = computed(() => {
         width: svg.value.width - pl - pr - scaleLabelX.left - scaleLabelX.right,
         height: svg.value.height - pt - pb - timeLabelsY.value - topOffset,
         scaleLabelsWidth: scaleLabelX.scaleLabelsWidth,
-        yAxisNameWidth: scaleLabelX.yAxisNameWidth,
         crosshair: scaleLabelX.crosshair,
     };
 });
@@ -830,32 +816,20 @@ const datasetBreakdown = computed(() => {
         });
     }
 
-    return mutableDataset.value.map((ds) => {
-        return {
-            absoluteIndex: ds.absoluteIndex,
-            period: ds[0],
-            open: ds[1],
-            high: ds[2],
-            low: ds[3],
-            close: ds[4],
-            volume: ds[5],
-        };
-    });
+    return normalizedDataset.value.slice(slicer.value.start, slicer.value.end);
 });
 
-const minimapSource = computed(() => {
-    return absoluteDataset.value.map((ds) => {
-        return {
-            absoluteIndex: ds.absoluteIndex,
-            period: ds[0],
-            open: ds[1],
-            high: ds[2],
-            low: ds[3],
-            close: ds[4],
-            volume: ds[5],
-        };
-    });
-});
+const normalizedDataset = computed(() =>
+    absoluteDataset.value.map((ds) => ({
+        absoluteIndex: ds.absoluteIndex,
+        period: ds[0],
+        open: ds[1],
+        high: ds[2],
+        low: ds[3],
+        close: ds[4],
+        volume: ds[5],
+    })),
+);
 
 const slot = computed(() => {
     return drawingArea.value.width / mutableDataset.value.length;
@@ -957,6 +931,35 @@ const drawableDataset = computed(() => {
     });
 });
 
+const candleBodies = computed(() =>
+    drawableDataset.value.map((candle) => ({
+        x:
+            candle.open.x -
+            slot.value / 2 +
+            (slot.value * (1 - candleCfg.value.widthRatio)) / 2,
+        y: candle.isBullish ? candle.close.y : candle.open.y,
+        height:
+            Math.abs(candle.close.y - candle.open.y) <= 0
+                ? 0.0001
+                : Math.abs(candle.close.y - candle.open.y),
+        width:
+            slot.value * candleCfg.value.widthRatio <= 0
+                ? 0.0001
+                : slot.value * candleCfg.value.widthRatio,
+    })),
+);
+
+const wickExtremityWidth = computed(() =>
+    layoutCfg.value.wick.extremity.size === 'auto'
+        ? slot.value * candleCfg.value.widthRatio
+        : layoutCfg.value.wick.extremity.size,
+);
+const wickExtremityRadius = computed(() =>
+    layoutCfg.value.wick.extremity.size === 'auto'
+        ? slot.value / 20
+        : layoutCfg.value.wick.extremity.size,
+);
+
 const minimapMaximum = computed(() => {
     let max = -Infinity;
     for (const ds of FINAL_DATASET.value) {
@@ -975,7 +978,7 @@ function convertToMinimapPlot({ item, index, minimapH, unitW, min, max }) {
 }
 
 const minimapDataset = computed(() => {
-    const source = minimapSource.value;
+    const source = normalizedDataset.value;
     const min = gridCfg.value.yAxis.scale.min ?? 0;
     const max = gridCfg.value.yAxis.scale.max ?? minimapMaximum.value;
     let cachedHeight;
@@ -1077,6 +1080,8 @@ const xLabels = computed(() => {
     return datasetBreakdown.value.map((ds) => ds.period);
 });
 
+const timestamps = computed(() => FINAL_DATASET.value.map((ds) => ds[0]));
+
 const timeLabels = ref([]);
 const timeLabelsAreReady = ref(false);
 const allTimeLabels = ref([]);
@@ -1087,7 +1092,7 @@ watchEffect(() => {
 
     (async () => {
         const labels = await useTimeLabels({
-            values: FINAL_DATASET.value.map((ds) => ds[0]),
+            values: timestamps.value,
             maxDatapoints: FINAL_DATASET.value.length,
             formatter: gridCfg.value.xAxis.dataLabels.datetimeFormatter,
             start: slicer.value.start,
@@ -1107,7 +1112,7 @@ watchEffect(() => {
 
     (async () => {
         const labels = await useTimeLabels({
-            values: FINAL_DATASET.value.map((ds) => ds[0]),
+            values: timestamps.value,
             maxDatapoints: FINAL_DATASET.value.length,
             formatter: gridCfg.value.xAxis.dataLabels.datetimeFormatter,
             start: 0,
@@ -1152,15 +1157,14 @@ const preciseTimeFormatter = computed(() => {
     });
 
     return (absIndex, fmt) => {
-        const values = FINAL_DATASET.value.map((ds) => ds[0]);
-        const ts = values?.[absIndex];
+        const ts = timestamps.value[absIndex];
         if (ts == null) return '';
         return dt.formatDate(new Date(ts), fmt);
     };
 });
 
 const preciseAllTimeLabelsTooltip = computed(() => {
-    const values = FINAL_DATASET.value.map((ds) => ds[0]) || [];
+    const values = timestamps.value;
     return values.map((_, i) => ({
         text: preciseTimeFormatter.value(i, styleCfg.value.tooltip.timeFormat),
         absoluteIndex: i,
@@ -1168,7 +1172,7 @@ const preciseAllTimeLabelsTooltip = computed(() => {
 });
 
 const preciseAllTimeLabels = computed(() => {
-    const values = FINAL_DATASET.value.map((ds) => ds[0]) || [];
+    const values = timestamps.value;
     return values.map((_, i) => ({
         text: preciseTimeFormatter.value(i, styleCfg.value.zoom.timeFormat),
         absoluteIndex: i,
@@ -1271,6 +1275,19 @@ const slicerLabels = computed(() => {
     }
 });
 
+const OHLC_FIELDS = ['open', 'high', 'low', 'close'];
+
+function formatOhlc(datapoint, config) {
+    return OHLC_FIELDS.map((field) =>
+        dataLabel({
+            p: config.prefix,
+            v: datapoint[field].value,
+            s: config.suffix,
+            r: config.roundingValue,
+        }),
+    );
+}
+
 const dataTooltipSlot = ref(null);
 
 function selectDatapoint(index, datapoint) {
@@ -1296,8 +1313,12 @@ function onTrapLeave(index, datapoint) {
 }
 
 watch(
-    () => props.selectedXIndex,
-    (v) => {
+    [
+        () => props.selectedXIndex,
+        () => slicer.value.start,
+        () => slicer.value.end,
+    ],
+    ([v]) => {
         if ([null, undefined].includes(props.selectedXIndex)) {
             hoveredIndex.value = null;
             return;
@@ -1336,28 +1357,20 @@ function useTooltip(index, datapoint, triggerMode = 'pointer') {
 
     const customFormat = styleCfg.value.tooltip.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                seriesIndex: index,
-                datapoint,
-                series: drawableDataset.value,
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            seriesIndex: index,
-            datapoint,
-            series: drawableDataset.value,
-            config: FINAL_CONFIG.value,
-        });
+    const customContent = isFunction(customFormat)
+        ? customFormat({
+              seriesIndex: index,
+              datapoint,
+              series: drawableDataset.value,
+              config: FINAL_CONFIG.value,
+          })
+        : null;
+    if (typeof customContent === 'string') {
+        tooltipContent.value = customContent;
     } else {
         if (styleCfg.value.tooltip.show) {
             let html = '';
-            const { period, open, high, low, close, volume, isBullish } =
-                drawableDataset.value[index];
+            const { period, volume, isBullish } = drawableDataset.value[index];
             const {
                 period: tr_period,
                 open: tr_open,
@@ -1372,7 +1385,9 @@ function useTooltip(index, datapoint, triggerMode = 'pointer') {
                 ? period
                 : styleCfg.value.tooltip.useDefaultTimeFormat
                   ? timeLabels.value[index].text
-                  : preciseAllTimeLabelsTooltip.value[index].text;
+                  : preciseAllTimeLabelsTooltip.value[
+                        index + slicer.value.start
+                    ].text;
 
             html += `<div data-cy="candlestick-tooltip-period"><svg style="margin-right:6px" viewBox="0 0 12 12" height="12" width="12"><rect x="0" y="0" height="12" width="12" rx="${candleCfg.value.borderRadius * 3}" stroke="${candleCfg.value.stroke}" stroke-width="${candleCfg.value.strokeWidth}" 
                 fill="${
@@ -1387,33 +1402,10 @@ function useTooltip(index, datapoint, triggerMode = 'pointer') {
             html += `${tr_volume} : <b data-cy="candlestick-tooltip-volume">${isNaN(volume) ? '-' : Number(volume.toFixed(styleCfg.value.tooltip.roundingValue)).toLocaleString()}</b>`;
             html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${styleCfg.value.tooltip.borderColor}">`;
 
-            const label_open = dataLabel({
-                p: styleCfg.value.tooltip.prefix,
-                v: open.value,
-                s: styleCfg.value.tooltip.suffix,
-                r: styleCfg.value.tooltip.roundingValue,
-            });
-
-            const label_high = dataLabel({
-                p: styleCfg.value.tooltip.prefix,
-                v: high.value,
-                s: styleCfg.value.tooltip.suffix,
-                r: styleCfg.value.tooltip.roundingValue,
-            });
-
-            const label_low = dataLabel({
-                p: styleCfg.value.tooltip.prefix,
-                v: low.value,
-                s: styleCfg.value.tooltip.suffix,
-                r: styleCfg.value.tooltip.roundingValue,
-            });
-
-            const label_close = dataLabel({
-                p: styleCfg.value.tooltip.prefix,
-                v: close.value,
-                s: styleCfg.value.tooltip.suffix,
-                r: styleCfg.value.tooltip.roundingValue,
-            });
+            const [label_open, label_high, label_low, label_close] = formatOhlc(
+                drawableDataset.value[index],
+                styleCfg.value.tooltip,
+            );
 
             if (styleCfg.value.tooltip.showChart) {
                 html += `<div style="width:100%;display:flex;align-items:center;justify-content:center;">
@@ -1456,42 +1448,55 @@ function useTooltip(index, datapoint, triggerMode = 'pointer') {
     isTooltip.value = true;
 }
 
-const refreshRAF = ref(null);
-function nextPaint() {
-    return new Promise((r) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => r())),
-    );
+let slicerRefreshVersion = 0;
+const pendingSlicerFrames = new Map();
+
+function cancelSlicerRefresh() {
+    slicerRefreshVersion += 1;
+    for (const [frame, resolve] of pendingSlicerFrames) {
+        cancelAnimationFrame(frame);
+        resolve(false);
+    }
+    pendingSlicerFrames.clear();
+}
+
+function nextSlicerFrame() {
+    return new Promise((resolve) => {
+        const frame = requestAnimationFrame(() => {
+            pendingSlicerFrames.delete(frame);
+            resolve(true);
+        });
+        pendingSlicerFrames.set(frame, resolve);
+    });
 }
 
 onBeforeUnmount(() => {
-    if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
+    cancelSlicerRefresh();
     clearQueuedSlicerFrame();
     cancelChartZoomSelection();
 });
 
 async function refreshSlicer({ force = false, publish = false } = {}) {
+    if (chartDisposed) return;
+    cancelSlicerRefresh();
+    const version = slicerRefreshVersion;
     const applyControlledZoom = !force;
-
     setupSlicer(applyControlledZoom);
-
     await nextTick();
-
-    if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
-
-    refreshRAF.value = requestAnimationFrame(async () => {
-        await nextPaint();
-
-        setupSlicer(applyControlledZoom);
-        refreshRAF.value = null;
-
-        if (publish) {
-            emitZoomState({
-                start: Number(slicer.value.start),
-                end: Number(slicer.value.end),
-            });
-            emit('zoomReset');
-        }
-    });
+    if (version !== slicerRefreshVersion) return;
+    // Preserve the three-frame wait for the child slicer and its layout.
+    for (let i = 0; i < 3; i += 1) {
+        if (!(await nextSlicerFrame()) || version !== slicerRefreshVersion)
+            return;
+    }
+    setupSlicer(applyControlledZoom);
+    if (publish) {
+        emitZoomState({
+            start: Number(slicer.value.start),
+            end: Number(slicer.value.end),
+        });
+        emit('zoomReset');
+    }
 }
 
 const isSettingUp = ref(false);
@@ -1515,7 +1520,7 @@ watch(
 );
 
 function setupSlicer(applyControlledZoom = true) {
-    if (isSettingUp.value) return;
+    if (chartDisposed || isSettingUp.value) return;
     isSettingUp.value = true;
 
     try {
@@ -1569,7 +1574,7 @@ function generateCsv(callback = null) {
             FINAL_CONFIG.value.translations.open,
             FINAL_CONFIG.value.translations.high,
             FINAL_CONFIG.value.translations.low,
-            FINAL_CONFIG.value.translations.close,
+            FINAL_CONFIG.value.translations.last,
             FINAL_CONFIG.value.translations.volume,
         ];
 
@@ -1606,86 +1611,25 @@ function generateCsv(callback = null) {
 }
 
 const dataTable = computed(() => {
-    const body = drawableDataset.value.map((ds, i) => {
+    const body = [];
+    const bodyA11y = [];
+    drawableDataset.value.forEach((ds, i) => {
         const timeLabel = gridCfg.value.xAxis.dataLabels.datetimeFormatter
             .enable
             ? (timeLabels.value?.[i]?.text ?? '')
             : ds.period;
-
-        const label_open = dataLabel({
-            p: FINAL_CONFIG.value.table.td.prefix,
-            v: ds.open.value,
-            s: FINAL_CONFIG.value.table.td.suffix,
-            r: FINAL_CONFIG.value.table.td.roundingValue,
-        });
-        const label_high = dataLabel({
-            p: FINAL_CONFIG.value.table.td.prefix,
-            v: ds.high.value,
-            s: FINAL_CONFIG.value.table.td.suffix,
-            r: FINAL_CONFIG.value.table.td.roundingValue,
-        });
-        const label_low = dataLabel({
-            p: FINAL_CONFIG.value.table.td.prefix,
-            v: ds.low.value,
-            s: FINAL_CONFIG.value.table.td.suffix,
-            r: FINAL_CONFIG.value.table.td.roundingValue,
-        });
-        const label_close = dataLabel({
-            p: FINAL_CONFIG.value.table.td.prefix,
-            v: ds.close.value,
-            s: FINAL_CONFIG.value.table.td.suffix,
-            r: FINAL_CONFIG.value.table.td.roundingValue,
-        });
-
-        return [
-            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" height="12" width="12" style="margin-right: 6px"><rect x="0" y="0" height="12" width="12" rx="${candleCfg.value.borderRadius * 3}" fill="${candleCfg.value.gradient.show ? (ds.isBullish ? `url(#bullish_gradient_${uid.value})` : `url(#bearish_gradient_${uid.value})`) : ds.isBullish ? candleCfg.value.colors.bullish : candleCfg.value.colors.bearish}"/></svg> ${timeLabel}`,
-            label_open,
-            label_high,
-            label_low,
-            label_close,
+        const values = formatOhlc(ds, FINAL_CONFIG.value.table.td);
+        const marker = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" height="12" width="12" style="margin-right: 6px"><rect x="0" y="0" height="12" width="12" rx="${candleCfg.value.borderRadius * 3}" fill="${candleCfg.value.gradient.show ? (ds.isBullish ? `url(#bullish_gradient_${uid.value})` : `url(#bearish_gradient_${uid.value})`) : ds.isBullish ? candleCfg.value.colors.bullish : candleCfg.value.colors.bearish}"/></svg>`;
+        body.push([
+            `${marker} ${timeLabel}`,
+            ...values,
             `${isNaN(ds.volume) ? '-' : ds.volume.toLocaleString()}`,
-        ];
-    });
-
-    const bodyA11y = drawableDataset.value.map((ds, i) => {
-        const timeLabel = gridCfg.value.xAxis.dataLabels.datetimeFormatter
-            .enable
-            ? (timeLabels.value?.[i]?.text ?? '')
-            : ds.period;
-
-        const label_open = dataLabel({
-            p: FINAL_CONFIG.value.table.td.prefix,
-            v: ds.open.value,
-            s: FINAL_CONFIG.value.table.td.suffix,
-            r: FINAL_CONFIG.value.table.td.roundingValue,
-        });
-        const label_high = dataLabel({
-            p: FINAL_CONFIG.value.table.td.prefix,
-            v: ds.high.value,
-            s: FINAL_CONFIG.value.table.td.suffix,
-            r: FINAL_CONFIG.value.table.td.roundingValue,
-        });
-        const label_low = dataLabel({
-            p: FINAL_CONFIG.value.table.td.prefix,
-            v: ds.low.value,
-            s: FINAL_CONFIG.value.table.td.suffix,
-            r: FINAL_CONFIG.value.table.td.roundingValue,
-        });
-        const label_close = dataLabel({
-            p: FINAL_CONFIG.value.table.td.prefix,
-            v: ds.close.value,
-            s: FINAL_CONFIG.value.table.td.suffix,
-            r: FINAL_CONFIG.value.table.td.roundingValue,
-        });
-
-        return [
+        ]);
+        bodyA11y.push([
             timeLabel,
-            label_open,
-            label_high,
-            label_low,
-            label_close,
+            ...values,
             `${isNaN(ds.volume) ? '-' : ds.volume}`,
-        ];
+        ]);
     });
 
     const config = {
@@ -2024,7 +1968,8 @@ function cancelChartZoomSelection(event) {
 function suppressNextChartClick() {
     ignoreNextChartClick.value = true;
 
-    setTimeout(() => {
+    clearTimeout(clickSuppressionTimer);
+    clickSuppressionTimer = setTimeout(() => {
         ignoreNextChartClick.value = false;
     }, 0);
 }
@@ -2487,7 +2432,7 @@ const annotationViewport = computed(() => {
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -2967,12 +2912,7 @@ const annotationViewport = computed(() => {
                                     <circle
                                         :cx="wick.high.x"
                                         :cy="wick.high.y"
-                                        :r="
-                                            layoutCfg.wick.extremity.size ===
-                                            'auto'
-                                                ? slot / 20
-                                                : layoutCfg.wick.extremity.size
-                                        "
+                                        :r="wickExtremityRadius"
                                         :fill="layoutCfg.wick.extremity.color"
                                         :class="{
                                             'vue-data-ui-transition':
@@ -2984,12 +2924,7 @@ const annotationViewport = computed(() => {
                                     <circle
                                         :cx="wick.low.x"
                                         :cy="wick.low.y"
-                                        :r="
-                                            layoutCfg.wick.extremity.size ===
-                                            'auto'
-                                                ? slot / 20
-                                                : layoutCfg.wick.extremity.size
-                                        "
+                                        :r="wickExtremityRadius"
                                         :fill="layoutCfg.wick.extremity.color"
                                         :class="{
                                             'vue-data-ui-transition':
@@ -3008,14 +2943,7 @@ const annotationViewport = computed(() => {
                                     <rect
                                         :data-cy="`candlestick-wick-high-${i}`"
                                         :x="
-                                            wick.high.x -
-                                            (layoutCfg.wick.extremity.size ===
-                                            'auto'
-                                                ? slot *
-                                                  layoutCfg.candle.widthRatio
-                                                : layoutCfg.wick.extremity
-                                                      .size) /
-                                                2
+                                            wick.high.x - wickExtremityWidth / 2
                                         "
                                         :y="
                                             wick.high.y -
@@ -3024,27 +2952,9 @@ const annotationViewport = computed(() => {
                                         :width="
                                             Math.abs(
                                                 wick.high.x -
-                                                    (layoutCfg.wick.extremity
-                                                        .size === 'auto'
-                                                        ? slot *
-                                                          styleCfg.layout.candle
-                                                              .widthRatio
-                                                        : styleCfg.layout.wick
-                                                              .extremity.size) /
-                                                        2 -
+                                                    wickExtremityWidth / 2 -
                                                     (wick.high.x +
-                                                        (styleCfg.layout.wick
-                                                            .extremity.size ===
-                                                        'auto'
-                                                            ? slot *
-                                                              styleCfg.layout
-                                                                  .candle
-                                                                  .widthRatio
-                                                            : styleCfg.layout
-                                                                  .wick
-                                                                  .extremity
-                                                                  .size) /
-                                                            2),
+                                                        wickExtremityWidth / 2),
                                             )
                                         "
                                         :height="layoutCfg.wick.strokeWidth"
@@ -3060,16 +2970,7 @@ const annotationViewport = computed(() => {
                                     />
                                     <rect
                                         :data-cy="`candlestick-wick-low-${i}`"
-                                        :x="
-                                            wick.low.x -
-                                            (layoutCfg.wick.extremity.size ===
-                                            'auto'
-                                                ? slot *
-                                                  layoutCfg.candle.widthRatio
-                                                : layoutCfg.wick.extremity
-                                                      .size) /
-                                                2
-                                        "
+                                        :x="wick.low.x - wickExtremityWidth / 2"
                                         :y="
                                             wick.low.y -
                                             layoutCfg.wick.strokeWidth / 2
@@ -3077,27 +2978,9 @@ const annotationViewport = computed(() => {
                                         :width="
                                             Math.abs(
                                                 wick.low.x -
-                                                    (layoutCfg.wick.extremity
-                                                        .size === 'auto'
-                                                        ? slot *
-                                                          styleCfg.layout.candle
-                                                              .widthRatio
-                                                        : styleCfg.layout.wick
-                                                              .extremity.size) /
-                                                        2 -
+                                                    wickExtremityWidth / 2 -
                                                     (wick.low.x +
-                                                        (styleCfg.layout.wick
-                                                            .extremity.size ===
-                                                        'auto'
-                                                            ? slot *
-                                                              styleCfg.layout
-                                                                  .candle
-                                                                  .widthRatio
-                                                            : styleCfg.layout
-                                                                  .wick
-                                                                  .extremity
-                                                                  .size) /
-                                                            2),
+                                                        wickExtremityWidth / 2),
                                             )
                                         "
                                         :height="layoutCfg.wick.strokeWidth"
@@ -3119,29 +3002,7 @@ const annotationViewport = computed(() => {
                             <rect
                                 v-for="(candle, i) in drawableDataset"
                                 :data-cy="`candlestick-rect-underlayer-${i}`"
-                                :x="
-                                    candle.open.x -
-                                    slot / 2 +
-                                    (slot * (1 - candleCfg.widthRatio)) / 2
-                                "
-                                :y="
-                                    candle.isBullish
-                                        ? candle.close.y
-                                        : candle.open.y
-                                "
-                                :height="
-                                    Math.abs(candle.close.y - candle.open.y) <=
-                                    0
-                                        ? 0.0001
-                                        : Math.abs(
-                                              candle.close.y - candle.open.y,
-                                          )
-                                "
-                                :width="
-                                    slot * candleCfg.widthRatio <= 0
-                                        ? 0.0001
-                                        : slot * candleCfg.widthRatio
-                                "
+                                v-bind="candleBodies[i]"
                                 :fill="candleCfg.gradient.underlayer"
                                 :rx="candleCfg.borderRadius"
                                 stroke="none"
@@ -3155,29 +3016,7 @@ const annotationViewport = computed(() => {
                             <rect
                                 v-for="(candle, i) in drawableDataset"
                                 :data-cy="`candlestick-rect-${i}`"
-                                :x="
-                                    candle.open.x -
-                                    slot / 2 +
-                                    (slot * (1 - candleCfg.widthRatio)) / 2
-                                "
-                                :y="
-                                    candle.isBullish
-                                        ? candle.close.y
-                                        : candle.open.y
-                                "
-                                :height="
-                                    Math.abs(candle.close.y - candle.open.y) <=
-                                    0
-                                        ? 0.0001
-                                        : Math.abs(
-                                              candle.close.y - candle.open.y,
-                                          )
-                                "
-                                :width="
-                                    slot * candleCfg.widthRatio <= 0
-                                        ? 0.0001
-                                        : slot * candleCfg.widthRatio
-                                "
+                                v-bind="candleBodies[i]"
                                 :fill="
                                     candle.isBullish
                                         ? candleCfg.gradient.show

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ref, nextTick } from 'vue';
 import { shallowMount, flushPromises } from '@vue/test-utils';
 import { components } from '../stories/fixtures/components';
@@ -31,6 +31,7 @@ vi.mock('../src/usePanZoom', () => ({
             scale: controls.scale,
             isZoom: ref(false),
             resetZoom() {},
+            cancelAnimation() {},
             zoomByFactor() {},
             setInitialViewBox(value) {
                 viewBox.value = value;
@@ -38,6 +39,13 @@ vi.mock('../src/usePanZoom', () => ({
         };
     },
 }));
+beforeEach(() => {
+    vi.stubGlobal('matchMedia', () => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+    }));
+});
 const mounted = [];
 afterEach(() => {
     mounted.splice(0).forEach((wrapper) => wrapper.unmount());

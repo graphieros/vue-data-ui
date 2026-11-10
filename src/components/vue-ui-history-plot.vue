@@ -12,6 +12,7 @@ import {
 } from '../annotationSlots';
 
 import { createChartImageGetter } from '../chartImage';
+import { resolveChartConfigWithPalette } from '../resolveChartConfig';
 import {
     computed,
     defineAsyncComponent,
@@ -19,13 +20,11 @@ import {
     onBeforeUnmount,
     onMounted,
     ref,
+    reactive,
     shallowRef,
-    toRefs,
     watch,
-    watchEffect,
 } from 'vue';
 import {
-    stringifyChartConfig as stringifyStructuralConfig,
     XMLNS,
     adaptColorToBackground,
     applyDataLabel,
@@ -34,21 +33,17 @@ import {
     convertCustomPalette,
     createCatmullRomPath,
     createCsvContent,
-    createSmoothPath,
     createTSpansFromLineBreaksOnX,
     createUid,
     darkenHexColor,
     dataLabel,
     downloadCsv,
     error,
-    getMissingDatasetAttributes,
     isFunction,
     lightenHexColor,
-    objectIsEmpty,
     palette,
     setGradientOffset,
     svgToClientCoords,
-    themePalettes,
     translateSize,
     treeShake,
     interpolateHexColors,
@@ -56,14 +51,10 @@ import {
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useSvgLabelLayout } from '../useSvgLabelLayout';
-import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
-import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
-import { useThemeCheck } from '../useThemeCheck';
 import { useChartExport } from '../useChartExport';
 import { useTransitions } from '../useTransitions.js';
-import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { useTimeLabelCollision } from '../useTimeLabelCollider';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
@@ -92,7 +83,6 @@ const BaseDraggableDialog = defineAsyncComponent(
 );
 
 const { vue_ui_history_plot: DEFAULT_CONFIG } = useConfig();
-const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -111,18 +101,14 @@ const props = defineProps({
 
 const historyPlotChart = ref(null);
 const chartTitle = ref(null);
-const titleStep = ref(0);
 const chartLegend = ref(null);
-const legendStep = ref(0);
-const tableStep = ref(0);
 const step = ref(0);
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
 const noTitle = ref(null);
 const uid = ref(createUid());
 const isTooltip = ref(false);
 const tooltipContent = ref('');
-const segregated = ref([]);
+const hiddenSeriesKeys = ref([]);
 const isFullscreen = ref(false);
 const selectedDatapoint = ref(null);
 const useCustomFormat = ref(false);
@@ -142,60 +128,63 @@ const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
 const tooltipTriggerMode = ref('pointer'); // a11y
 const isFocus = ref(false); // a11y
 
-const isDataset = computed({
-    get: () => {
-        return !!props.dataset && props.dataset.length;
-    },
-    set: (bool) => {
-        return bool;
-    },
-});
+const validation = computed(() =>
+    Array.from(props.dataset, (serie) => {
+        const keys =
+            serie && typeof serie === 'object' ? Object.keys(serie) : [];
+        const missing = ['name', 'values'].filter((key) => !keys.includes(key));
+        const array = Array.isArray(serie?.values);
+        const points = array
+            ? Array.from(serie.values, (point) => ({
+                  x: Number.isFinite(point?.x),
+                  y: Number.isFinite(point?.y),
+              }))
+            : [];
+        return {
+            missing,
+            array,
+            points,
+            valid:
+                !missing.length &&
+                array &&
+                points.every((point) => point.x && point.y),
+        };
+    }),
+);
+
+const isDataset = computed(
+    () =>
+        props.dataset.length > 0 &&
+        validation.value.every((serie) => serie.valid),
+);
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint', 'copyAlt']);
 
 const responsiveSizeReady = ref(false);
-let resizeFrame = 0;
+let resizeFrame = null;
+let disposed = false;
+const responsiveSize = shallowRef(null);
 
-onMounted(() => {
-    readyTeleport.value = true;
-    prepareChart();
-});
-
-const debug = computed(() => FINAL_CONFIG.value.debug);
+function teardownResponsive() {
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+}
 
 function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiHistoryPlot',
-            type: 'dataset',
-            debug: debug.value,
-        });
-        manualLoading.value = true;
-    } else {
-        props.dataset.forEach((ds, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['name', 'values'],
-            }).forEach((attr) => {
-                isDataset.value = false;
-                error({
-                    componentName: 'VueUiHistoryPlot',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i,
-                    debug: debug.value,
-                });
-            });
-        });
-    }
-
-    // v3
-    if (!objectIsEmpty(props.dataset)) {
-        manualLoading.value = FINAL_CONFIG.value.loading;
-    }
-
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = () => {
+    teardownResponsive();
+    responsiveSize.value = null;
+    responsiveSizeReady.value = false;
+    if (!FINAL_CONFIG.value.responsive || !historyPlotChart.value?.parentNode)
+        return;
+    const observer = new ResizeObserver(measure);
+    function measure() {
+        if (disposed || resizeObserver.value !== observer) return;
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            if (disposed || resizeObserver.value !== observer) return;
+            resizeFrame = null;
             const { width, height } = useResponsive({
                 chart: historyPlotChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -203,172 +192,43 @@ function prepareChart() {
                 legend: cfgChart.value.legend.show ? chartLegend.value : null,
                 source: source.value,
             });
-
-            cancelAnimationFrame(resizeFrame);
-            resizeFrame = requestAnimationFrame(() => {
-                svg.value.width = width;
-                svg.value.height = height;
-                responsiveSizeReady.value = true;
-
-                if (FINAL_CONFIG.value.responsiveProportionalSizing) {
-                    sizes.value.plots = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgPlots.value.radius,
-                        threshold: 3,
-                        fallback: 3,
-                    });
-
-                    sizes.value.indexLabels = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgPlots.value.indexLabels.fontSize,
-                        threshold: 6,
-                        fallback: 6,
-                    });
-
-                    sizes.value.labels = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgPlots.value.labels.fontSize,
-                        threshold: 6,
-                        fallback: 6,
-                    });
-
-                    sizes.value.xAxisLabels = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgAxes.value.x.labels.fontSize,
-                        threshold: 6,
-                        fallback: 6,
-                    });
-
-                    sizes.value.xAxisName = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgAxes.value.x.name.fontSize,
-                        threshold: 6,
-                        fallback: 6,
-                    });
-
-                    sizes.value.yAxisLabels = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgAxes.value.y.labels.fontSize,
-                        threshold: 6,
-                        fallback: 6,
-                    });
-
-                    sizes.value.yAxisName = translateSize({
-                        relator: Math.min(width, height),
-                        adjuster: 600,
-                        source: cfgAxes.value.y.name.fontSize,
-                        threshold: 6,
-                        fallback: 6,
-                    });
-                } else {
-                    sizes.value.plots = cfgPlots.value.radius;
-                    sizes.value.indexLabels =
-                        cfgPlots.value.indexLabels.fontSize;
-                    sizes.value.labels = cfgPlots.value.labels.fontSize;
-                    sizes.value.xAxisLabels = cfgAxes.value.x.labels.fontSize;
-                    sizes.value.xAxisName = cfgAxes.value.x.name.fontSize;
-                    sizes.value.yAxisLabels = cfgAxes.value.y.labels.fontSize;
-                    sizes.value.yAxisName = cfgAxes.value.y.name.fontSize;
-                }
-            });
-        };
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = historyPlotChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
+            responsiveSize.value = {
+                width: Math.max(0.1, width),
+                height: Math.max(0.1, height),
+            };
+            responsiveSizeReady.value = true;
+        });
     }
+    resizeObserver.value = observer;
+    observer.observe(historyPlotChart.value.parentNode);
+    for (const element of [
+        chartTitle.value,
+        chartLegend.value,
+        source.value,
+        noTitle.value,
+    ]) {
+        if (element) observer.observe(element);
+    }
+    measure();
 }
 
+onMounted(() => {
+    readyTeleport.value = true;
+    prepareChart();
+});
+
 onBeforeUnmount(() => {
-    cancelAnimationFrame(resizeFrame);
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    disposed = true;
+    teardownResponsive();
 });
 
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
-        userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG,
-    });
-    let finalConfig = {};
-
-    const theme = mergedConfig.theme;
-
-    if (theme) {
-        if (!isThemeValid.value(mergedConfig)) {
-            warnInvalidTheme(mergedConfig);
-            finalConfig = mergedConfig;
-        } else {
-            const fused = useNestedProp({
-                userConfig: themes[theme] || props.config,
-                defaultConfig: mergedConfig,
-            });
-
-            finalConfig = {
-                ...useNestedProp({
-                    userConfig: props.config,
-                    defaultConfig: fused,
-                }),
-                customPalette: mergedConfig.customPalette.length
-                    ? mergedConfig.customPalette
-                    : themePalettes[theme] || palette,
-            };
-        }
-    } else {
-        finalConfig = mergedConfig;
-    }
-
-    return finalConfig;
+    return resolveChartConfigWithPalette(props.config, DEFAULT_CONFIG, themes);
 }
 
-const FINAL_CONFIG = ref(prepareConfig());
-const cfgPlots = computed(() => FINAL_CONFIG.value.style.chart.plots);
-const cfgGrid = computed(() => FINAL_CONFIG.value.style.chart.grid);
-const cfgAxes = computed(() => FINAL_CONFIG.value.style.chart.axes);
-const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
+const preparedConfig = computed(() => reactive(prepareConfig()));
 
-useHints({
-    config: () => FINAL_CONFIG.value,
-    dataset: () => props.dataset,
-    component: 'VueUiHistoryPlot',
-    rules: [
-        COMMON_RULES.emptyArray,
-        {
-            test: (ds) => ds.length > 6,
-            message: [
-                '👀 The number of series is > 6. Consider:',
-                '',
-                '▶️ Using filters to let users choose a maximum number of series to display.',
-            ],
-        },
-    ],
-});
-
-const { transitionEnabled } = useTransitions({
-    config: () => FINAL_CONFIG.value.transitions,
-    dataset: () => props.dataset,
-});
-
-const isCursorPointer = computed(
-    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
-);
+const loading = computed(() => !!props.config.loading || !isDataset.value);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -421,96 +281,143 @@ const skeletonConfig = computed(() => {
                 },
             },
         },
-        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {},
+        userConfig: preparedConfig.value.skeletonConfig ?? {},
     });
 });
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: props.config?.skeletonDataset ?? [
+const FINAL_CONFIG = computed(() =>
+    loading.value
+        ? reactive(
+              treeShake({
+                  defaultConfig: preparedConfig.value,
+                  userConfig: skeletonConfig.value,
+              }),
+          )
+        : preparedConfig.value,
+);
+
+const FINAL_DATASET = computed(() =>
+    loading.value
+        ? (props.config.skeletonDataset ?? [
+              {
+                  name: '',
+                  color: '#CACACA',
+                  values: [
+                      { label: '', x: 1, y: 9 },
+                      { label: '', x: 4, y: 1 },
+                      { label: '', x: 7, y: 9 },
+                      { label: '', x: 9, y: 4 },
+                  ],
+              },
+          ])
+        : props.dataset,
+);
+const debug = computed(() => preparedConfig.value.debug);
+
+const cfgPlots = computed(() => FINAL_CONFIG.value.style.chart.plots);
+const cfgGrid = computed(() => FINAL_CONFIG.value.style.chart.grid);
+const cfgAxes = computed(() => FINAL_CONFIG.value.style.chart.axes);
+const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
+
+useHints({
+    config: () => FINAL_CONFIG.value,
+    dataset: () => props.dataset,
+    component: 'VueUiHistoryPlot',
+    rules: [
+        COMMON_RULES.emptyArray,
         {
-            name: '',
-            color: '#CACACA',
-            values: [
-                { label: '', x: 1, y: 9 },
-                { label: '', x: 4, y: 1 },
-                { label: '', x: 7, y: 9 },
-                { label: '', x: 9, y: 4 },
+            test: (ds) => ds.length > 6,
+            message: [
+                '👀 The number of series is > 6. Consider:',
+                '',
+                '▶️ Using filters to let users choose a maximum number of series to display.',
             ],
         },
     ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: skeletonConfig.value,
-    }),
 });
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
-    useUserOptionState({ config: FINAL_CONFIG.value });
+const { transitionEnabled } = useTransitions({
+    config: () => FINAL_CONFIG.value.transitions,
+    dataset: () => props.dataset,
+});
+
+const isCursorPointer = computed(
+    () => FINAL_CONFIG.value.userOptions.useCursorPointer,
+);
+
+const userOptionsVisible = ref(
+    !FINAL_CONFIG.value.userOptions.showOnChartHover,
+);
+
+const keepUserOptionState = computed(
+    () => FINAL_CONFIG.value.userOptions.keepStateOnChartLeave,
+);
+
+function setUserOptionsVisibility(value = false) {
+    if (FINAL_CONFIG.value.userOptions.showOnChartHover)
+        userOptionsVisible.value = value;
+}
+
+watch(
+    () => FINAL_CONFIG.value.userOptions.showOnChartHover,
+    (value) => {
+        userOptionsVisible.value = !value;
+    },
+);
+
 const { svgRef } = useChartAccessibility({
     config: cfgChart.value.title,
 });
 
-let previousStructuralConfig = stringifyStructuralConfig(props.config);
-
 watch(
-    () => props.config,
-    (newConfig, oldConfig) => {
-        const nextStructuralConfig = stringifyStructuralConfig(newConfig);
-
-        const requiresChartPreparation =
-            nextStructuralConfig !== previousStructuralConfig;
-
-        previousStructuralConfig = nextStructuralConfig;
-
-        const preparedConfig = prepareConfig();
-
-        if (!requiresChartPreparation) {
-            FINAL_CONFIG.value.style.chart.tooltip =
-                preparedConfig.style.chart.tooltip;
-
-            mutableConfig.value.showTooltip =
-                FINAL_CONFIG.value.style.chart.tooltip.show;
-
-            return;
-        }
-
-        if (!loading.value) {
-            FINAL_CONFIG.value = preparedConfig;
-        }
-        userOptionsVisible.value =
-            !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
-        titleStep.value += 1;
-        tableStep.value += 1;
-        legendStep.value += 1;
-        svg.value.height = cfgChart.value.height;
-        svg.value.width = cfgChart.value.width;
-        sizes.value.plots = cfgPlots.value.radius;
-        sizes.value.indexLabels = cfgPlots.value.indexLabels.fontSize;
-        sizes.value.labels = cfgPlots.value.labels.fontSize;
-        sizes.value.xAxisLabels = cfgAxes.value.x.labels.fontSize;
-        sizes.value.xAxisName = cfgAxes.value.x.name.fontSize;
-        sizes.value.yAxisLabels = cfgAxes.value.y.labels.fontSize;
-        sizes.value.yAxisName = cfgAxes.value.y.name.fontSize;
-
-        // Reset mutable config
-        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip = cfgChart.value.tooltip.show;
+    [validation, debug],
+    () => {
+        if (!props.dataset.length)
+            error({
+                componentName: 'VueUiHistoryPlot',
+                type: 'dataset',
+                debug: debug.value,
+            });
+        validation.value.forEach((serie, index) => {
+            serie.missing.forEach((property) =>
+                error({
+                    componentName: 'VueUiHistoryPlot',
+                    type: 'datasetSerieAttribute',
+                    property,
+                    index,
+                    debug: debug.value,
+                }),
+            );
+            if (!debug.value) return;
+            if (!serie.missing.includes('values') && !serie.array)
+                console.warn(
+                    `VueUiHistoryPlot: dataset[${index}].values must be an array.`,
+                );
+            serie.points.forEach((point, plotIndex) => {
+                for (const axis of ['x', 'y'])
+                    if (!point[axis])
+                        console.warn(
+                            `VueUiHistoryPlot: dataset[${index}].values[${plotIndex}].${axis} must be a finite number.`,
+                        );
+            });
+        });
     },
-    { deep: true },
+    { immediate: true },
 );
 
 watch(
-    () => props.dataset,
-    (_) => {
-        if (Array.isArray(_) && _.length > 0) {
-            manualLoading.value = false;
-        }
-    },
-    { deep: true },
+    [
+        () => FINAL_CONFIG.value.responsive,
+        () => cfgChart.value.title.text,
+        () => cfgChart.value.legend.show,
+        () => cfgChart.value.legend.position,
+        chartTitle,
+        chartLegend,
+        source,
+        noTitle,
+    ],
+    prepareChart,
+    { flush: 'post' },
 );
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -532,22 +439,27 @@ const mutableConfig = ref({
     showTooltip: cfgChart.value.tooltip.show,
 });
 
-// v3 - Essential to make shifting between loading config and final config work
 watch(
-    FINAL_CONFIG,
-    () => {
-        mutableConfig.value = {
-            showTable: FINAL_CONFIG.value.table.show,
-            showTooltip: cfgChart.value.tooltip.show,
-        };
+    () => FINAL_CONFIG.value.table.show,
+    (value) => {
+        mutableConfig.value.showTable = value;
     },
-    { immediate: true },
 );
 
-const svg = ref({
-    height: cfgChart.value.height,
-    width: cfgChart.value.width,
-});
+watch(
+    () => cfgChart.value.tooltip.show,
+    (value) => {
+        mutableConfig.value.showTooltip = value;
+    },
+);
+
+const svg = computed(
+    () =>
+        responsiveSize.value || {
+            width: cfgChart.value.width,
+            height: cfgChart.value.height,
+        },
+);
 
 const WIDTH = computed(() => svg.value.width);
 const HEIGHT = computed(() => svg.value.height);
@@ -589,51 +501,116 @@ const offsetY = computed(
 );
 
 const drawingArea = computed(() => {
-    const left = cfgChart.value.padding.left;
-    const top = cfgChart.value.padding.top;
-    const offsetX = getOffsetX();
-    const plotRadius = cfgPlots.value.radius;
-
+    const radius = cfgPlots.value.radius;
+    const left =
+        cfgChart.value.padding.left +
+        getOffsetX() +
+        cfgAxes.value.y.name.offsetX;
+    const top = cfgChart.value.padding.top + radius;
+    const right =
+        svg.value.width -
+        cfgChart.value.padding.right -
+        radius -
+        cfgAxes.value.y.name.offsetX;
+    const bottom =
+        svg.value.height -
+        cfgChart.value.padding.bottom -
+        offsetY.value -
+        radius -
+        cfgAxes.value.x.name.offsetY;
     return {
-        left: left + offsetX + cfgAxes.value.y.name.offsetX,
-        top: top + plotRadius,
-        right:
-            svg.value.width -
-            cfgChart.value.padding.right -
-            plotRadius -
-            cfgAxes.value.y.name.offsetX,
-        bottom:
-            svg.value.height -
-            cfgChart.value.padding.bottom -
-            offsetY.value -
-            plotRadius -
-            cfgAxes.value.x.name.offsetY,
-        width:
-            svg.value.width -
-            left -
-            cfgChart.value.padding.right -
-            offsetX -
-            plotRadius -
-            cfgAxes.value.y.name.offsetX,
-        height:
-            svg.value.height -
-            top -
-            cfgChart.value.padding.bottom -
-            offsetY.value -
-            plotRadius * 2 -
-            cfgAxes.value.x.name.offsetY,
+        left,
+        top,
+        right,
+        bottom,
+        width: right - left,
+        height: bottom - top,
     };
 });
 
-const sizes = ref({
-    plots: cfgPlots.value.radius,
-    indexLabels: cfgPlots.value.indexLabels.fontSize,
-    labels: cfgPlots.value.labels.fontSize,
-    xAxisLabels: cfgAxes.value.x.labels.fontSize,
-    xAxisName: cfgAxes.value.x.name.fontSize,
-    yAxisLabels: cfgAxes.value.y.labels.fontSize,
-    yAxisName: cfgAxes.value.y.name.fontSize,
+const sizes = computed(() => {
+    const resize = (source, minimum) =>
+        FINAL_CONFIG.value.responsive &&
+        FINAL_CONFIG.value.responsiveProportionalSizing &&
+        responsiveSize.value
+            ? translateSize({
+                  relator: Math.min(svg.value.width, svg.value.height),
+                  adjuster: 600,
+                  source,
+                  threshold: minimum,
+                  fallback: minimum,
+              })
+            : source;
+    return {
+        plots: resize(cfgPlots.value.radius, 3),
+        indexLabels: resize(cfgPlots.value.indexLabels.fontSize, 6),
+        labels: resize(cfgPlots.value.labels.fontSize, 6),
+        xAxisLabels: resize(cfgAxes.value.x.labels.fontSize, 6),
+        xAxisName: resize(cfgAxes.value.x.name.fontSize, 6),
+        yAxisLabels: resize(cfgAxes.value.y.labels.fontSize, 6),
+        yAxisName: resize(cfgAxes.value.y.name.fontSize, 6),
+    };
 });
+
+const identityCache = new Map();
+function getIdentity(key) {
+    if (!identityCache.has(key)) identityCache.set(key, createUid());
+    return identityCache.get(key);
+}
+
+const identityPhaseKeys = new Map();
+const datasetIdentities = computed(() => {
+    const keys = new Set();
+    function identity(key) {
+        keys.add(key);
+        return getIdentity(key);
+    }
+    const occurrences = new Map();
+    const series = FINAL_DATASET.value.map((serie, index) => {
+        const source =
+            serie?.id != null
+                ? `id:${typeof serie.id}:${serie.id}`
+                : serie?.name != null
+                  ? `name:${serie.name}`
+                  : `index:${index}`;
+        const occurrence = occurrences.get(source) || 0;
+        occurrences.set(source, occurrence + 1);
+        return identity(
+            `${loading.value ? 'skeleton' : 'data'}:${source}:${occurrence}`,
+        );
+    });
+    const plots = FINAL_DATASET.value.map((serie, seriesIndex) => {
+        const occurrences = new Map();
+        return (Array.isArray(serie?.values) ? serie.values : []).map(
+            (point, index) => {
+                const source =
+                    point?.id != null
+                        ? `id:${typeof point.id}:${point.id}`
+                        : point?.label
+                          ? `label:${point.label}`
+                          : `index:${index}`;
+                const occurrence = occurrences.get(source) || 0;
+                occurrences.set(source, occurrence + 1);
+                return identity(
+                    `${series[seriesIndex]}:${source}:${occurrence}`,
+                );
+            },
+        );
+    });
+    for (const key of identityPhaseKeys.get(loading.value) || []) {
+        if (!keys.has(key)) identityCache.delete(key);
+    }
+    identityPhaseKeys.set(loading.value, keys);
+    return { series, plots };
+});
+const seriesKeys = computed(() => datasetIdentities.value.series);
+const plotKeys = computed(() => datasetIdentities.value.plots);
+
+const segregated = computed(() =>
+    seriesKeys.value.flatMap((key, index) =>
+        hiddenSeriesKeys.value.includes(key) ? [index] : [],
+    ),
+);
 
 const formattedDataset = computed(() => {
     return FINAL_DATASET.value.map((ds, i) => {
@@ -664,48 +641,54 @@ function normalizeTemperatureAngle(angle = 0) {
     return ((numericAngle % 360) + 360) % 360;
 }
 
-const maxX = computed(() => {
-    return Math.max(
-        ...formattedDataset.value
-            .filter((ds) => !segregated.value.includes(ds.seriesIndex))
-            .flatMap((ds) => ds.values.map((d) => d.x)),
-    );
+const visibleDataset = computed(() =>
+    formattedDataset.value.filter(
+        (serie) => !segregated.value.includes(serie.seriesIndex),
+    ),
+);
+
+const dataBounds = computed(() => {
+    let minX = Infinity,
+        maxX = -Infinity,
+        minY = Infinity,
+        maxY = -Infinity;
+    for (const serie of visibleDataset.value)
+        for (const point of serie.values) {
+            minX = Math.min(minX, point.x);
+            maxX = Math.max(maxX, point.x);
+            minY = Math.min(minY, point.y);
+            maxY = Math.max(maxY, point.y);
+        }
+    return {
+        minX: Math.min(0, Number.isFinite(minX) ? minX : 0),
+        maxX: Number.isFinite(maxX) ? maxX : 1,
+        minY: Math.min(0, Number.isFinite(minY) ? minY : 0),
+        maxY: Number.isFinite(maxY) ? maxY : 1,
+    };
 });
-const minX = computed(() => {
-    const min = Math.min(
-        ...formattedDataset.value
-            .filter((ds) => !segregated.value.includes(ds.seriesIndex))
-            .flatMap((ds) => ds.values.map((d) => d.x)),
+
+function getScale(axis, min, max) {
+    const lower = Number.isFinite(axis.scaleMin) ? axis.scaleMin : min;
+    const upper = Number.isFinite(axis.scaleMax) ? axis.scaleMax : max;
+    const low = Math.min(lower, upper),
+        high = Math.max(lower, upper);
+    return calculateNiceScale(
+        low === high ? low - (low ? Math.abs(low) * 0.1 : 0) : low,
+        low === high ? high + (high ? Math.abs(high) * 0.1 : 1) : high,
+        Math.max(2, axis.ticks || 2),
     );
-    return min < 0 ? min : 0;
-});
-const maxY = computed(() => {
-    return Math.max(
-        ...formattedDataset.value
-            .filter((ds) => !segregated.value.includes(ds.seriesIndex))
-            .flatMap((ds) => ds.values.map((d) => d.y)),
-    );
-});
-const minY = computed(() => {
-    const min = Math.min(
-        ...formattedDataset.value
-            .filter((ds) => !segregated.value.includes(ds.seriesIndex))
-            .flatMap((ds) => ds.values.map((d) => d.y)),
-    );
-    return min < 0 ? min : 0;
-});
+}
 
 const scales = computed(() => {
-    const x = calculateNiceScale(
-        cfgAxes.value.x.scaleMin ?? minX.value,
-        cfgAxes.value.x.scaleMax ?? maxX.value,
-        cfgAxes.value.x.ticks,
+    const x = getScale(
+        cfgAxes.value.x,
+        dataBounds.value.minX,
+        dataBounds.value.maxX,
     );
-
-    const y = calculateNiceScale(
-        cfgAxes.value.y.scaleMin ?? minY.value,
-        cfgAxes.value.y.scaleMax ?? maxY.value,
-        cfgAxes.value.y.ticks,
+    const y = getScale(
+        cfgAxes.value.y,
+        dataBounds.value.minY,
+        dataBounds.value.maxY,
     );
 
     return {
@@ -763,36 +746,34 @@ function setDimensionY(value) {
 }
 
 const drawableDataset = computed(() => {
-    return formattedDataset.value
-        .filter((ds) => !segregated.value.includes(ds.seriesIndex))
-        .map((ds, i) => {
-            const plots = ds.values.map((p, i) => {
-                return {
-                    valueX: p.x,
-                    valueY: p.y,
-                    label: p.label,
-                    x: setDimensionX(p.x),
-                    y: setDimensionY(p.y),
-                    color: ds.color,
-                    seriesName: ds.name,
-                    id: createUid(),
-                };
-            });
-            const path = ds.smooth
-                ? createCatmullRomPath(plots)
-                : plots
-                      .map((p) => {
-                          return `${p.x},${p.y} `;
-                      })
-                      .join('')
-                      .trim();
+    return visibleDataset.value.map((ds, i) => {
+        const plots = ds.values.map((p, i) => {
             return {
-                ...ds,
-                gradientIndex: i,
-                plots,
-                path: `M${path}`,
+                valueX: p.x,
+                valueY: p.y,
+                label: p.label,
+                x: setDimensionX(p.x),
+                y: setDimensionY(p.y),
+                color: ds.color,
+                seriesName: ds.name,
+                id: plotKeys.value[ds.seriesIndex][i],
             };
         });
+        const path = ds.smooth
+            ? createCatmullRomPath(plots)
+            : plots
+                  .map((p) => {
+                      return `${p.x},${p.y} `;
+                  })
+                  .join('')
+                  .trim();
+        return {
+            ...ds,
+            gradientIndex: i,
+            plots,
+            path: plots.length ? `M${path}` : '',
+        };
+    });
 });
 
 const drawableDatasetWithActiveLast = computed(() => {
@@ -846,12 +827,16 @@ function getSeriesPlotBounds(ds) {
         };
     }
 
-    const xValues = plots.map((plot) => plot.x);
-    const yValues = plots.map((plot) => plot.y);
-    const minX = Math.min(...xValues);
-    const maxX = Math.max(...xValues);
-    const minY = Math.min(...yValues);
-    const maxY = Math.max(...yValues);
+    let minX = Infinity,
+        maxX = -Infinity,
+        minY = Infinity,
+        maxY = -Infinity;
+    for (const plot of plots) {
+        minX = Math.min(minX, plot.x);
+        maxX = Math.max(maxX, plot.x);
+        minY = Math.min(minY, plot.y);
+        maxY = Math.max(maxY, plot.y);
+    }
 
     return {
         minX,
@@ -882,7 +867,7 @@ function getTemperatureBounds(ds) {
         : getDrawingAreaBounds();
 }
 
-function getTemperatureGradientCoordinates(ds) {
+function computeTemperatureGradientCoordinates(ds) {
     const angle = normalizeTemperatureAngle(ds?.temperatureAngle);
     const radians = (angle * Math.PI) / 180;
     const dx = Math.sin(radians);
@@ -901,23 +886,50 @@ function getTemperatureGradientCoordinates(ds) {
     };
 }
 
-function getTemperaturePlotRatio(ds, plot) {
-    const { x1, y1, x2, y2 } = getTemperatureGradientCoordinates(ds);
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const lengthSquared = dx * dx + dy * dy;
+const temperatureStyles = computed(() => {
+    const styles = new Map();
+    for (const serie of drawableDataset.value) {
+        if (!hasTemperatureColors(serie)) continue;
+        const coordinates = computeTemperatureGradientCoordinates(serie);
+        const { x1, y1, x2, y2 } = coordinates;
+        const dx = x2 - x1,
+            dy = y2 - y1;
+        const lengthSquared = dx * dx + dy * dy;
+        const colors = new Map();
+        if (usePlotTemperatureColors(serie))
+            for (const plot of serie.plots) {
+                const ratio = lengthSquared
+                    ? Math.min(
+                          1,
+                          Math.max(
+                              0,
+                              ((plot.x - x1) * dx + (plot.y - y1) * dy) /
+                                  lengthSquared,
+                          ),
+                      )
+                    : 0;
+                colors.set(
+                    plot.id,
+                    interpolateHexColors({
+                        colors: serie.temperatureColors,
+                        ratio,
+                    }),
+                );
+            }
+        styles.set(serie.seriesIndex, { coordinates, colors });
+    }
+    return styles;
+});
 
-    if (!lengthSquared) return 0;
-
-    const rawRatio = ((plot.x - x1) * dx + (plot.y - y1) * dy) / lengthSquared;
-    return Math.min(1, Math.max(0, rawRatio));
+function getTemperatureGradientCoordinates(serie) {
+    return temperatureStyles.value.get(serie.seriesIndex)?.coordinates;
 }
 
-function getTemperaturePlotColor(ds, plot) {
-    return interpolateHexColors({
-        colors: ds.temperatureColors,
-        ratio: getTemperaturePlotRatio(ds, plot),
-    });
+function getTemperaturePlotColor(serie, plot) {
+    return (
+        temperatureStyles.value.get(serie.seriesIndex)?.colors.get(plot.id) ??
+        serie.color
+    );
 }
 
 function getTemperaturePlotGradientId(ds, plot) {
@@ -977,25 +989,12 @@ function getSeriesOpacity(seriesIndex) {
         : Math.min(1, cfgPlots.value.unselectedOpacity);
 }
 
-const isSeriesHighlighted = computed(() => {
-    return (
-        selectedDatapoint.value !== null &&
-        activeTooltipSeriesIndex.value !== null
-    );
-});
-
-const hasHighlightedSeries = ref(false);
-
-function getSeriesOpacityTransition() {
-    return 'opacity 0.2s ease-in-out';
-}
-
 function toggleLegend() {
     if (segregated.value.length) {
-        segregated.value = [];
+        hiddenSeriesKeys.value = [];
     } else {
         legendSet.value.forEach((l) => {
-            segregated.value.push(l.seriesIndex);
+            hiddenSeriesKeys.value.push(seriesKeys.value[l.seriesIndex]);
         });
     }
     emit('selectLegend', drawableDataset.value);
@@ -1003,9 +1002,11 @@ function toggleLegend() {
 
 function segregate(index) {
     if (segregated.value.includes(index)) {
-        segregated.value = segregated.value.filter((el) => el !== index);
+        hiddenSeriesKeys.value = hiddenSeriesKeys.value.filter(
+            (key) => key !== seriesKeys.value[index],
+        );
     } else {
-        segregated.value.push(index);
+        hiddenSeriesKeys.value.push(seriesKeys.value[index]);
     }
     emit('selectLegend', drawableDataset.value);
 }
@@ -1057,6 +1058,25 @@ function hideSeries(name) {
     }
 }
 
+watch(seriesKeys, (keys) => {
+    if (!loading.value)
+        hiddenSeriesKeys.value = hiddenSeriesKeys.value.filter((key) =>
+            keys.includes(key),
+        );
+});
+const keyboardDataset = computed(() =>
+    drawableDataset.value.filter((serie) => serie.plots.length),
+);
+const plotLookup = computed(() => {
+    const lookup = new Map();
+    for (const serie of drawableDataset.value)
+        serie.plots.forEach((plot, plotIndex) =>
+            lookup.set(plot.id, { serie, plot, plotIndex }),
+        );
+    return lookup;
+});
+const selectedPlotId = ref(null);
+
 const legendSet = computed(() => {
     return formattedDataset.value.map((ds) => {
         const gradientColors = hasTemperatureColors(ds)
@@ -1086,6 +1106,7 @@ const legendConfig = computed(() => {
 });
 
 function selectDatapoint({ datapoint, plotIndex, seriesIndex }) {
+    if (loading.value) return;
     if (FINAL_CONFIG.value.events.datapointClick) {
         FINAL_CONFIG.value.events.datapointClick({
             datapoint: { ...datapoint, plotIndex, seriesIndex },
@@ -1118,12 +1139,11 @@ function onTrapLeave({ datapoint, plotIndex, seriesIndex }) {
         return;
     }
 
-    isTooltip.value = false;
-    selectedDatapoint.value = null;
+    clearSelection();
 }
 
 function updateTooltipA11yPosition(seriesIndex, plotIndex) {
-    if (!svgRef.value) return;
+    if (disposed || !svgRef.value) return;
     const serie = drawableDataset.value.find(
         (ds) => ds.seriesIndex === seriesIndex,
     );
@@ -1141,6 +1161,7 @@ function useTooltip({
     seriesIndex,
     triggerMode = 'pointer',
 }) {
+    if (loading.value) return;
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({
             datapoint: { ...datapoint, plotIndex, seriesIndex },
@@ -1148,11 +1169,20 @@ function useTooltip({
         });
     }
 
+    selectedPlotId.value = datapoint.id;
     activeTooltipSeriesIndex.value = seriesIndex;
     activeTooltipPlotIndex.value = plotIndex;
     tooltipTriggerMode.value = triggerMode;
-    hasHighlightedSeries.value = true;
-
+    selectedDatapoint.value = datapoint;
+    refreshTooltip({ datapoint, plotIndex, seriesIndex });
+    isTooltip.value = true;
+    if (triggerMode === 'keyboard')
+        nextTick(() => {
+            if (selectedPlotId.value === datapoint.id)
+                updateTooltipA11yPosition(seriesIndex, plotIndex);
+        });
+}
+function refreshTooltip({ datapoint, plotIndex, seriesIndex }) {
     const tooltipMarkerColor = getTooltipMarkerColor(seriesIndex, datapoint);
     const tooltipDatapoint = {
         ...datapoint,
@@ -1221,24 +1251,31 @@ function useTooltip({
 
         tooltipContent.value = `<div>${html}</div>`;
     }
-    isTooltip.value = true;
-
-    if (triggerMode === 'keyboard') {
-        nextTick(() => {
-            updateTooltipA11yPosition(seriesIndex, plotIndex);
-        });
-    }
 }
 
-const table = computed(() => {
-    const head = drawableDataset.value.map((ds) => {
-        return {
-            name: ds.name,
-            color: ds.color,
-        };
-    });
-    return { head };
-});
+watch(
+    [drawableDataset, () => cfgChart.value.tooltip, loading],
+    () => {
+        if (!selectedPlotId.value) return;
+        const current = plotLookup.value.get(selectedPlotId.value);
+        if (!current || loading.value) {
+            clearSelection();
+            return;
+        }
+        const { plot, serie, plotIndex } = current;
+        selectedDatapoint.value = plot;
+        activeTooltipSeriesIndex.value = serie.seriesIndex;
+        activeTooltipPlotIndex.value = plotIndex;
+        refreshTooltip({
+            datapoint: plot,
+            seriesIndex: serie.seriesIndex,
+            plotIndex,
+        });
+        if (tooltipTriggerMode.value === 'keyboard')
+            updateTooltipA11yPosition(serie.seriesIndex, plotIndex);
+    },
+    { flush: 'post' },
+);
 
 const dataTable = computed(() => {
     const head = [
@@ -1406,8 +1443,12 @@ const tableComponent = computed(() =>
 );
 
 watch(
-    () => mutableConfig.value.showTable,
-    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
+    [() => mutableConfig.value.showTable, tableUnit],
+    ([visible]) => {
+        if (tableUnit.value)
+            syncTableVisibility(visible, FINAL_CONFIG, tableUnit);
+    },
+    { flush: 'post' },
 );
 
 function closeTable() {
@@ -1469,40 +1510,42 @@ const a11yTable = computed(() => {
 });
 
 function getKeyboardSerieIndex(seriesIndex) {
-    return drawableDataset.value.findIndex(
+    return keyboardDataset.value.findIndex(
         (ds) => ds.seriesIndex === seriesIndex,
     );
 }
 
-function clearKeyboardSelection() {
+function clearSelection(notify = false) {
     if (
-        activeTooltipSeriesIndex.value !== null &&
-        activeTooltipPlotIndex.value !== null
+        notify &&
+        selectedDatapoint.value &&
+        FINAL_CONFIG.value.events.datapointLeave
     ) {
-        const serie = drawableDataset.value.find(
-            (ds) => ds.seriesIndex === activeTooltipSeriesIndex.value,
-        );
-        const plot = serie?.plots?.[activeTooltipPlotIndex.value];
-
-        if (plot) {
-            onTrapLeave({
-                datapoint: plot,
+        FINAL_CONFIG.value.events.datapointLeave({
+            datapoint: {
+                ...selectedDatapoint.value,
                 plotIndex: activeTooltipPlotIndex.value,
                 seriesIndex: activeTooltipSeriesIndex.value,
-            });
-        }
+            },
+            seriesIndex: activeTooltipSeriesIndex.value,
+        });
     }
-
+    selectedPlotId.value = null;
     activeTooltipSeriesIndex.value = null;
     activeTooltipPlotIndex.value = null;
     tooltipTriggerMode.value = 'pointer';
     isTooltip.value = false;
     selectedDatapoint.value = null;
+    dataTooltipSlot.value = null;
+    tooltipContent.value = '';
+    useCustomFormat.value = false;
+}
+function clearKeyboardSelection() {
+    clearSelection(true);
 }
 
 function onSvgFocus() {
-    activeTooltipSeriesIndex.value = null;
-    activeTooltipPlotIndex.value = null;
+    clearSelection();
     isFocus.value = true;
 }
 
@@ -1518,13 +1561,13 @@ function getWrappedPlotIndex(serie, plotIndex) {
 }
 
 function getNextKeyboardTarget({ seriesIndex, plotIndex, direction }) {
-    if (!drawableDataset.value.length) return null;
+    if (!keyboardDataset.value.length) return null;
 
     const currentKeyboardSerieIndex = getKeyboardSerieIndex(seriesIndex);
     if (currentKeyboardSerieIndex === -1) return null;
 
     if (direction === 'up' || direction === 'down') {
-        const serie = drawableDataset.value[currentKeyboardSerieIndex];
+        const serie = keyboardDataset.value[currentKeyboardSerieIndex];
         if (!serie?.plots?.length) return null;
         const delta = direction === 'up' ? -1 : 1;
         const nextPlotIndex = getWrappedPlotIndex(serie, plotIndex + delta);
@@ -1538,10 +1581,10 @@ function getNextKeyboardTarget({ seriesIndex, plotIndex, direction }) {
         const delta = direction === 'left' ? -1 : 1;
         const nextKeyboardSerieIndex =
             (((currentKeyboardSerieIndex + delta) %
-                drawableDataset.value.length) +
-                drawableDataset.value.length) %
-            drawableDataset.value.length;
-        const nextSerie = drawableDataset.value[nextKeyboardSerieIndex];
+                keyboardDataset.value.length) +
+                keyboardDataset.value.length) %
+            keyboardDataset.value.length;
+        const nextSerie = keyboardDataset.value[nextKeyboardSerieIndex];
         if (!nextSerie?.plots?.length) return null;
 
         const nextPlotIndex = Math.min(plotIndex, nextSerie.plots.length - 1);
@@ -1556,9 +1599,9 @@ function getNextKeyboardTarget({ seriesIndex, plotIndex, direction }) {
 }
 
 function onSvgKeydown(event) {
-    if (!svgRef.value || isAnnotator.value) return;
+    if (!svgRef.value || isAnnotator.value || loading.value) return;
     if (document.activeElement !== svgRef.value) return;
-    if (!drawableDataset.value.length) return;
+    if (!keyboardDataset.value.length) return;
 
     const isLeftKey = event.key === 'ArrowLeft';
     const isRightKey = event.key === 'ArrowRight';
@@ -1592,7 +1635,7 @@ function onSvgKeydown(event) {
         )
             return;
 
-        const serie = drawableDataset.value.find(
+        const serie = keyboardDataset.value.find(
             (ds) => ds.seriesIndex === activeTooltipSeriesIndex.value,
         );
         const plot = serie?.plots?.[activeTooltipPlotIndex.value];
@@ -1612,7 +1655,7 @@ function onSvgKeydown(event) {
         activeTooltipSeriesIndex.value === null ||
         activeTooltipPlotIndex.value === null
     ) {
-        const firstSerie = drawableDataset.value[0];
+        const firstSerie = keyboardDataset.value[0];
         if (!firstSerie?.plots?.length) return;
 
         nextTarget = {
@@ -1647,7 +1690,7 @@ function onSvgKeydown(event) {
 
     if (!nextTarget) return;
 
-    const serie = drawableDataset.value.find(
+    const serie = keyboardDataset.value.find(
         (ds) => ds.seriesIndex === nextTarget.seriesIndex,
     );
     const plot = serie?.plots?.[nextTarget.plotIndex];
@@ -1714,7 +1757,7 @@ watch(
         </div>
 
         <A11yDataTable
-            v-if="a11yTable.body.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable.body.length"
             :uid="uid"
             :head="a11yTable.head"
             :body="a11yTable.body"
@@ -1760,7 +1803,6 @@ watch(
             :style="`font-family:${FINAL_CONFIG.style.fontFamily}`"
         >
             <Title
-                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'history-plot-div-title',
@@ -2392,7 +2434,6 @@ watch(
                 <slot name="legend" v-bind:legend="legendSet">
                     <Legend
                         v-if="cfgChart.legend.show && isDataset"
-                        :key="`legend_${legendStep}`"
                         :legendSet="legendSet"
                         :config="legendConfig"
                         :isCursorPointer="isCursorPointer"
@@ -2505,7 +2546,6 @@ watch(
             </template>
             <template #content>
                 <DataTable
-                    :key="`table_${tableStep}`"
                     :colNames="dataTable.colNames"
                     :head="dataTable.head"
                     :body="dataTable.body"

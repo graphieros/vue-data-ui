@@ -38,7 +38,6 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    functionReturnsString,
     getMissingDatasetAttributes,
     giftWrap,
     isFunction,
@@ -61,7 +60,7 @@ import { useChartExport } from '../useChartExport';
 import { useTransitions } from '../useTransitions.js';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
-import img from '../img';
+import { createChartImageGetter } from '../chartImage';
 import Shape from '../atoms/Shape.vue';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from '../themes/vue_ui_scatter.json';
@@ -133,7 +132,6 @@ const userOptionsRef = ref(null);
 const xAxisLabelLeft = ref(null);
 const xAxisLabelRight = ref(null);
 
-const yAxisLabelTop = ref(null);
 const yAxisLabelBottom = ref(null);
 
 const yAxisScaleLabels = ref(null);
@@ -354,13 +352,14 @@ watch(
 );
 
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
+let chartDisposed = false;
 
 const responsiveSizeReady = ref(false);
 let resizeFrame = 0;
 
 onMounted(async () => {
     prepareChart();
+    updateChartSizing();
     await nextTick();
     readyTeleport.value = true;
 });
@@ -381,9 +380,33 @@ function prepareChart() {
     if (!objectIsEmpty(props.dataset)) {
         manualLoading.value = FINAL_CONFIG.value.loading;
     }
+}
 
-    if (FINAL_CONFIG.value.responsive) {
-        const handleResize = () => {
+function stopResponsive() {
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = 0;
+}
+
+function updateChartSizing() {
+    stopResponsive();
+    responsiveSizeReady.value = false;
+    if (chartDisposed) return;
+    if (!FINAL_CONFIG.value.responsive) {
+        svg.value = {
+            width: cfgStyle.value.layout.width,
+            height: cfgStyle.value.layout.height,
+        };
+        return;
+    }
+    if (!scatterChart.value) return;
+    const handleResize = () => {
+        if (chartDisposed || !FINAL_CONFIG.value.responsive) return;
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            resizeFrame = 0;
+            if (chartDisposed) return;
             const { width, height } = useResponsive({
                 chart: scatterChart.value,
                 title: cfgStyle.value.title.text ? chartTitle.value : null,
@@ -391,36 +414,18 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value,
             });
-
-            cancelAnimationFrame(resizeFrame);
-            resizeFrame = requestAnimationFrame(() => {
-                svg.value.width = width;
-                svg.value.height = height;
-                responsiveSizeReady.value = true;
-            });
-        };
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = scatterChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-    }
+            svg.value = { width, height };
+            responsiveSizeReady.value = true;
+        });
+    };
+    resizeObserver.value = new ResizeObserver(handleResize);
+    resizeObserver.value.observe(scatterChart.value.parentNode);
+    handleResize();
 }
 
 onBeforeUnmount(() => {
-    cancelAnimationFrame(resizeFrame);
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    chartDisposed = true;
+    stopResponsive();
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -458,6 +463,8 @@ const svg = ref({
     height: cfgStyle.value.layout.height,
     width: cfgStyle.value.layout.width,
 });
+
+watch(FINAL_CONFIG, updateChartSizing, { flush: 'post' });
 
 const marginalSize = computed(() => {
     if (!cfgBars.value.show) {
@@ -581,26 +588,18 @@ const extremes = computed(() => {
         });
     }
 
-    const xMin = Math.min(
-        ...datasetWithId.value
-            .filter((el) => !segregated.value.includes(el.id))
-            .flatMap((ds) => ds.values.map((v) => v.x)),
-    );
-    const xMax = Math.max(
-        ...datasetWithId.value
-            .filter((el) => !segregated.value.includes(el.id))
-            .flatMap((ds) => ds.values.map((v) => v.x)),
-    );
-    const yMin = Math.min(
-        ...datasetWithId.value
-            .filter((el) => !segregated.value.includes(el.id))
-            .flatMap((ds) => ds.values.map((v) => v.y)),
-    );
-    const yMax = Math.max(
-        ...datasetWithId.value
-            .filter((el) => !segregated.value.includes(el.id))
-            .flatMap((ds) => ds.values.map((v) => v.y)),
-    );
+    let xMin = Infinity,
+        xMax = -Infinity,
+        yMin = Infinity,
+        yMax = -Infinity;
+    for (const series of visibleDataset.value) {
+        for (const { x, y } of series.values) {
+            xMin = Math.min(xMin, x);
+            xMax = Math.max(xMax, x);
+            yMin = Math.min(yMin, y);
+            yMax = Math.max(yMax, y);
+        }
+    }
     return {
         xMin: xMin < 0 ? xMin : 0,
         xMax,
@@ -784,7 +783,7 @@ const zero = computed(() => {
     };
 });
 
-const datasetWithId = computed(() => {
+const preparedDataset = computed(() => {
     return FINAL_DATASET.value.map((ds, i) => {
         const id = `cluster_${uid.value}_${i}`;
         return {
@@ -801,17 +800,28 @@ const datasetWithId = computed(() => {
                 : customPalette.value[i] ||
                   palette[i] ||
                   palette[i % palette.length],
-            opacity: segregated.value.includes(id) ? 0.5 : 1,
             shape: ds.shape ?? 'circle',
-            segregate: () => segregate(id),
-            isSegregated: segregated.value.includes(id),
-            hasGroupSelection: !!selectedGroupId.value,
-            isGroupSelected: selectedGroupId.value === id,
-            onEnter: () => onSeriesEnter(id),
-            onLeave: () => onSeriesLeave(),
         };
     });
 });
+
+function decorateSeries(ds) {
+    return {
+        ...ds,
+        opacity: segregated.value.includes(ds.id) ? 0.5 : 1,
+        isSegregated: segregated.value.includes(ds.id),
+        hasGroupSelection: !!selectedGroupId.value,
+        isGroupSelected: selectedGroupId.value === ds.id,
+        segregate: () => segregate(ds.id),
+        onEnter: () => onSeriesEnter(ds.id),
+        onLeave: onSeriesLeave,
+    };
+}
+
+const datasetWithId = computed(() => preparedDataset.value.map(decorateSeries));
+const visibleDataset = computed(() =>
+    preparedDataset.value.filter((ds) => !segregated.value.includes(ds.id)),
+);
 
 const legendConfig = computed(() => {
     return {
@@ -824,8 +834,8 @@ const legendConfig = computed(() => {
     };
 });
 
-const mutableDataset = computed(() => {
-    return datasetWithId.value
+const plotDataset = computed(() => {
+    return preparedDataset.value
         .map((ds, i) => {
             return {
                 ...ds,
@@ -839,11 +849,7 @@ const mutableDataset = computed(() => {
                         },
                         clusterName: ds.name,
                         clusterId: ds.id,
-                        color: ds.color
-                            ? ds.color
-                            : customPalette.value[i] ||
-                              palette[i] ||
-                              palette[i % palette.length],
+                        color: ds.color,
                         id: `plot_${uid.value}_${i}_${j}`,
                         weight: v.weight ?? cfgPlots.value.radius,
                     };
@@ -853,7 +859,7 @@ const mutableDataset = computed(() => {
         .filter((ds) => !segregated.value.includes(ds.id));
 });
 
-const drawableDataset = computed(() => {
+const drawableGeometry = computed(() => {
     const EPS = 1e-9;
 
     const clipLineToRect = ({ m, b, rect, verticalX = null }) => {
@@ -920,7 +926,7 @@ const drawableDataset = computed(() => {
         return { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y };
     };
 
-    return mutableDataset.value.map((ds) => {
+    return plotDataset.value.map((ds) => {
         const n = ds.plots.length;
 
         const meanX = ds.plots.reduce((s, p) => s + p.x, 0) / n;
@@ -1054,9 +1060,14 @@ const drawableDataset = computed(() => {
     });
 });
 
+const mutableDataset = computed(() => plotDataset.value.map(decorateSeries));
+const drawableDataset = computed(() =>
+    drawableGeometry.value.map(decorateSeries),
+);
+
 const maxDeviation = computed(() => {
     return Math.max(
-        ...drawableDataset.value.flatMap((ds) =>
+        ...drawableGeometry.value.flatMap((ds) =>
             ds.plots.map((p) => Math.abs(p.deviation)),
         ),
     );
@@ -1148,7 +1159,7 @@ function aggregateCoordinates(arr, scale) {
 const scale = computed(() => cfgBars.value.tranches);
 
 const marginalBars = computed(() => {
-    return aggregateCoordinates(mutableDataset.value, scale.value);
+    return aggregateCoordinates(plotDataset.value, scale.value);
 });
 
 // Geometry stays cached when only the hovered marginal bin changes.
@@ -1255,7 +1266,7 @@ const marginalBins = computed(() =>
 const marginalLines = computed(() => {
     const top = drawingArea.value.top - cfgBars.value.offset;
     const right = drawingArea.value.right + cfgBars.value.offset;
-    return mutableDataset.value.map((ds) => {
+    return plotDataset.value.map((ds) => {
         const coords = aggregateCoordinates(ds, scale.value);
 
         return {
@@ -1359,6 +1370,23 @@ function getSelectorYAxisScaleLabel(selectorPlot) {
     );
 }
 
+function formatTooltipCoordinate(plot, axis, seriesIndex) {
+    const value = plot.v[axis];
+    return isNaN(value)
+        ? '-'
+        : applyDataLabel(
+              cfgPlots.value.selectors.labels[axis].formatter,
+              value,
+              dataLabel({
+                  p: cfgTooltip.value.prefix,
+                  v: value,
+                  s: cfgTooltip.value.suffix,
+                  r: cfgTooltip.value.roundingValue,
+              }),
+              { datapoint: plot, seriesIndex },
+          );
+}
+
 function onTrapEnter(
     plot,
     seriesIndex,
@@ -1381,32 +1409,21 @@ function onTrapEnter(
         });
     }
 
-    dataTooltipSlot.value = {
+    const tooltipPayload = {
         datapoint: plot,
         seriesIndex,
         series: drawableDataset.value,
         config: FINAL_CONFIG.value,
     };
 
+    dataTooltipSlot.value = tooltipPayload;
     const customFormat = cfgTooltip.value.customFormat;
 
-    if (
-        isFunction(customFormat) &&
-        functionReturnsString(() =>
-            customFormat({
-                datapoint: plot,
-                seriesIndex,
-                series: drawableDataset.value,
-                config: FINAL_CONFIG.value,
-            }),
-        )
-    ) {
-        tooltipContent.value = customFormat({
-            datapoint: plot,
-            seriesIndex,
-            series: drawableDataset.value,
-            config: FINAL_CONFIG.value,
-        });
+    const formatted = isFunction(customFormat)
+        ? customFormat(tooltipPayload)
+        : undefined;
+    if (typeof formatted === 'string') {
+        tooltipContent.value = formatted;
     } else {
         if (plot.clusterName) {
             html += `<div style="display:flex;gap:3px;align-items:center">${plot.clusterName}</div>`;
@@ -1418,37 +1435,8 @@ function onTrapEnter(
 
         html += `<div style="text-align:left;margin-top:6px;padding-top:6px;border-top:1px solid ${cfgTooltip.value.borderColor}">`;
 
-        html += `<div>${cfgXAxisLabels.value.name}: <b>${
-            isNaN(plot.v.x)
-                ? '-'
-                : applyDataLabel(
-                      cfgPlots.value.selectors.labels.x.formatter,
-                      plot.v.x,
-                      dataLabel({
-                          p: cfgTooltip.value.prefix,
-                          v: plot.v.x,
-                          s: cfgTooltip.value.suffix,
-                          r: cfgTooltip.value.roundingValue,
-                      }),
-                      { datapoint: plot, seriesIndex },
-                  )
-        }</b></div>`;
-
-        html += `<div>${cfgYAxisLabels.value.name}: <b>${
-            isNaN(plot.v.y)
-                ? '-'
-                : applyDataLabel(
-                      cfgPlots.value.selectors.labels.y.formatter,
-                      plot.v.y,
-                      dataLabel({
-                          p: cfgTooltip.value.prefix,
-                          v: plot.v.y,
-                          s: cfgTooltip.value.suffix,
-                          r: cfgTooltip.value.roundingValue,
-                      }),
-                      { datapoint: plot, seriesIndex },
-                  )
-        }</b></div>`;
+        html += `<div>${cfgXAxisLabels.value.name}: <b>${formatTooltipCoordinate(plot, 'x', seriesIndex)}</b></div>`;
+        html += `<div>${cfgYAxisLabels.value.name}: <b>${formatTooltipCoordinate(plot, 'y', seriesIndex)}</b></div>`;
 
         html += `${cfgPlots.value.deviation.translation}: <b>${dataLabel({
             v: plot.deviation,
@@ -1558,6 +1546,22 @@ function hideSeries(name) {
     }
 }
 
+const seriesStatistics = computed(() =>
+    drawableGeometry.value.map((series) => {
+        const count = series.plots.length;
+        const average = (axis) =>
+            series.plots.reduce((sum, plot) => sum + (plot.v[axis] ?? 0), 0) /
+            count;
+        return {
+            series,
+            count,
+            coefficient: series.correlation?.coefficient ?? 0,
+            averageX: average('x'),
+            averageY: average('y'),
+        };
+    }),
+);
+
 function generateCsv(callback = null) {
     nextTick(() => {
         const labels = [
@@ -1568,17 +1572,15 @@ function generateCsv(callback = null) {
             `${cfgYAxisLabels.value.name} ${FINAL_CONFIG.value.table.translations.average}`,
         ];
 
-        const values = drawableDataset.value.map((ds) => {
-            return [
-                ds.name,
-                ds.correlation.coefficient,
-                ds.plots.length,
-                ds.plots.map((plot) => plot.v.x).reduce((a, b) => a + b, 0) /
-                    ds.plots.length,
-                ds.plots.map((plot) => plot.v.y).reduce((a, b) => a + b, 0) /
-                    ds.plots.length,
-            ];
-        });
+        const values = seriesStatistics.value.map(
+            ({ series, coefficient, count, averageX, averageY }) => [
+                series.name,
+                coefficient,
+                count,
+                averageX,
+                averageY,
+            ],
+        );
 
         const tableXls = [
             [cfgStyle.value.title.text],
@@ -1592,7 +1594,7 @@ function generateCsv(callback = null) {
         if (!callback) {
             downloadCsv({
                 csvContent,
-                title: cfgStyle.value.title.text || 'vue-ui-heatmap',
+                title: cfgStyle.value.title.text || 'vue-ui-scatter',
             });
         } else {
             callback(csvContent);
@@ -1609,33 +1611,23 @@ const dataTable = computed(() => {
         `${cfgYAxisLabels.value.name} ${FINAL_CONFIG.value.table.translations.average}`,
     ];
 
-    const body = drawableDataset.value.map((ds) => {
-        return [
-            {
-                shape: ds.shape,
-                content: ds.name ?? '-',
-                color: ds.color,
-            },
-            Number(
-                (ds.correlation?.coefficient ?? 0).toFixed(
-                    FINAL_CONFIG.value.table.td.roundingValue,
-                ),
-            ).toLocaleString(),
-            ds.plots.length.toLocaleString(),
-            Number(
-                (
-                    ds.plots.map((p) => p.v.x ?? 0).reduce((a, b) => a + b, 0) /
-                    ds.plots.length
-                ).toFixed(FINAL_CONFIG.value.table.td.roundingAverage),
-            ).toLocaleString(),
-            Number(
-                (
-                    ds.plots.map((p) => p.v.y ?? 0).reduce((a, b) => a + b, 0) /
-                    ds.plots.length
-                ).toFixed(FINAL_CONFIG.value.table.td.roundingAverage),
-            ).toLocaleString(),
-        ];
-    });
+    const body = seriesStatistics.value.map(
+        ({ series, coefficient, count, averageX, averageY }) => {
+            const format = (value, rounding) =>
+                Number(value.toFixed(rounding)).toLocaleString();
+            return [
+                {
+                    shape: series.shape,
+                    content: series.name ?? '-',
+                    color: series.color,
+                },
+                format(coefficient, FINAL_CONFIG.value.table.td.roundingValue),
+                count.toLocaleString(),
+                format(averageX, FINAL_CONFIG.value.table.td.roundingAverage),
+                format(averageY, FINAL_CONFIG.value.table.td.roundingAverage),
+            ];
+        },
+    );
 
     const a11yBody = body.map((b) => {
         return b.map((c, i) => {
@@ -1680,25 +1672,10 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
-async function getImage({ scale = 2 } = {}) {
-    if (!scatterChart.value) return;
-    const { width, height } = scatterChart.value.getBoundingClientRect();
-    const aspectRatio = width / height;
-    const { imageUri, base64 } = await img({
-        domElement: scatterChart.value,
-        base64: true,
-        img: true,
-        scale,
-    });
-    return {
-        imageUri,
-        base64,
-        title: cfgStyle.value.title.text,
-        width,
-        height,
-        aspectRatio,
-    };
-}
+const getImage = createChartImageGetter(
+    scatterChart,
+    () => cfgStyle.value.title.text,
+);
 
 function onMarginalXEnter(index) {
     selectedMarginalX.value = index;
@@ -1717,6 +1694,50 @@ function onMarginalYEnter(index) {
 function onMarginalLeave() {
     selectedMarginalX.value = null;
     selectedMarginalY.value = null;
+}
+
+function isPlotSelected(plot) {
+    return (
+        selectedPlotId.value === plot.id ||
+        selectedPlots.value.includes(plot.id)
+    );
+}
+
+function isPlotDimmed(plot) {
+    return (
+        (selectedPlotId.value && selectedPlotId.value !== plot.id) ||
+        (selectedPlots.value.length && !selectedPlots.value.includes(plot.id))
+    );
+}
+
+function getPlotRadius(plot) {
+    return (
+        plot.weight *
+        (isPlotSelected(plot) ? cfgPlots.value.hoverRadiusRatio : 1)
+    );
+}
+
+function getPlotFill(plot, color) {
+    return setOpacity(
+        color,
+        (isPlotDimmed(plot)
+            ? cfgPlots.value.opacityNotSelected
+            : cfgPlots.value.opacity) * 100,
+    );
+}
+
+function getPlotOpacity(plot) {
+    if (isPlotSelected(plot)) return 1;
+    const significance = cfgPlots.value.significance;
+    if (significance.useDistanceOpacity) {
+        return maxDeviation.value > 0
+            ? 1 - Math.abs(plot.deviation) / maxDeviation.value
+            : 1;
+    }
+    return significance.show &&
+        Math.abs(plot.deviation) > significance.deviationThreshold
+        ? significance.opacity
+        : 1;
 }
 
 const SHAPES_RADIUS_SCALE = {
@@ -1781,35 +1802,15 @@ function makeSinglePathPlots({ shape = 'circle', cx, cy, r }) {
             }
             return d + ' Z';
         }
-        case 'pentagon': {
-            const n = 5;
-            const pts = [];
-            for (let i = 0; i < n; i += 1) {
-                const ang = ((-90 + i * (360 / n)) * Math.PI) / 180;
-                pts.push([
-                    cx + radius * Math.cos(ang),
-                    cy + radius * Math.sin(ang),
-                ]);
-            }
-            let d = `M ${f(pts[0][0])} ${f(pts[0][1])}`;
-            for (let i = 1; i < n; i += 1)
-                d += ` L ${f(pts[i][0])} ${f(pts[i][1])}`;
-            return d + ' Z';
-        }
+        case 'pentagon':
         case 'hexagon': {
-            const n = 6;
-            const pts = [];
-            for (let i = 0; i < n; i += 1) {
-                const ang = ((-60 + i * (360 / n)) * Math.PI) / 180;
-                pts.push([
-                    cx + radius * Math.cos(ang),
-                    cy + radius * Math.sin(ang),
-                ]);
-            }
-            let d = `M ${f(pts[0][0])} ${f(pts[0][1])}`;
-            for (let i = 1; i < n; i += 1)
-                d += ` L ${f(pts[i][0])} ${f(pts[i][1])}`;
-            return d + ' Z';
+            const n = shape === 'pentagon' ? 5 : 6;
+            const startAngle = shape === 'pentagon' ? -90 : -60;
+            const points = Array.from({ length: n }, (_, i) => {
+                const angle = ((startAngle + i * (360 / n)) * Math.PI) / 180;
+                return `${f(cx + radius * Math.cos(angle))} ${f(cy + radius * Math.sin(angle))}`;
+            });
+            return `M ${points.join(' L ')} Z`;
         }
         default: {
             const x1 = f(cx - radius);
@@ -1836,7 +1837,7 @@ const seriesPaths = computed(() => {
     const baseStrokeWidth = cfgPlots.value.strokeWidth;
     const baseOpacity = cfgPlots.value.opacity;
 
-    return drawableDataset.value
+    return drawableGeometry.value
         .map((ds) => {
             const parts = [];
 
@@ -1873,62 +1874,57 @@ const seriesPaths = computed(() => {
         .filter(Boolean);
 });
 
-function onTrapMoveFactory() {
-    if (!FINAL_CONFIG.value.usePerformanceMode) return () => null;
+function onPathMouseMove(evt) {
+    if (!FINAL_CONFIG.value.usePerformanceMode) return;
+    const svgEl = svgRef.value;
+    if (!svgEl) return;
 
-    return (evt) => {
-        const svgEl = svgRef.value;
-        if (!svgEl) return;
+    const pt = svgEl.createSVGPoint();
+    pt.x = evt.clientX;
+    pt.y = evt.clientY;
+    const ctm = svgEl.getScreenCTM();
+    if (!ctm) return;
+    const inv = ctm.inverse();
+    const p = pt.matrixTransform(inv);
 
-        const pt = svgEl.createSVGPoint();
-        pt.x = evt.clientX;
-        pt.y = evt.clientY;
-        const ctm = svgEl.getScreenCTM();
-        if (!ctm) return;
-        const inv = ctm.inverse();
-        const p = pt.matrixTransform(inv);
+    const hoverRadius = 8;
+    const r2 = hoverRadius * hoverRadius;
 
-        const hoverRadius = 8;
-        const r2 = hoverRadius * hoverRadius;
+    let best = null;
+    let bestD2 = Infinity;
+    let sIdx = -1;
 
-        let best = null;
-        let bestD2 = Infinity;
-        let sIdx = -1;
-
-        drawableDataset.value.forEach((ds, i) => {
-            ds.plots.forEach((plot) => {
-                const dx = plot.x - p.x;
-                const dy = plot.y - p.y;
-                const d2 = dx * dx + dy * dy;
-                if (d2 <= r2 && d2 < bestD2) {
-                    bestD2 = d2;
-                    best = plot;
-                    sIdx = i;
-                }
-            });
-        });
-
-        isPerformancePlotHovered.value = Boolean(best);
-
-        if (best) {
-            if (selectedPlotId.value !== best.id) {
-                selectedPlotId.value = best.id;
-                onTrapEnter(
-                    best,
-                    sIdx,
-                    'pointer',
-                    a11yPlotIndexMap.value.get(best.id) ?? null,
-                );
+    drawableDataset.value.forEach((ds, i) => {
+        ds.plots.forEach((plot) => {
+            const dx = plot.x - p.x;
+            const dy = plot.y - p.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 <= r2 && d2 < bestD2) {
+                bestD2 = d2;
+                best = plot;
+                sIdx = i;
             }
-        } else if (selectedPlotId.value) {
-            const prev = selectedPlot.value;
-            selectedPlotId.value = undefined;
-            onTrapLeave(prev, sIdx);
-        }
-    };
-}
+        });
+    });
 
-const onPathMouseMove = onTrapMoveFactory();
+    isPerformancePlotHovered.value = Boolean(best);
+
+    if (best) {
+        if (selectedPlotId.value !== best.id) {
+            selectedPlotId.value = best.id;
+            onTrapEnter(
+                best,
+                sIdx,
+                'pointer',
+                a11yPlotIndexMap.value.get(best.id) ?? null,
+            );
+        }
+    } else if (selectedPlotId.value) {
+        const prev = selectedPlot.value;
+        selectedPlotId.value = undefined;
+        onTrapLeave(prev, sIdx);
+    }
+}
 
 function onPathMouseLeave() {
     isPerformancePlotHovered.value = false;
@@ -2216,33 +2212,8 @@ const srActivePlotText = computed(() => {
 
     const plot = selectedPlot.value;
 
-    const xLabel = isNaN(plot.v.x)
-        ? '-'
-        : applyDataLabel(
-              cfgPlots.value.selectors.labels.x.formatter,
-              plot.v.x,
-              dataLabel({
-                  p: cfgTooltip.value.prefix,
-                  v: plot.v.x,
-                  s: cfgTooltip.value.suffix,
-                  r: cfgTooltip.value.roundingValue,
-              }),
-              { datapoint: plot, seriesIndex: plot.seriesIndex },
-          );
-
-    const yLabel = isNaN(plot.v.y)
-        ? '-'
-        : applyDataLabel(
-              cfgPlots.value.selectors.labels.y.formatter,
-              plot.v.y,
-              dataLabel({
-                  p: cfgTooltip.value.prefix,
-                  v: plot.v.y,
-                  s: cfgTooltip.value.suffix,
-                  r: cfgTooltip.value.roundingValue,
-              }),
-              { datapoint: plot, seriesIndex: plot.seriesIndex },
-          );
+    const xLabel = formatTooltipCoordinate(plot, 'x', plot.seriesIndex);
+    const yLabel = formatTooltipCoordinate(plot, 'y', plot.seriesIndex);
 
     return [
         plot.clusterName || '',
@@ -2350,7 +2321,11 @@ watch(
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length && isDataset"
+            v-if="
+                FINAL_CONFIG.a11y.includeTable &&
+                a11yTable?.rows?.length &&
+                isDataset
+            "
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -2755,7 +2730,6 @@ watch(
                         <template v-for="line in marginalLines">
                             <path
                                 data-cy="marginal-line-x-wrapper"
-                                v-if="!segregated.includes(line.id)"
                                 :d="`M ${line.dX}`"
                                 :stroke="cfgStyle.backgroundColor"
                                 :stroke-width="cfgBars.linesStrokeWidth + 1"
@@ -2765,7 +2739,6 @@ watch(
                             />
                             <path
                                 data-cy="marginal-line-x"
-                                v-if="!segregated.includes(line.id)"
                                 :d="`M ${line.dX}`"
                                 :stroke="line.color"
                                 :stroke-width="cfgBars.linesStrokeWidth"
@@ -2775,7 +2748,6 @@ watch(
                             />
                             <path
                                 data-cy="marginal-line-y-wrapper"
-                                v-if="!segregated.includes(line.id)"
                                 :d="`M ${line.dY}`"
                                 :stroke="cfgStyle.backgroundColor"
                                 :stroke-width="cfgBars.linesStrokeWidth + 1"
@@ -2785,7 +2757,6 @@ watch(
                             />
                             <path
                                 data-cy="marginal-line-y"
-                                v-if="!segregated.includes(line.id)"
                                 :d="`M ${line.dY}`"
                                 :stroke="line.color"
                                 :stroke-width="cfgBars.linesStrokeWidth"
@@ -2833,30 +2804,11 @@ watch(
                                 :key="plot.id"
                                 :cx="plot.x"
                                 :cy="plot.y"
-                                :r="
-                                    (selectedPlotId &&
-                                        selectedPlotId === plot.id) ||
-                                    selectedPlots.includes(plot.id)
-                                        ? plot.weight *
-                                          cfgPlots.hoverRadiusRatio
-                                        : plot.weight
-                                "
-                                :fill="
-                                    setOpacity(
-                                        ds.color,
-                                        (selectedPlotId &&
-                                            selectedPlotId !== plot.id) ||
-                                            (selectedPlots.length &&
-                                                !selectedPlots.includes(
-                                                    plot.id,
-                                                ))
-                                            ? cfgPlots.opacityNotSelected * 100
-                                            : cfgPlots.opacity * 100,
-                                    )
-                                "
+                                :r="getPlotRadius(plot)"
+                                :fill="getPlotFill(plot, ds.color)"
                                 :stroke="cfgPlots.stroke"
                                 :stroke-width="cfgPlots.strokeWidth"
-                                :style="`opacity:${(selectedPlotId && selectedPlotId === plot.id) || selectedPlots.includes(plot.id) ? 1 : cfgPlots.significance.useDistanceOpacity ? 1 - Math.abs(plot.deviation) / maxDeviation : cfgPlots.significance.show && Math.abs(plot.deviation) > cfgPlots.significance.deviationThreshold ? cfgPlots.significance.opacity : 1}`"
+                                :style="{ opacity: getPlotOpacity(plot) }"
                                 @mouseover="
                                     onTrapEnter(
                                         plot,
@@ -2874,31 +2826,12 @@ watch(
                                 class="vue-ui-scatter-datapoint"
                                 v-for="(plot, j) in ds.plots"
                                 :plot="{ x: plot.x, y: plot.y }"
-                                :radius="
-                                    (selectedPlotId &&
-                                        selectedPlotId === plot.id) ||
-                                    selectedPlots.includes(plot.id)
-                                        ? plot.weight *
-                                          cfgPlots.hoverRadiusRatio
-                                        : plot.weight
-                                "
+                                :radius="getPlotRadius(plot)"
                                 :shape="ds.shape"
-                                :color="
-                                    setOpacity(
-                                        ds.color,
-                                        (selectedPlotId &&
-                                            selectedPlotId !== plot.id) ||
-                                            (selectedPlots.length &&
-                                                !selectedPlots.includes(
-                                                    plot.id,
-                                                ))
-                                            ? cfgPlots.opacityNotSelected * 100
-                                            : cfgPlots.opacity * 100,
-                                    )
-                                "
+                                :color="getPlotFill(plot, ds.color)"
                                 :stroke="cfgPlots.stroke"
                                 :strokeWidth="cfgPlots.strokeWidth"
-                                :style="`opacity:${(selectedPlotId && selectedPlotId === plot.id) || selectedPlots.includes(plot.id) ? 1 : cfgPlots.significance.useDistanceOpacity ? 1 - Math.abs(plot.deviation) / maxDeviation : cfgPlots.significance.show && Math.abs(plot.deviation) > cfgPlots.significance.deviationThreshold ? cfgPlots.significance.opacity : 1}`"
+                                :style="{ opacity: getPlotOpacity(plot) }"
                                 @mouseover="
                                     onTrapEnter(
                                         plot,
@@ -3003,7 +2936,6 @@ watch(
                 </template>
 
                 <!-- SELECTORS -->
-                <!-- SELECTORS -->
                 <template
                     v-for="selectorPlot in selectorPlots"
                     :key="`selector_${selectorPlot.id}`"
@@ -3090,7 +3022,7 @@ watch(
                             {{
                                 formatCoordinate(
                                     selectorPlot.v.x,
-                                    cfgPlots.selectors.labels.y.formatter,
+                                    cfgPlots.selectors.labels.x.formatter,
                                     cfgPlots.selectors.labels.rounding,
                                     { datapoint: selectorPlot },
                                 )
@@ -3224,7 +3156,7 @@ watch(
                             formatCoordinate(
                                 displayedAxisBounds.xMin,
                                 cfgPlots.selectors.labels.x.formatter,
-                                cfgStyle.layout.dataLabels.xAxis.rounding,
+                                cfgStyle.layout.dataLabels.xAxis.roundingValue,
                             )
                         }}
                     </text>
@@ -3251,7 +3183,6 @@ watch(
                 <!-- Y AXIS LABELS -->
                 <text
                     v-if="cfgYAxisLabels.show && cfgYAxisLabels.showValue"
-                    ref="yAxisLabelTop"
                     data-cy="scatter-y-max-axis-label"
                     :x="zero.x"
                     :y="drawingArea.top - cfgYAxisLabels.fontSize"
@@ -3283,7 +3214,7 @@ watch(
                             formatCoordinate(
                                 displayedAxisBounds.yMin,
                                 cfgPlots.selectors.labels.y.formatter,
-                                cfgStyle.layout.dataLabels.yAxis.rounding,
+                                cfgStyle.layout.dataLabels.yAxis.roundingValue,
                             )
                         }}
                     </text>

@@ -37,6 +37,17 @@ export function registerAnnotatorShortcuts(ctx) {
     };
 
     const toggleMode = (key) => {
+        if (ctx.setToolMode) {
+            const modes = {
+                m: 'move',
+                r: 'resize',
+                d: 'delete',
+                g: 'group',
+                t: 'text',
+            };
+            ctx.setToolMode(modes[key], key === 'g' ? 'group' : undefined);
+            return;
+        }
         clearModes();
 
         switch (key) {
@@ -115,10 +126,18 @@ export function registerAnnotatorShortcuts(ctx) {
         const selectedShape = ctx.lastSelectedShape.value;
         if (!selectedShape) return;
 
-        ctx.shapes.value = ctx.shapes.value.filter(
-            (shape) => shape.id !== selectedShape.id,
-        );
-        ctx.lastSelectedShape.value = undefined;
+        const remove = () => {
+            ctx.shapes.value = ctx.shapes.value.filter(
+                (shape) => shape.id !== selectedShape.id,
+            );
+            ctx.lastSelectedShape.value = undefined;
+        };
+        if (ctx.editShapes) ctx.editShapes(remove);
+        else {
+            ctx.history?.value?.begin?.();
+            remove();
+            ctx.history?.value?.end?.();
+        }
     };
 
     let arrowBatchActive = false;
@@ -149,6 +168,7 @@ export function registerAnnotatorShortcuts(ctx) {
     };
 
     const onKeyDown = (event) => {
+        if (!event.key.startsWith('Arrow')) endArrowBatchNow();
         if (
             isPrimaryMod(event) &&
             !event.shiftKey &&
@@ -182,7 +202,8 @@ export function registerAnnotatorShortcuts(ctx) {
 
         if (key === 'escape') {
             event.preventDefault();
-            clearModes();
+            if (ctx.setToolMode) ctx.setToolMode(null);
+            else clearModes();
             return;
         }
 

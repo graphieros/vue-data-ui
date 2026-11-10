@@ -1,4 +1,4 @@
-import { expect, waitFor } from 'storybook/test';
+import { expect, waitFor, userEvent } from 'storybook/test';
 import {
     scenarioRender,
     runScenario,
@@ -179,6 +179,55 @@ function createCases(env) {
             }
         }
     };
+    cases.LegendSelection = async () => {
+        const clicks = [];
+        await mountSubject(VueUiMoodRadar, {
+            props: {
+                dataset,
+                config: {
+                    userOptions: { show: false },
+                    events: { datapointClick: (event) => clicks.push(event) },
+                },
+            },
+        });
+        await waitFor(() =>
+            expect(
+                select(
+                    '[data-cy="mood-radar-legend"] .vue-data-ui-legend-item',
+                ),
+            ).toHaveLength(5),
+        );
+        const items = select(
+            '[data-cy="mood-radar-legend"] .vue-data-ui-legend-item',
+        );
+        const trap = select('[data-cy="trap-5"]')[0];
+        await userEvent.click(items[0].querySelector('span'));
+        await waitFor(() =>
+            expect(trap.getAttribute('fill')).not.toBe('transparent'),
+        );
+        expect(clicks).toHaveLength(1);
+        expect(clicks[0].datapoint.key).toBe('5');
+        await userEvent.click(items[0].querySelector('span'));
+        await waitFor(() =>
+            expect(trap.getAttribute('fill')).toBe('transparent'),
+        );
+        expect(clicks).toHaveLength(1);
+        items[0].focus();
+        await userEvent.keyboard('{Enter}');
+        await waitFor(() =>
+            expect(trap.getAttribute('fill')).not.toBe('transparent'),
+        );
+        expect(clicks).toHaveLength(2);
+        await userEvent.keyboard(' ');
+        await waitFor(() =>
+            expect(trap.getAttribute('fill')).toBe('transparent'),
+        );
+        await userEvent.keyboard('{Enter}{Escape}');
+        await waitFor(() =>
+            expect(trap.getAttribute('fill')).toBe('transparent'),
+        );
+        expect(clicks).toHaveLength(3);
+    };
     return {
         cases,
         hooks,
@@ -191,4 +240,10 @@ export default {
 export const Renders = {
     name: 'renders',
     play: async (context) => runScenario(context, createCases, 'Renders'),
+};
+
+export const LegendSelection = {
+    name: 'legend selection',
+    play: async (context) =>
+        runScenario(context, createCases, 'LegendSelection'),
 };

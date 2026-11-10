@@ -1,4 +1,5 @@
 <script setup>
+import { useAnimationFrame } from '../useAnimationFrame';
 import {
     getUserOptionsProps,
     getUserOptionSlots,
@@ -18,6 +19,7 @@ import {
     defineAsyncComponent,
     nextTick,
     onMounted,
+    onBeforeUnmount,
     ref,
     toRefs,
     watch,
@@ -100,6 +102,17 @@ const chartTitle = ref(null);
 const chartLegend = ref(null);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
+const resizeFrames = useAnimationFrame();
+let resizeVersion = 0;
+function stopResize() {
+    resizeVersion += 1;
+    resizeFrames.cancel();
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    observedEl.value = null;
+}
+onBeforeUnmount(stopResize);
+
 const source = ref(null);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
@@ -205,6 +218,7 @@ onMounted(() => {
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
+    stopResize();
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiMoodRadar',
@@ -213,8 +227,10 @@ function prepareChart() {
         });
     }
 
-    if (FINAL_CONFIG.value.responsive) {
+    if (FINAL_CONFIG.value.responsive && moodRadarChart.value?.parentNode) {
+        const version = resizeVersion;
         const handleResize = throttle(() => {
+            if (version !== resizeVersion || resizeFrames.isDisposed()) return;
             const { width, height } = useResponsive({
                 chart: moodRadarChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -223,18 +239,11 @@ function prepareChart() {
                 source: source.value,
             });
 
-            requestAnimationFrame(() => {
+            resizeFrames.request(() => {
                 svg.value.width = width;
                 svg.value.height = height - 12;
             });
         });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
 
         resizeObserver.value = new ResizeObserver(handleResize);
         observedEl.value = moodRadarChart.value.parentNode;
@@ -841,7 +850,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -1351,11 +1360,11 @@ defineExpose({
                         :key="`legend_${legendStep}`"
                         :isCursorPointer="isCursorPointer"
                         style="display: flex; row-gap: 6px"
-                        @focusMarker="({ legend }) => selectKey(legend.key)"
+                        @clickMarker="({ legend }) => selectKey(legend.key)"
+                        @keydown.esc="onTrapKeydown($event)"
                     >
                         <template #item="{ legend, index }">
                             <div
-                                role="button"
                                 @click="() => selectKey(legend.key)"
                                 style="
                                     display: flex;
@@ -1363,9 +1372,6 @@ defineExpose({
                                     gap: 3px;
                                     align-items: center;
                                     margin: 3px 0;
-                                "
-                                @keydown="
-                                    onTrapKeydown($event, String(legend.key))
                                 "
                             >
                                 <BaseIcon

@@ -1,10 +1,12 @@
 <script setup>
+import { useAnimationFrame } from '../useAnimationFrame';
 import { resolveChartConfig } from '../resolveChartConfig';
 import {
     computed,
     defineAsyncComponent,
     nextTick,
     onMounted,
+    onBeforeUnmount,
     ref,
     toRefs,
     watch,
@@ -62,8 +64,19 @@ const svgRef = ref(null);
 const source = ref(null);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
+const resizeFrames = useAnimationFrame();
+let resizeVersion = 0;
+function stopResize() {
+    resizeVersion += 1;
+    resizeFrames.cancel();
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    observedEl.value = null;
+}
+onBeforeUnmount(stopResize);
+
 const isAnimating = ref(false);
-const raf = ref(null);
+const animation = useAnimationFrame();
 
 const uid = ref(createUid());
 
@@ -169,10 +182,7 @@ const safeDatasetCopy = ref(
 watch(
     downsampled,
     (ds) => {
-        if (raf.value) {
-            cancelAnimationFrame(raf.value);
-            raf.value = null;
-        }
+        animation.cancel();
 
         if (cfgStyle.value.animation.show && !prefersReducedMotion.value) {
             safeDatasetCopy.value = Array(ds.length).fill(null);
@@ -194,10 +204,7 @@ watch(
 watch(
     () => JSON.stringify(props.dataset),
     () => {
-        if (raf.value) {
-            cancelAnimationFrame(raf.value);
-            raf.value = null;
-        }
+        animation.cancel();
         manualLoading.value = objectIsEmpty(props.dataset);
 
         const ds = downsampled.value;
@@ -213,6 +220,9 @@ watch(
 );
 
 function animateChart() {
+    animation.cancel();
+    if (animation.isDisposed()) return;
+    isAnimating.value = false;
     let fps = cfgStyle.value.animation.animationFrames;
     let interval = 1000 / fps;
     let then = performance.now();
@@ -221,7 +231,8 @@ function animateChart() {
         !loading.value &&
         cfgStyle.value.animation.show &&
         !prefersReducedMotion.value &&
-        cfgStyle.value.animation.animationFrames &&
+        Number.isFinite(fps) &&
+        fps > 0 &&
         FINAL_DATASET.value.length > 1
     ) {
         safeDatasetCopy.value = [];
@@ -236,20 +247,29 @@ function animateChart() {
                 if (start < downsampled.value.length) {
                     safeDatasetCopy.value.push(downsampled.value[start]);
                     start += 1;
-                    raf.value = requestAnimationFrame(animate);
+                    animation.request(animate);
                 } else {
-                    cancelAnimationFrame(raf.value);
+                    animation.cancel();
                     safeDatasetCopy.value = sanitize(downsampled.value);
                     isAnimating.value = false;
                     fitText('.vue-ui-sparktrend-progress-label', 6);
                 }
             } else {
-                raf.value = requestAnimationFrame(animate);
+                animation.request(animate);
             }
         }
         animate();
+    } else {
+        safeDatasetCopy.value = sanitize(downsampled.value);
     }
 }
+
+watch(
+    [() => cfgStyle.value.animation.show, prefersReducedMotion],
+    ([enabled, reduced]) => {
+        if (!enabled || reduced) animateChart();
+    },
+);
 
 onMounted(() => {
     prepareChart();
@@ -258,6 +278,7 @@ onMounted(() => {
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
+    stopResize();
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiSparkTrend',
@@ -271,25 +292,20 @@ function prepareChart() {
         manualLoading.value = false;
     }
 
-    if (FINAL_CONFIG.value.responsive) {
+    if (FINAL_CONFIG.value.responsive && sparkTrendChart.value?.parentNode) {
+        const version = resizeVersion;
         const handleResize = throttle(() => {
+            if (version !== resizeVersion || resizeFrames.isDisposed()) return;
             const { width: W, height: H } = useResponsive({
                 chart: sparkTrendChart.value,
                 source: source.value,
             });
 
-            requestAnimationFrame(() => {
+            resizeFrames.request(() => {
                 WIDTH.value = W;
                 HEIGHT.value = H;
             });
         });
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
 
         resizeObserver.value = new ResizeObserver(handleResize);
         observedEl.value = sparkTrendChart.value.parentNode;

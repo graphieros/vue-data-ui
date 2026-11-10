@@ -35,14 +35,11 @@ import {
     dataLabel,
     downloadCsv,
     error,
-    getMissingDatasetAttributes,
-    objectIsEmpty,
     palette,
     treeShake,
     wrapText,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
@@ -99,13 +96,33 @@ const emit = defineEmits([
     'copyAlt',
 ]);
 
-const isDataset = ref(
-    !!props.dataset && Object.hasOwn(props.dataset, 'matrix'),
-);
+function isValidMatrix(dataset) {
+    const matrix = dataset?.matrix;
+    return (
+        Array.isArray(matrix) &&
+        matrix.length >= 2 &&
+        matrix.every(
+            (row) => Array.isArray(row) && row.length === matrix.length,
+        )
+    );
+}
+const isDataset = computed(() => isValidMatrix(props.dataset));
 
 const uid = ref(createUid());
-const selectedGroup = ref(null);
-const selectedRibbon = ref(null);
+const selectedGroupId = ref(null);
+const selectedRibbonId = ref(null);
+const selectedGroup = computed(
+    () =>
+        chordData.value.groups.find(
+            (group) => group.id === selectedGroupId.value,
+        ) ?? null,
+);
+const selectedRibbon = computed(
+    () =>
+        ribbonModels.value.find(
+            (ribbon) => ribbon.id === selectedRibbonId.value,
+        ) ?? null,
+);
 const selectedLegendId = ref(null);
 const step = ref(0);
 const chordChart = ref(null);
@@ -118,13 +135,26 @@ const tableStep = ref(0);
 const legendStep = ref(0);
 const loaded = ref(false);
 const resizeObserver = shallowRef(null);
-const observedEl = shallowRef(null);
+let scheduleResize = null;
+let resizeFrame = null;
+let disposed = false;
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 
 const activeA11yType = ref('group'); // a11y
-const activeA11yIndex = ref(null); // a11y
+const activeA11yId = ref(null);
+const activeA11yIndex = computed(() => {
+    if (activeA11yId.value == null) return null;
+    const targets =
+        activeA11yType.value === 'group'
+            ? a11yTargets.value.groups
+            : a11yTargets.value.ribbons;
+    const index = targets.findIndex(
+        (target) => target.item.id === activeA11yId.value,
+    );
+    return index < 0 ? null : index;
+});
 const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
@@ -188,12 +218,6 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        });
-    },
     skeletonDataset: props.config?.skeletonDataset ?? {
         matrix: [
             [12000, 6000, 9000, 3000],
@@ -239,12 +263,10 @@ watch(
         }
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
-        prepareChart();
         titleStep.value += 1;
         tableStep.value += 1;
         legendStep.value += 1;
         // Reset mutable config
-        rotation.value = FINAL_CONFIG.value.initialRotation;
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     },
     { deep: true },
@@ -252,97 +274,42 @@ watch(
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
-watch(
-    () => props.dataset,
-    () => {
-        validateRawDataset();
-        prepareChart();
-        titleStep.value += 1;
-        tableStep.value += 1;
-        legendStep.value += 1;
-    },
-);
-
 function validateRawDataset() {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiChord',
-            type: 'dataset',
-            debug: debug.value,
-        });
-        isDataset.value = false;
-        manualLoading.value = true;
-        return;
-    }
-
-    const missing = getMissingDatasetAttributes({
-        datasetObject: props.dataset,
-        requiredAttributes: ['matrix'],
-    });
-
-    if (missing.length) {
-        if (debug.value) {
-            missing.forEach((attr) => {
-                error({
-                    componentName: 'VueUiChord',
-                    type: 'datasetAttribute',
-                    property: attr,
-                });
-            });
-        }
-        isDataset.value = false;
-        manualLoading.value = true;
-        return;
-    }
-
-    const m = props.dataset.matrix;
-    if (!Array.isArray(m) || m.length < 2) {
-        if (debug.value) {
-            console.warn(`VueUiChord: dataset.matrix requires a minimum of 2 datapoints, for example:
-        
-matrix:[
-    [1, 1],
-    [1, 1]
-]`);
-        }
-        isDataset.value = false;
-        manualLoading.value = true;
-        return;
-    }
-
-    const n = m.length;
-    const badIdx = m.findIndex(
-        (row) => !Array.isArray(row) || row.length !== n,
-    );
-    if (badIdx !== -1) {
-        if (debug.value) {
-            console.warn(
-                `VueUiChord - Invalid matrix: dataset.matrix at index ${badIdx} has ${Array.isArray(m[badIdx]) ? m[badIdx].length : 'NaN'} elements instead of the required ${n}
-
-dataset.matrix[${badIdx}] = [${Array.isArray(m[badIdx]) ? m[badIdx].toString() : 'invalid'}]`,
-            );
-        }
-        isDataset.value = false;
-        manualLoading.value = true;
-        return;
-    }
-
-    isDataset.value = true;
-    manualLoading.value = false;
+    manualLoading.value = !isDataset.value;
+    if (!isDataset.value && debug.value)
+        error({ componentName: 'VueUiChord', type: 'dataset', debug: true });
 }
-
+function stopResize() {
+    scheduleResize = null;
+    resizeObserver.value?.disconnect();
+    resizeObserver.value = null;
+    if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+    resizeFrame = null;
+}
+function clearResponsiveStyles() {
+    if (chordChart.value) {
+        chordChart.value.style.width = '100%';
+        chordChart.value.style.height = '';
+    }
+    if (svgRef.value) svgRef.value.style.height = '';
+}
 function prepareChart() {
-    validateRawDataset();
-
-    if (FINAL_CONFIG.value.responsive) {
-        const resizeHandler = throttle(() => {
+    stopResize();
+    clearResponsiveStyles();
+    const parent = chordChart.value?.parentNode;
+    if (!FINAL_CONFIG.value.responsive || !parent) return;
+    const resize = () => {
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+            resizeFrame = null;
+            if (disposed || !chordChart.value || !svgRef.value) return;
             const {
                 width,
                 height,
-                heightNoTitle,
-                heightSource,
                 heightTitle,
                 heightLegend,
+                heightSource,
+                heightNoTitle,
             } = useResponsive({
                 chart: chordChart.value,
                 title: cfgChart.value.title.text ? chartTitle.value : null,
@@ -350,69 +317,25 @@ function prepareChart() {
                 source: source.value,
                 noTitle: noTitle.value,
             });
-
-            const otherH =
-                heightTitle + heightLegend + heightSource + heightNoTitle;
-
-            if (width < height) {
-                chordChart.value.style.width = `100%`;
-            } else {
-                chordChart.value.style.height = `100%`;
-                svgRef.value.style.height = `calc(100% - ${otherH}px)`;
+            clearResponsiveStyles();
+            if (width >= height) {
+                chordChart.value.style.height = '100%';
+                svgRef.value.style.height = `calc(100% - ${heightTitle + heightLegend + heightSource + heightNoTitle}px)`;
             }
-        }, 100);
-
-        if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
-        }
-
-        resizeObserver.value = new ResizeObserver(resizeHandler);
-        observedEl.value = chordChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
-
-        resizeHandler();
-    }
-
-    loadingTimeout.value = setTimeout(() => {
-        loaded.value = true;
-    }, 500);
+        });
+    };
+    scheduleResize = resize;
+    resizeObserver.value = new ResizeObserver(resize);
+    resizeObserver.value.observe(parent);
+    resize();
 }
-
-function checkDataset() {
-    if (
-        !FINAL_DATASET.value ||
-        !Object.hasOwn(FINAL_DATASET.value, 'matrix') ||
-        FINAL_DATASET.value.matrix.length < 2
-    ) {
-        if (debug.value) {
-            console.warn(
-                `VueUiChord: dataset.matrix requires a minimum of 2 datapoints, for example:\n\nmatrix:[\n  [1, 1],\n  [1, 1]\n]`,
-            );
-        }
-        isDataset.value = false;
-        return;
-    }
-
-    FINAL_DATASET.value.matrix.forEach((m, i) => {
-        if (m.length !== FINAL_DATASET.value.matrix.length) {
-            if (debug.value) {
-                console.warn(
-                    `VueUiChord - Invalid matrix: dataset.matrix at index ${i} has ${m.length} elements instead of the required ${FINAL_DATASET.value.matrix.length}\n\ndataset.matrix[${i}] = [${m.toString()}] has a length of ${m.length} but should have the same length as the matrix itself (${FINAL_DATASET.value.matrix.length})`,
-                );
-            }
-            isDataset.value = false;
-        }
-    });
-}
-
-const loadingTimeout = ref(null);
-
+let loadingTimeout = null;
 onMounted(() => {
     readyTeleport.value = true;
     prepareChart();
+    loadingTimeout = setTimeout(() => {
+        if (!disposed) loaded.value = true;
+    }, 500);
 });
 
 const svg = ref({
@@ -440,21 +363,25 @@ const paddingAngle = computed(() => {
 });
 
 const formattedDataset = computed(() => {
+    const data = FINAL_DATASET.value;
+    const matrix = isValidMatrix(data)
+        ? data.matrix.map((row) =>
+              row.map((value) =>
+                  typeof value === 'number' && Number.isFinite(value)
+                      ? Math.max(0, value)
+                      : 0,
+              ),
+          )
+        : [];
     return {
-        matrix: FINAL_DATASET.value.matrix ?? [[0]],
-        labels: FINAL_DATASET.value.labels ?? [''],
-        colors:
-            FINAL_DATASET.value.colors &&
-            Array.isArray(FINAL_DATASET.value.colors) &&
-            FINAL_DATASET.value.colors.length
-                ? FINAL_DATASET.value.colors.map((c) => convertColorToHex(c))
-                : FINAL_DATASET.value.matrix.map((_m, i) => {
-                      return (
-                          customPalette.value[i] ||
-                          palette[i] ||
-                          palette[i % palette.length]
-                      );
-                  }),
+        matrix,
+        labels: matrix.map((_, i) => data.labels?.[i] ?? String(i)),
+        colors: matrix.map(
+            (_, i) =>
+                convertColorToHex(data.colors?.[i]) ||
+                customPalette.value[i] ||
+                palette[i % palette.length],
+        ),
     };
 });
 
@@ -471,7 +398,10 @@ function computeChord(matrix, padAngle) {
         }
     }
 
-    const k = (2 * Math.PI - padAngle * n) / totalSum;
+    padAngle = n
+        ? Math.min((2 * Math.PI) / n, Math.max(0, Number(padAngle) || 0))
+        : 0;
+    const k = totalSum > 0 ? (2 * Math.PI - padAngle * n) / totalSum : 0;
 
     const groups = [];
     let currentAngle = 0;
@@ -484,14 +414,15 @@ function computeChord(matrix, padAngle) {
             startAngle,
             endAngle,
             name: formattedDataset.value.labels[i],
-            id: createUid(),
+            id: `chord_group_${uid.value}_${i}`,
             color: formattedDataset.value.colors[i],
-            proportion: groupSums[i] / totalSum,
+            proportion: totalSum ? groupSums[i] / totalSum : 0,
         });
         currentAngle = endAngle + padAngle;
     }
 
     const subgroups = [];
+    const subgroupRows = Array.from({ length: n }, () => []);
     for (let i = 0; i < n; i += 1) {
         const entries = matrix[i].map((v, j) => ({ j, v }));
         entries.sort((a, b) => b.v - a.v);
@@ -499,7 +430,7 @@ function computeChord(matrix, padAngle) {
         for (const { j, v } of entries) {
             const startAngle = angle;
             const endAngle = startAngle + v * k;
-            subgroups.push({
+            const subgroup = {
                 index: i,
                 subIndex: j,
                 pattern: `pattern_${uid.value}_${i}`,
@@ -514,17 +445,21 @@ function computeChord(matrix, padAngle) {
                     Math.cos((startAngle + endAngle) / 2 - Math.PI / 2) * r,
                 midBaseY:
                     Math.sin((startAngle + endAngle) / 2 - Math.PI / 2) * r,
-            });
+            };
+            subgroups.push(subgroup);
+            subgroupRows[i][j] = subgroup;
             angle = endAngle;
         }
     }
 
     const chords = [];
     for (const a of subgroups) {
-        const b = subgroups.find(
-            (s) => s.index === a.subIndex && s.subIndex === a.index,
-        );
-        chords.push({ source: a, target: b, id: createUid() });
+        const b = subgroupRows[a.subIndex][a.index];
+        chords.push({
+            source: a,
+            target: b,
+            id: `chord_ribbon_${uid.value}_${a.index}_${a.subIndex}`,
+        });
     }
     return { groups, chords };
 }
@@ -534,7 +469,6 @@ const chordData = computed(() => {
         formattedDataset.value.matrix,
         paddingAngle.value,
     );
-    checkDataset();
     layout.chords.sort(
         (a, b) =>
             Math.max(b.source.value, b.target.value) -
@@ -544,90 +478,32 @@ const chordData = computed(() => {
 });
 
 const rawValueLabels = computed(() => {
-    const R = radii.value.outer + cfgRibbons.value.labels.offset + 12;
-    const fontSize = cfgRibbons.value.labels.fontSize;
-    const charWidth = fontSize * 0.6;
-    const out = [];
-
-    if (selectedRibbon.value) {
-        const c = selectedRibbon.value;
-
-        // Always show the source end
-        if (c.source.value) {
-            const txt = String(c.source.value);
-            out.push({
-                id: c.id + '-src',
-                theta: c.source.midAngle,
-                w: (txt.length * charWidth) / R,
-                midBaseX: c.source.midBaseX,
-                midBaseY: c.source.midBaseY,
-                groupColor: c.source.groupColor,
-                value: c.source.value,
-            });
-        }
-
-        // Only show the target end if its value differs
-        if (c.target && c.target.value && c.target.value !== c.source.value) {
-            const txt = String(c.target.value);
-            out.push({
-                id: c.id + '-tgt',
-                theta: c.target.midAngle,
-                w: (txt.length * charWidth) / R,
-                midBaseX: c.target.midBaseX,
-                midBaseY: c.target.midBaseY,
-                groupColor: c.target.groupColor,
-                value: c.target.value,
-            });
-        }
-
-        return out;
-    }
-
-    function segregateById(id) {
-        chordData.value.chords
-            .filter((c) => c.source.groupId === id && c.source.value)
-            .forEach((c) => {
-                // Always show the source end
-                {
-                    const txt = String(c.source.value);
-                    out.push({
-                        id: c.id + '-src',
-                        theta: c.source.midAngle,
-                        w: (txt.length * charWidth) / R,
-                        midBaseX: c.source.midBaseX,
-                        midBaseY: c.source.midBaseY,
-                        groupColor: c.source.groupColor,
-                        value: c.source.value,
-                    });
-                }
-                // Only show the target end if its value differs
-                if (
-                    c.target &&
-                    c.target.value &&
-                    c.target.value !== c.source.value
-                ) {
-                    const txt = String(c.target.value);
-                    out.push({
-                        id: c.id + '-tgt',
-                        theta: c.target.midAngle,
-                        w: (txt.length * charWidth) / R,
-                        midBaseX: c.target.midBaseX,
-                        midBaseY: c.target.midBaseY,
-                        groupColor: c.target.groupColor,
-                        value: c.target.value,
-                    });
-                }
-            });
-    }
-
-    if (selectedLegendId.value) {
-        segregateById(selectedLegendId.value);
-    }
-
-    if (selectedGroup.value) {
-        segregateById(selectedGroup.value.id);
-    }
-    return out;
+    const radius = radii.value.outer + cfgRibbons.value.labels.offset + 12;
+    const charWidth = cfgRibbons.value.labels.fontSize * 0.6;
+    const selectedId = selectedLegendId.value ?? selectedGroup.value?.id;
+    const ribbons = selectedRibbon.value
+        ? [selectedRibbon.value]
+        : selectedId
+          ? chordData.value.chords.filter(
+                (chord) =>
+                    chord.source.groupId === selectedId && chord.source.value,
+            )
+          : [];
+    return ribbons.flatMap((chord) => {
+        const endpoints = [];
+        if (chord.source.value) endpoints.push(['src', chord.source]);
+        if (chord.target?.value && chord.target.value !== chord.source.value)
+            endpoints.push(['tgt', chord.target]);
+        return endpoints.map(([side, endpoint]) => ({
+            id: `${chord.id}-${side}`,
+            theta: endpoint.midAngle,
+            w: (String(endpoint.value).length * charWidth) / radius,
+            midBaseX: endpoint.midBaseX,
+            midBaseY: endpoint.midBaseY,
+            groupColor: endpoint.groupColor,
+            value: endpoint.value,
+        }));
+    });
 });
 
 const separatedValueLabels = computed(() => {
@@ -635,6 +511,7 @@ const separatedValueLabels = computed(() => {
         .map((d) => ({ ...d }))
         .sort((a, b) => a.theta - b.theta);
 
+    if (!arr.length) return arr;
     const pad = (cfgRibbons.value.labels.minSeparationDeg * Math.PI) / 180;
     let changed = true;
     let loops = 0;
@@ -771,6 +648,7 @@ function getMouseAngle(event) {
 
 function onDown(e) {
     if (!FINAL_CONFIG.value.enableRotation || isAnnotator.value) return;
+    stopResetRotation();
     e.preventDefault();
     dragging.value = true;
     startRotate = rotation.value;
@@ -778,7 +656,12 @@ function onDown(e) {
 }
 
 function onMove(e) {
-    if (!dragging.value) return;
+    if (
+        !dragging.value ||
+        !FINAL_CONFIG.value.enableRotation ||
+        isAnnotator.value
+    )
+        return;
     const angle = getMouseAngle(e);
     rotation.value = startRotate + ((angle - startAngle) * 180) / Math.PI;
 }
@@ -805,6 +688,7 @@ onMounted(() => {
     window.addEventListener('mouseup', onUp);
     window.addEventListener('touchmove', onMove, { passive: false });
     window.addEventListener('touchend', onUp);
+    window.addEventListener('touchcancel', onUp);
 });
 
 onBeforeUnmount(() => {
@@ -812,13 +696,11 @@ onBeforeUnmount(() => {
     window.removeEventListener('mouseup', onUp);
     window.removeEventListener('touchmove', onMove);
     window.removeEventListener('touchend', onUp);
-    clearTimeout(loadingTimeout.value);
-    if (resizeObserver.value) {
-        if (observedEl.value) {
-            resizeObserver.value.unobserve(observedEl.value);
-        }
-        resizeObserver.value.disconnect();
-    }
+    window.removeEventListener('touchcancel', onUp);
+    disposed = true;
+    clearTimeout(loadingTimeout);
+    stopResize();
+    stopResetRotation();
 });
 
 const isFullscreen = ref(false);
@@ -835,11 +717,12 @@ function selectGroup(group, index) {
         });
     }
     if (selectedLegendId.value) return;
-    selectedGroup.value = group;
+    selectedGroupId.value = group.id;
+    selectedRibbonId.value = null;
 }
 
 function onGroupLeave(group, index) {
-    selectedGroup.value = null;
+    selectedGroupId.value = null;
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({
             datapoint: group,
@@ -866,11 +749,11 @@ function selectRibbon(ribbon, index) {
         });
     }
     if (selectedLegendId.value) return;
-    selectedRibbon.value = ribbon;
+    selectedRibbonId.value = ribbon.id;
 }
 
 function onRibbonLeave(ribbon, index) {
-    selectedRibbon.value = null;
+    selectedRibbonId.value = null;
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({
             datapoint: ribbon,
@@ -946,12 +829,18 @@ function getData() {
 }
 
 const raf = ref(null);
+let resetSequence = 0;
+function stopResetRotation() {
+    resetSequence++;
+    if (raf.value != null) cancelAnimationFrame(raf.value);
+    raf.value = null;
+}
 function resetRotation() {
     const target = FINAL_CONFIG.value.initialRotation;
-    if (raf.value !== null) {
-        cancelAnimationFrame(raf.value);
-    }
+    stopResetRotation();
+    const sequence = resetSequence;
     const step = () => {
+        if (disposed || sequence !== resetSequence) return;
         const ease = 0.05;
         rotation.value += (target - rotation.value) * ease;
         if (Math.abs(rotation.value - target) < 0.1) {
@@ -964,13 +853,8 @@ function resetRotation() {
     raf.value = requestAnimationFrame(step);
 }
 
-onBeforeUnmount(() => {
-    if (raf.value !== null) {
-        cancelAnimationFrame(raf.value);
-    }
-});
-
 function selectLegendItem(itemId) {
+    resetA11ySelection();
     if (itemId === selectedLegendId.value) {
         selectedLegendId.value = null;
         emit('selectLegend', null);
@@ -1016,7 +900,7 @@ const legendConfig = computed(() => {
 const table = computed(() => {
     const head = chordData.value.groups.map((g, i) => {
         return {
-            name: g.name || i,
+            name: g.name ?? String(i),
             color: g.color,
         };
     });
@@ -1056,13 +940,13 @@ const dataTable = computed(() => {
 function generateCsv(callback = null) {
     nextTick(() => {
         const rows = formattedDataset.value.matrix.map((m, i) => {
-            return [[formattedDataset.value.labels[i] || i], m];
+            return [table.value.head[i].name, ...m];
         });
 
         const tableXls = [
             [cfgChart.value.title.text],
             [cfgChart.value.title.subtitle.text],
-            [[''], ...formattedDataset.value.labels.map((l, i) => [l || i])],
+            ['', ...table.value.head.map((header) => header.name)],
         ].concat(rows);
 
         const csvContent = createCsvContent(tableXls);
@@ -1160,19 +1044,46 @@ async function copyAlt() {
  * a11y
  **************************************************************************************************/
 
-const visibleRibbons = computed(() => {
-    return (
-        selectedGroup.value
-            ? chordData.value.chords.filter(
-                  (c) => c.source.groupId === selectedGroup.value.id,
-              )
-            : selectedLegendId.value
-              ? chordData.value.chords.filter(
-                    (c) => c.source.groupId === selectedLegendId.value,
-                )
-              : chordData.value.chords
-    ).filter((c) => c.source.value);
-});
+const groupPaths = computed(
+    () =>
+        new Map(
+            chordData.value.groups.map((group) => [
+                group.id,
+                arcPath(
+                    group.startAngle,
+                    group.endAngle,
+                    radii.value.outer,
+                    radii.value.inner,
+                ),
+            ]),
+        ),
+);
+function getRibbonPayload(ribbon, includePath = false) {
+    const { source, target, id, path, color } = ribbon;
+    return includePath
+        ? { source, target, id, path, color }
+        : { source, target, id, color };
+}
+
+const ribbonModels = computed(() =>
+    chordData.value.chords.map((chord) => ({
+        ...chord,
+        path: ribbonPath(chord.source, chord.target),
+        color: formattedDataset.value.colors[chord.source.index],
+    })),
+);
+const visibleRibbons = computed(() =>
+    ribbonModels.value
+        .filter((chord) =>
+            selectedGroupId.value
+                ? chord.source.groupId === selectedGroupId.value
+                : selectedLegendId.value
+                  ? chord.source.groupId === selectedLegendId.value
+                  : true,
+        )
+        .map((chord, renderIndex) => ({ ...chord, renderIndex }))
+        .filter((chord) => chord.source.value),
+);
 
 const a11yTargets = computed(() => {
     const groups = chordData.value.groups.map((group, index) => ({
@@ -1184,11 +1095,7 @@ const a11yTargets = computed(() => {
     const ribbons = visibleRibbons.value.map((ribbon, index) => ({
         type: 'ribbon',
         index,
-        item: {
-            ...ribbon,
-            path: ribbonPath(ribbon.source, ribbon.target),
-            color: formattedDataset.value.colors[ribbon.source.index],
-        },
+        item: getRibbonPayload(ribbon, true),
     }));
 
     return { groups, ribbons };
@@ -1210,32 +1117,34 @@ const a11yTable = computed(() => {
 function setActiveA11yGroup(index) {
     const target = a11yTargets.value.groups[index];
     if (!target) return;
+    selectedLegendId.value = null;
     activeA11yType.value = 'group';
-    activeA11yIndex.value = index;
-    selectedRibbon.value = null;
-    selectedGroup.value = target.item;
+    activeA11yId.value = target.item.id;
+    selectedRibbonId.value = null;
+    selectedGroupId.value = target.item.id;
 }
 
 function setActiveA11yRibbon(index) {
     const target = a11yTargets.value.ribbons[index];
     if (!target) return;
+    selectedLegendId.value = null;
     activeA11yType.value = 'ribbon';
-    activeA11yIndex.value = index;
-    selectedGroup.value = null;
-    selectedRibbon.value = target.item;
+    activeA11yId.value = target.item.id;
+    selectedGroupId.value = null;
+    selectedRibbonId.value = target.item.id;
 }
 
 function resetA11ySelection() {
-    activeA11yIndex.value = null;
+    activeA11yId.value = null;
     activeA11yType.value = 'group';
-    selectedGroup.value = null;
-    selectedRibbon.value = null;
+    selectedGroupId.value = null;
+    selectedRibbonId.value = null;
 }
 
 function onSvgFocus() {
     isFocus.value = true;
     activeA11yType.value = 'group';
-    activeA11yIndex.value = null;
+    activeA11yId.value = null;
 }
 
 function onSvgBlur() {
@@ -1346,6 +1255,44 @@ function onSvgKeydown(event) {
     }
 }
 
+watch(() => props.dataset, validateRawDataset, { deep: true, immediate: true });
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+});
+watch(() => FINAL_CONFIG.value.responsive, prepareChart, { flush: 'post' });
+watch(cfgChart, () => scheduleResize?.(), { flush: 'post' });
+watch(
+    () => FINAL_CONFIG.value.initialRotation,
+    (value) => {
+        stopResetRotation();
+        rotation.value = value;
+    },
+);
+watch(
+    () => FINAL_CONFIG.value.enableRotation,
+    (value) => {
+        if (!value) onUp();
+    },
+);
+watch(loading, (value) => {
+    if (value) {
+        selectedLegendId.value = null;
+        resetA11ySelection();
+    }
+});
+watch(chordData, (data) => {
+    if (!data.groups.some((group) => group.id === selectedGroupId.value))
+        selectedGroupId.value = null;
+    if (!data.groups.some((group) => group.id === selectedLegendId.value))
+        selectedLegendId.value = null;
+    if (!data.chords.some((chord) => chord.id === selectedRibbonId.value))
+        selectedRibbonId.value = null;
+    const collection =
+        activeA11yType.value === 'group' ? data.groups : data.chords;
+    if (!collection.some((item) => item.id === activeA11yId.value))
+        activeA11yId.value = null;
+});
+
 defineExpose({
     getData,
     getImage,
@@ -1379,7 +1326,7 @@ defineExpose({
         </div>
 
         <A11yDataTable
-            v-if="a11yTable?.rows?.length"
+            v-if="FINAL_CONFIG.a11y.includeTable && a11yTable?.rows?.length"
             :uid="uid"
             :head="a11yTable.headers"
             :body="a11yTable.rows"
@@ -1582,14 +1529,7 @@ defineExpose({
                                 FINAL_CONFIG.useCssAnimation && !loaded,
                         }"
                         :key="`arc-${i}`"
-                        :d="
-                            arcPath(
-                                g.startAngle,
-                                g.endAngle,
-                                radii.outer,
-                                radii.inner,
-                            )
-                        "
+                        :d="groupPaths.get(g.id)"
                         :fill="formattedDataset.colors[i]"
                         :stroke="cfgArcs.stroke"
                         :stroke-width="cfgArcs.strokeWidth"
@@ -1609,15 +1549,8 @@ defineExpose({
                             'vue-ui-chord-arc-animated':
                                 FINAL_CONFIG.useCssAnimation && !loaded,
                         }"
-                        :key="`arc-${i}`"
-                        :d="
-                            arcPath(
-                                g.startAngle,
-                                g.endAngle,
-                                radii.outer,
-                                radii.inner,
-                            )
-                        "
+                        :key="`pattern-arc-${i}`"
+                        :d="groupPaths.get(g.id)"
                         :fill="`url(#${g.pattern})`"
                         :stroke="cfgArcs.stroke"
                         :stroke-width="cfgArcs.strokeWidth"
@@ -1633,16 +1566,7 @@ defineExpose({
                 <!-- Chord Ribbons -->
                 <g>
                     <template
-                        v-for="(c, i) in selectedGroup
-                            ? chordData.chords.filter(
-                                  (c) => c.source.groupId === selectedGroup.id,
-                              )
-                            : selectedLegendId
-                              ? chordData.chords.filter(
-                                    (c) =>
-                                        c.source.groupId === selectedLegendId,
-                                )
-                              : chordData.chords"
+                        v-for="(c, i) in visibleRibbons"
                         :key="`ribbon-${c.id}`"
                     >
                         <path
@@ -1650,7 +1574,7 @@ defineExpose({
                             :class="{
                                 'vue-ui-chord-ribbon': true,
                             }"
-                            :d="ribbonPath(c.source, c.target)"
+                            :d="c.path"
                             :fill="cfgChart.backgroundColor"
                             :style="{
                                 opacity: cfgRibbons.underlayerOpacity,
@@ -1662,7 +1586,7 @@ defineExpose({
                             :class="{
                                 'vue-ui-chord-ribbon': true,
                             }"
-                            :d="ribbonPath(c.source, c.target)"
+                            :d="c.path"
                             :fill="formattedDataset.colors[c.source.index]"
                             :stroke="cfgRibbons.stroke"
                             :stroke-width="cfgRibbons.strokeWidth"
@@ -1671,36 +1595,20 @@ defineExpose({
                             :style="{ opacity: getRibbonOpacity(c) }"
                             @mouseenter="
                                 selectRibbon(
-                                    {
-                                        ...c,
-                                        path: ribbonPath(c.source, c.target),
-                                        color: formattedDataset.colors[
-                                            c.source.index
-                                        ],
-                                    },
-                                    i,
+                                    getRibbonPayload(c, true),
+                                    c.renderIndex,
                                 )
                             "
                             @click="
                                 onRibbonClick(
-                                    {
-                                        ...c,
-                                        color: formattedDataset.colors[
-                                            c.source.index
-                                        ],
-                                    },
-                                    i,
+                                    getRibbonPayload(c),
+                                    c.renderIndex,
                                 )
                             "
                             @mouseleave="
                                 onRibbonLeave(
-                                    {
-                                        ...c,
-                                        color: formattedDataset.colors[
-                                            c.source.index
-                                        ],
-                                    },
-                                    i,
+                                    getRibbonPayload(c),
+                                    c.renderIndex,
                                 )
                             "
                         />
@@ -1709,7 +1617,7 @@ defineExpose({
                             :class="{
                                 'vue-ui-chord-ribbon': true,
                             }"
-                            :d="ribbonPath(c.source, c.target)"
+                            :d="c.path"
                             :fill="`url(#pattern_${uid}_${c.source.index})`"
                             :stroke="cfgRibbons.stroke"
                             :stroke-width="cfgRibbons.strokeWidth"
@@ -1862,20 +1770,7 @@ defineExpose({
                                 startOffset="50%"
                                 text-anchor="middle"
                             >
-                                {{ formattedDataset.labels[i]
-                                }}{{
-                                    cfgArcs.labels.showPercentage
-                                        ? dataLabel({
-                                              p: ' (',
-                                              v: isNaN(g.proportion)
-                                                  ? 0
-                                                  : g.proportion * 100,
-                                              s: '%)',
-                                              r: cfgArcs.labels
-                                                  .roundingPercentage,
-                                          })
-                                        : ''
-                                }}
+                                {{ getArcLabel(g, i) }}
                             </textPath>
                         </text>
                     </template>
@@ -2148,7 +2043,7 @@ defineExpose({
     transition: transform 0.2s ease-in-out;
     transform-origin: center;
     &:focus {
-        outline: 1px solid v-bind(slicerColor);
+        outline: 1px solid currentColor;
     }
     &:hover {
         transform: rotate(-90deg);

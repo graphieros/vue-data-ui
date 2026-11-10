@@ -30,7 +30,8 @@ const { CHECKBOX, NUMBER, RANGE, TEXT, COLOR, SELECT, createModel } =
 function makeDs(n) {
     const arr = [];
     for (let i = 0; i < n; i += 1) {
-        arr.push(Math.random() * 1000);
+        if (i === 2) arr.push(null);
+        else arr.push(Math.random() * 1000);
     }
     return arr;
 }
