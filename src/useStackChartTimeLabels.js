@@ -222,5 +222,6 @@ export function useStackChartTimeLabels({
         getDisplayedTimeLabels,
         preciseAllTimeLabels,
         preciseAllTimeLabelsTooltip,
+        preciseTimeFormatter,
     };
 }

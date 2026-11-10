@@ -106,31 +106,33 @@ function makeDs(n) {
     return arr;
 }
 
+const DATAPOINT_COUNT = 100;
+
 const dataset = ref([
     {
         name: 'Series A',
-        series: makeDs(24),
+        series: makeDs(DATAPOINT_COUNT),
         shape: 'triangle',
     },
     {
         name: 'Series B',
-        series: makeDs(24),
+        series: makeDs(DATAPOINT_COUNT),
         shape: 'square',
     },
     {
         name: 'Series C',
-        series: makeDs(24),
+        series: makeDs(DATAPOINT_COUNT),
         shape: 'star',
     },
     {
         name: 'Series D',
-        series: makeDs(24),
+        series: makeDs(DATAPOINT_COUNT),
         shape: 'diamond',
         standalone: true,
     },
     {
         name: 'Series E',
-        series: makeDs(24),
+        series: makeDs(DATAPOINT_COUNT),
         shape: 'pentagon',
         standalone: true,
     },
@@ -365,6 +367,16 @@ const model = createModel([
         max: 100,
     }),
 
+    CHECKBOX('style.chart.timeTag.show'),
+    COLOR('style.chart.timeTag.backgroundColor'),
+    COLOR('style.chart.timeTag.color'),
+    NUMBER('style.chart.timeTag.fontSize', { min: 8, max: 42 }),
+    NUMBER('style.chart.timeTag.circleMarker.radius', { min: 0, max: 20 }),
+    COLOR('style.chart.timeTag.circleMarker.color'),
+    CHECKBOX('style.chart.timeTag.useDefaultFormat'),
+    TEXT('style.chart.timeTag.timeFormat'),
+    CHECKBOX('style.chart.timeTag.customFormat', { def: false }),
+
     SELECT('style.chart.grid.scale.ticks', [2, 5, 10, 20], { def: 10 }),
     NUMBER('style.chart.grid.scale.scaleMin', {
         def: null,
@@ -544,6 +556,13 @@ const config = computed(() => {
             ...c.style,
             chart: {
                 ...c.style.chart,
+                timeTag: {
+                    ...c.style.chart.timeTag,
+                    customFormat: c.style.chart.timeTag.customFormat
+                        ? ({ absoluteIndex, datapoint }) =>
+                              `<b>Period ${absoluteIndex + 1}</b><br>${datapoint.map(({ name, value }) => `${name}: ${value == null ? '—' : value.toFixed(1)}`).join('<br>')}`
+                        : null,
+                },
                 // backgroundColor: 'transparent',
                 zoom: {
                     ...c.style.chart.zoom,
@@ -573,7 +592,7 @@ const config = computed(() => {
                         ...c.style.chart.grid.x,
                         timeLabels: {
                             ...c.style.chart.grid.x.timeLabels,
-                            values: generateDayTimestamps(100),
+                            values: generateDayTimestamps(DATAPOINT_COUNT),
                             datetimeFormatter: {
                                 enable: true,
                             },

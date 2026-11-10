@@ -630,6 +630,19 @@ export function useConfig(options = {}) {
                 height: 500,
                 width: 800,
                 padding: PADDING([12, 12, 12, 12]),
+                timeTag: {
+                    show: false,
+                    backgroundColor: COLOR_GRID,
+                    color: COLOR_TEXT_PRIMARY,
+                    fontSize: FONT._12,
+                    circleMarker: {
+                        radius: 3,
+                        color: COLOR_TEXT_PRIMARY,
+                    },
+                    useDefaultFormat: true,
+                    timeFormat: 'yyyy-MM-dd HH:mm:ss', // When datetimeFormatter is enabled
+                    customFormat: null, // overrides all if callback => string
+                },
                 title: TITLE,
                 legend: {
                     ...LEGEND,

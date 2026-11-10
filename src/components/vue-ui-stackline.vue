@@ -1562,6 +1562,7 @@ const {
     getDisplayedTimeLabels,
     preciseAllTimeLabels,
     preciseAllTimeLabelsTooltip,
+    preciseTimeFormatter,
 } = useStackChartTimeLabels({
     cfgTimeLabels,
     timeLabels,
@@ -1573,7 +1574,9 @@ const {
     cfgTooltip,
 });
 const displayedTimeLabels = computed(() => {
-    return getDisplayedTimeLabels(selectedSerieIndex.value);
+    return getDisplayedTimeLabels(
+        cfgChart.value.timeTag.show ? selectedSerieIndex.value : null,
+    );
 });
 
 // Hover state must not participate in chart layout measurement.
@@ -1617,6 +1620,7 @@ const renderedTimeLabels = computed(() => {
 const selectedTimeLabel = computed(() => {
     const index = selectedSerieIndex.value;
     if (
+        !cfgChart.value.timeTag.show ||
         !useSparseTimeLabels.value ||
         index == null ||
         !timeLabels.value[index] ||
@@ -2550,6 +2554,78 @@ const selectedSeries = computed(() => {
             standalone: !!datapoint.standalone,
         };
     });
+});
+
+const timeTagIndex = computed(
+    () => selectedSerieIndex.value ?? selectedMinimapIndex.value,
+);
+const timeTagEl = shallowRef(null);
+const timeTagWidth = ref(200);
+let timeTagObserver;
+
+onMounted(() => {
+    timeTagObserver = new ResizeObserver(() => {
+        if (timeTagEl.value) {
+            timeTagWidth.value = Math.min(
+                200,
+                Math.max(1, timeTagEl.value.getBoundingClientRect().width),
+            );
+        }
+    });
+    if (timeTagEl.value) timeTagObserver.observe(timeTagEl.value);
+});
+watch(
+    timeTagEl,
+    (element, previous) => {
+        if (previous) timeTagObserver?.unobserve(previous);
+        if (element) timeTagObserver?.observe(element);
+    },
+    { flush: 'post' },
+);
+onBeforeUnmount(() => timeTagObserver?.disconnect());
+
+const timeTagX = computed(() => {
+    const halfWidth = timeTagWidth.value / 2;
+    const center = xAtVisibleIndex(timeTagIndex.value ?? 0);
+    return checkNaN(
+        Math.max(
+            drawingArea.value.left + halfWidth,
+            Math.min(center, drawingArea.value.right - halfWidth),
+        ) - 100,
+    );
+});
+
+const timeTagContent = computed(() => {
+    const index = timeTagIndex.value;
+    if (index == null) return '';
+    const tag = cfgChart.value.timeTag;
+    if (isFunction(tag.customFormat)) {
+        try {
+            const result = tag.customFormat({
+                absoluteIndex: absIndex(index),
+                seriesIndex: index,
+                datapoint: formattedDataset.value.map((serie) => ({
+                    slotAbsoluteIndex: serie.absoluteIndex,
+                    shape: serie.shape || 'circle',
+                    name: serie.name,
+                    color: serie.color,
+                    value: serie.series[index],
+                    sourceValue: serie.seriesSource?.[absIndex(index)],
+                    comments: serie.comments || [],
+                    id: serie.id,
+                    standalone: !!serie.standalone,
+                })),
+                config: FINAL_CONFIG.value,
+            });
+            if (typeof result === 'string') return result;
+        } catch {
+            console.warn('Custom format cannot be applied on timeTag.');
+        }
+    }
+    if (cfgTimeLabels.value.datetimeFormatter.enable && !tag.useDefaultFormat) {
+        return preciseTimeFormatter.value(absIndex(index), tag.timeFormat);
+    }
+    return timeLabels.value[index]?.text ?? '';
 });
 
 function getTooltipTimeLabel(seriesIndex) {
@@ -4200,6 +4276,34 @@ const annotationViewport = computed(() => {
                         })
                     "
                 />
+
+                <!-- TIME TAG -->
+                <g
+                    v-if="cfgChart.timeTag.show && timeTagIndex != null"
+                    style="pointer-events: none"
+                >
+                    <foreignObject
+                        :x="timeTagX"
+                        :y="drawingArea.bottom"
+                        width="200"
+                        height="40"
+                        style="overflow: visible !important"
+                    >
+                        <div
+                            ref="timeTagEl"
+                            data-cy="time-tag"
+                            class="vue-ui-stackline-time-tag"
+                            :style="`width: fit-content;max-width:200px;box-sizing:border-box;margin:0 auto;text-align:center;padding:3px 12px;background:${cfgChart.timeTag.backgroundColor};color:${cfgChart.timeTag.color};font-size:${cfgChart.timeTag.fontSize}px`"
+                            v-html="timeTagContent"
+                        />
+                    </foreignObject>
+                    <circle
+                        :cx="xAtVisibleIndex(timeTagIndex)"
+                        :cy="drawingArea.bottom"
+                        :r="cfgChart.timeTag.circleMarker.radius"
+                        :fill="cfgChart.timeTag.circleMarker.color"
+                    />
+                </g>
 
                 <!-- HIGHLIGHTER (rect) -->
                 <template

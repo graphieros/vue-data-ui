@@ -182,6 +182,19 @@ const testPreconfig = computed<VueUiStacklineConfig>(() => {
                     bottom: 12,
                     left: 12,
                 },
+                timeTag: {
+                    show: false,
+                    backgroundColor: '#e1e5e8',
+                    color: '#2D353C',
+                    fontSize: 12,
+                    circleMarker: {
+                        radius: 3,
+                        color: '#2D353C',
+                    },
+                    useDefaultFormat: true,
+                    timeFormat: 'yyyy-MM-dd HH:mm:ss',
+                    customFormat: null,
+                },
                 title: {
                     text: '',
                     color: '#2D353C',

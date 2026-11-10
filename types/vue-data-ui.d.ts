@@ -14632,6 +14632,25 @@ declare module 'vue-data-ui' {
                 height?: number;
                 width?: number;
                 padding?: ChartPadding;
+                timeTag?: {
+                    show?: boolean;
+                    backgroundColor?: string;
+                    color?: string;
+                    fontSize?: number;
+                    circleMarker?: {
+                        radius?: number;
+                        color?: string;
+                    };
+                    useDefaultFormat?: boolean;
+                    timeFormat?: string;
+                    customFormat?:
+                        | null
+                        | ((
+                              params: MinimalCustomFormatParams<
+                                  VueUiStacklineDatapointItem[]
+                              >,
+                          ) => string);
+                };
                 title?: ChartTitle;
                 legend?: ChartBaseLegend & {
                     backgroundColor?: string;
