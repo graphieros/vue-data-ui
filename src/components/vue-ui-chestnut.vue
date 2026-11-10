@@ -1146,13 +1146,13 @@ function getNutAnnouncement(nut) {
         p: cfgLayout.value.legend.prefix,
         v: nut.value,
         s: cfgLayout.value.legend.suffix,
-        r: cfgNuts.value.selected.labels.roundingValue,
+        r: cfgNuts.value.selected.roundingValue,
     });
 
     const percentageToBranch = dataLabel({
         v: nut.proportionToBranch * 100,
         s: '%',
-        r: cfgNuts.value.selected.labels.roundingPercentage,
+        r: cfgNuts.value.selected.roundingPercentage,
     });
 
     return `Nut ${nut.name}. Branch ${nut.branchName}. Root ${nut.rootName}. Value ${valueLabel}. ${percentageToBranch} of branch ${nut.branchName}.`;
@@ -2227,8 +2227,7 @@ defineExpose({
                                             {{
                                                 nut.value.toFixed(
                                                     cfgChart.layout.nuts
-                                                        .selected.labels
-                                                        .roundingValue,
+                                                        .selected.roundingValue,
                                                 )
                                             }}
                                             {{ cfgLayout.legend.suffix }}</b
@@ -2237,7 +2236,7 @@ defineExpose({
                                             (
                                                 nut.proportionToBranch * 100
                                             ).toFixed(
-                                                cfgLayout.nuts.selected.labels
+                                                cfgLayout.nuts.selected
                                                     .roundingPercentage,
                                             )
                                         }}%)</span
@@ -2473,8 +2472,7 @@ defineExpose({
                                             selectedNut.value,
                                         ) * 100,
                                     s: '%',
-                                    r: cfgNuts.selected.labels
-                                        .roundingPercentage,
+                                    r: cfgNuts.selected.roundingPercentage,
                                 })
                             }}
 
@@ -2525,8 +2523,7 @@ defineExpose({
                                         selectedNut.breakdown[i]
                                             .proportionToRoot * 100,
                                     s: '%',
-                                    r: cfgNuts.selected.labels
-                                        .roundingPercentage,
+                                    r: cfgNuts.selected.roundingPercentage,
                                 })
                             }}
                             {{ FINAL_CONFIG.translations.of }}
@@ -2559,8 +2556,7 @@ defineExpose({
                                         selectedNut.breakdown[i]
                                             .proportionToTree * 100,
                                     s: '%',
-                                    r: cfgNuts.selected.labels
-                                        .roundingPercentage,
+                                    r: cfgNuts.selected.roundingPercentage,
                                 })
                             }}
                             {{ FINAL_CONFIG.translations.proportionToTree }}

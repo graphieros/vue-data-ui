@@ -679,6 +679,7 @@ declare module 'vue-data-ui' {
         fontSize?: number;
         bold?: boolean;
         selectAllToggle?: ChartLegendToggle;
+        backgroundColor?: string;
     };
 
     export type ChartFrame = {
@@ -968,6 +969,7 @@ declare module 'vue-data-ui' {
         focusRangeRatio?: number;
         maxWidth?: number | null;
         dragToZoom?: ZoomOnChart;
+        keepState?: boolean;
     };
 
     export type Theme =
@@ -3809,7 +3811,14 @@ declare module 'vue-data-ui' {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
-        a11y?: A11YConfig;
+        a11y?: A11YConfig & {
+            translations?: A11YConfig['translations'] & {
+                series?: string;
+                time?: string;
+                value?: string;
+                label?: string;
+            };
+        };
         events?: {
             datapointEnter?: VueUiSparkHistogramEvent; // v3
             datapointLeave?: VueUiSparkHistogramEvent; // v3
@@ -3882,6 +3891,7 @@ declare module 'vue-data-ui' {
                 strokeDasharray?: number;
                 strokeWidth?: number;
                 borderRadius?: number;
+                fill?: string;
             };
             title?: {
                 textAlign?: TextAlign;
@@ -3979,7 +3989,13 @@ declare module 'vue-data-ui' {
         debug?: boolean; // v3
         loading?: boolean; // v3
         useCursorPointer?: boolean;
-        a11y?: A11YConfig;
+        a11y?: A11YConfig & {
+            translations?: A11YConfig['translations'] & {
+                series?: string;
+                percentage?: string;
+                value?: string;
+            };
+        };
         events?: {
             datapointEnter?: VueUiSparkStackbarEvent; // v3
             datapointLeave?: VueUiSparkStackbarEvent; // v3
@@ -4717,7 +4733,9 @@ declare module 'vue-data-ui' {
                 scale?: number;
                 filename?: string;
             };
+            annotatorPalette?: string[];
         };
+        allowPrint?: boolean;
     };
 
     export type VueUiDashboardPlacedElement = {
@@ -10124,13 +10142,14 @@ declare module 'vue-data-ui' {
                     color?: string;
                     radius?: number;
                     durationMs?: number;
-                    easeing?:
+                    easing?:
                         | 'ease-in-out'
                         | 'ease'
                         | 'ease-in'
                         | 'ease-out'
                         | 'linear'
-                        | 'cubic-bezizer';
+                        | 'steps'
+                        | 'cubic-bezier';
                     cubicBezier?: [number, number, number, number];
                     trail?: {
                         show?: boolean;
@@ -10489,6 +10508,7 @@ declare module 'vue-data-ui' {
                     bar?: {
                         fill?: string;
                         stroke?: string;
+                        strokeWidth?: number;
                     };
                     line?: {
                         smooth?: boolean;
@@ -10805,7 +10825,8 @@ declare module 'vue-data-ui' {
             | 'bullet'
             | 'historyPlot'
             | 'circlePack'
-            | 'ridgeline';
+            | 'ridgeline'
+            | 'chord';
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -10987,6 +11008,7 @@ declare module 'vue-data-ui' {
             rings?: {
                 color?: string;
             };
+            chord?: { color?: string };
         };
     };
 
@@ -11902,6 +11924,7 @@ declare module 'vue-data-ui' {
                 };
             };
         };
+        type?: 'classic' | 'scatter' | 'violin';
     };
 
     export type VueUiStripPlotDatapoint = {
@@ -12480,6 +12503,8 @@ declare module 'vue-data-ui' {
                 suffix?: string;
             };
         };
+        nodeCategories?: Record<string, string>;
+        nodeCategoryColors?: Record<string, string>;
     };
 
     export type VueUiWordCloudExpose = {
@@ -12725,6 +12750,7 @@ declare module 'vue-data-ui' {
                     fontSize?: number;
                     bold?: boolean;
                     position?: 'bottom' | 'top';
+                    selectAllToggle?: ChartLegendToggle;
                 };
                 title?: ChartTitle;
                 grid?: {
@@ -14318,6 +14344,8 @@ declare module 'vue-data-ui' {
                 };
             };
         };
+        loading?: boolean;
+        debug?: boolean;
     };
 
     export type VueUiStackbarExpose = {
@@ -14704,6 +14732,7 @@ declare module 'vue-data-ui' {
                         rounding?: number;
                         prefix?: string;
                         formatter?: Formatter;
+                        suffix?: string;
                     };
                 };
                 grid?: {
@@ -16132,7 +16161,7 @@ declare module 'vue-data-ui' {
             };
             columnNames?: {
                 series?: string;
-                datapoint?: string;
+                value?: string;
                 category?: string;
             };
         };
@@ -17357,7 +17386,18 @@ declare module 'vue-data-ui' {
                 };
                 controls?: ChartZoomControls;
                 title?: ChartTitle;
-                tooltip?: ChartTooltip;
+                tooltip?: ChartTooltip & {
+                    customFormat?:
+                        | null
+                        | ((
+                              params:
+                                  | VueUiGeoTooltipSlotProps
+                                  | {
+                                        datapoint: VueUiGeoTerritory;
+                                        config: VueUiGeoConfig;
+                                    },
+                          ) => string);
+                };
                 zoom?: {
                     active?: boolean;
                 };
@@ -17842,7 +17882,7 @@ declare module 'vue-data-ui' {
             VueUiHillConfig
         >;
         a11y?: A11YConfig & {
-            topOfHill?: string;
+            translations?: A11YConfig['translations'] & { topOfHill?: string };
         };
         events?: VueUiHillEvents;
         interaction?: {
@@ -17976,7 +18016,7 @@ declare module 'vue-data-ui' {
                             ellipsisThresholdChars?: number;
                             show?: boolean;
                             color?: string;
-                            useSeriesColor?: boolean;
+                            useSerieColor?: boolean;
                             fontSize?: number;
                             bold?: boolean;
                             offsetX?: number;

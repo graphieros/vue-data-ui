@@ -2453,7 +2453,7 @@ function selectTd({ td, rowIndex, colIndex, headerType, event }) {
         Array.from(tr.children).forEach((td, i) => {
             if (td.dataset.row === 'even') {
                 td.style.background = cfgRows.value.even.backgroundColor;
-                td.style.color = cfgRows.value.even.olor;
+                td.style.color = cfgRows.value.even.color;
             } else {
                 td.style.background = cfgRows.value.odd.backgroundColor;
                 td.style.color = cfgRows.value.odd.color;

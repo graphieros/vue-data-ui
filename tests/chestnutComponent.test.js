@@ -310,3 +310,37 @@ test('rendered table keeps repeated hierarchy names in distinct groups', async (
         wrapper.unmount();
     }
 });
+
+test('nut announcements honor selected value and percentage precision', async () => {
+    const wrapper = mountChart({
+        config: {
+            style: {
+                chart: {
+                    layout: {
+                        nuts: {
+                            selected: {
+                                roundingValue: 2,
+                                roundingPercentage: 1,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    });
+    try {
+        const state = wrapper.vm.$.setupState;
+        const announcement = state.getNutAnnouncement({
+            name: 'Nut',
+            branchName: 'Branch',
+            rootName: 'Root',
+            value: 12.3456,
+            proportionToBranch: 0.123456,
+        });
+        expect(announcement).toContain('12.35');
+        expect(announcement).toContain('12.3%');
+    } finally {
+        await flushPromises();
+        wrapper.unmount();
+    }
+});

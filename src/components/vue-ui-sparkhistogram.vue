@@ -509,7 +509,7 @@ const a11yTable = computed(() => {
         FINAL_CONFIG.value.a11y?.translations?.series ?? 'Series',
         FINAL_CONFIG.value.a11y?.translations?.time ?? 'Time',
         FINAL_CONFIG.value.a11y?.translations?.value ?? 'Value',
-        FINAL_CONFIG.value.a11y?.translations?.valueLabel ?? 'Label',
+        FINAL_CONFIG.value.a11y?.translations?.label ?? 'Label',
     ];
 
     const rows = computedDataset.value.map((datapoint, index) => {

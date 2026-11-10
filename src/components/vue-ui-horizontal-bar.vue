@@ -1566,8 +1566,8 @@ const a11yTable = computed(() => {
                     : dataLabel({
                           v: row.parentValue,
                           r: cfgBars.value.dataLabels.value.roundingValue,
-                          p: cfgBars.value.dataLabels.prefix,
-                          s: cfgBars.value.dataLabels.suffix,
+                          p: cfgBars.value.dataLabels.value.prefix,
+                          s: cfgBars.value.dataLabels.value.suffix,
                       }),
                 row.percentageToTotal === ''
                     ? ''
@@ -1583,8 +1583,8 @@ const a11yTable = computed(() => {
                     : dataLabel({
                           v: row.childValue,
                           r: cfgBars.value.dataLabels.value.roundingValue,
-                          p: cfgBars.value.dataLabels.prefix,
-                          s: cfgBars.value.dataLabels.suffix,
+                          p: cfgBars.value.dataLabels.value.prefix,
+                          s: cfgBars.value.dataLabels.value.suffix,
                       }),
                 row.childPercentageToParent === ''
                     ? ''

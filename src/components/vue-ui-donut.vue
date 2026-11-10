@@ -3367,7 +3367,7 @@ defineExpose({
             :smooth="cfgChart.tooltip.smooth"
             :backdropFilter="cfgChart.tooltip.backdropFilter"
             :smoothForce="cfgChart.tooltip.smoothForce"
-            :smoothSnapThreshold="cfgChart.tooltip.smoothSnapThrehsold"
+            :smoothSnapThreshold="cfgChart.tooltip.smoothSnapThreshold"
             :isA11yMode="tooltipTriggerMode === 'keyboard'"
             :a11yPosition="tooltipA11yPosition"
         >

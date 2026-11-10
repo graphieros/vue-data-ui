@@ -534,18 +534,12 @@ function getScaleLabelX() {
 
     const crosshair = 13;
 
-    const yAxisNameWidth = gridCfg.value.yAxis.axisName?.show
-        ? gridCfg.value.yAxis.axisName.fontSize +
-          gridCfg.value.yAxis.axisName.offsetX
-        : 0;
-
-    const total = scaleLabelsWidth + crosshair + yAxisNameWidth;
+    const total = scaleLabelsWidth + crosshair;
 
     return {
         left: yAxisLabelsAreRight.value ? 0 : total,
         right: yAxisLabelsAreRight.value ? total : 0,
         scaleLabelsWidth,
-        yAxisNameWidth,
         crosshair,
     };
 }
@@ -569,7 +563,6 @@ const drawingArea = computed(() => {
         width: svg.value.width - pl - pr - scaleLabelX.left - scaleLabelX.right,
         height: svg.value.height - pt - pb - timeLabelsY.value - topOffset,
         scaleLabelsWidth: scaleLabelX.scaleLabelsWidth,
-        yAxisNameWidth: scaleLabelX.yAxisNameWidth,
         crosshair: scaleLabelX.crosshair,
     };
 });
@@ -1581,7 +1574,7 @@ function generateCsv(callback = null) {
             FINAL_CONFIG.value.translations.open,
             FINAL_CONFIG.value.translations.high,
             FINAL_CONFIG.value.translations.low,
-            FINAL_CONFIG.value.translations.close,
+            FINAL_CONFIG.value.translations.last,
             FINAL_CONFIG.value.translations.volume,
         ];
 

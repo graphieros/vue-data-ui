@@ -6645,6 +6645,7 @@ export function useConfig(options = {}) {
     const vue_ui_dashboard = {
         devHints: DEV_HINTS,
         locked: false,
+        allowPrint: false,
         style: {
             board: {
                 backgroundColor: COLOR_BACKGROUND,
@@ -6661,6 +6662,7 @@ export function useConfig(options = {}) {
             },
         },
         userOptions: {
+            annotatorPalette: COLOR_PICKER_PALETTE,
             annotator: {
                 showGroupActions: true,
                 useOutline: true,
@@ -7029,6 +7031,7 @@ export function useConfig(options = {}) {
                     bar: {
                         fill: COLOR_BLUE,
                         stroke: COLOR_WHITE,
+                        strokeWidth: 0,
                     },
                     line: {
                         smooth: true,

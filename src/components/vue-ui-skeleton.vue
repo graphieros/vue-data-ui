@@ -1901,7 +1901,7 @@ const chordPaths = ref([
                     :cy="item.root.y"
                     :r="item.root.r"
                     :fill="`${cfgStyle.backgroundColor}`"
-                    :stroke="FINAL_CONFIG.backgroundColor"
+                    :stroke="FINAL_CONFIG.style.backgroundColor"
                     :stroke-width="3"
                 />
                 <circle

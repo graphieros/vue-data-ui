@@ -462,7 +462,7 @@ defineExpose({
                 containerType: 'inline-size',
                 position: 'relative',
                 overflow: 'auto',
-                fontFamily: FINAL_CONFIG.fontFamily,
+                fontFamily: FINAL_CONFIG.style.fontFamily,
             }"
             :class="{
                 'vue-ui-responsive': isResponsive,

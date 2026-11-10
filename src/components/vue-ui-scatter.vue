@@ -3156,7 +3156,7 @@ watch(
                             formatCoordinate(
                                 displayedAxisBounds.xMin,
                                 cfgPlots.selectors.labels.x.formatter,
-                                cfgStyle.layout.dataLabels.xAxis.rounding,
+                                cfgStyle.layout.dataLabels.xAxis.roundingValue,
                             )
                         }}
                     </text>
@@ -3214,7 +3214,7 @@ watch(
                             formatCoordinate(
                                 displayedAxisBounds.yMin,
                                 cfgPlots.selectors.labels.y.formatter,
-                                cfgStyle.layout.dataLabels.yAxis.rounding,
+                                cfgStyle.layout.dataLabels.yAxis.roundingValue,
                             )
                         }}
                     </text>
