@@ -197,6 +197,7 @@ function createCases(env) {
         const config = {
             style: {
                 chart: {
+                    timeTag: { show: true },
                     grid: {
                         x: {
                             timeLabels: {
@@ -248,6 +249,24 @@ function createCases(env) {
         expect(wrapper.findAll('[data-cy="time-label"]').length).toBeLessThan(
             40,
         );
+        await wrapper.setProps({
+            config: {
+                ...config,
+                style: {
+                    ...config.style,
+                    chart: {
+                        ...config.style.chart,
+                        timeTag: { show: false },
+                    },
+                },
+            },
+        });
+        await waitFor(() => {
+            expect(
+                wrapper.find('[data-cy="selected-time-label"]').exists(),
+            ).toBe(false);
+            expect(wrapper.find('[data-cy="time-tag"]').exists()).toBe(false);
+        });
         await fireEvent.click(svg, { clientX: screen.x, clientY: screen.y });
         expect(
             wrapper.emitted('selectDatapoint').at(-1)[0].datapoint,

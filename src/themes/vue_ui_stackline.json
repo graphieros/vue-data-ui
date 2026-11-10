@@ -125,6 +125,13 @@
                             "color": "#CCCCCC"
                         }
                     }
+                },
+                "timeTag": {
+                    "backgroundColor": "#2A2A2A",
+                    "color": "#CCCCCC",
+                    "circleMarker": {
+                        "color": "#2A2A2A"
+                    }
                 }
             }
         }
@@ -222,6 +229,13 @@
                             "color": "#CCCCCC"
                         }
                     }
+                },
+                "timeTag": {
+                    "backgroundColor": "#2A2A2A",
+                    "color": "#CCCCCC",
+                    "circleMarker": {
+                        "color": "#2A2A2A"
+                    }
                 }
             }
         }
@@ -316,6 +330,13 @@
                         "axisLabels": {
                             "color": "#424242"
                         }
+                    }
+                },
+                "timeTag": {
+                    "backgroundColor": "#424242",
+                    "color": "#FFF8E1",
+                    "circleMarker": {
+                        "color": "#424242"
                     }
                 }
             }
@@ -412,6 +433,13 @@
                             "color": "#BDBDBD"
                         }
                     }
+                },
+                "timeTag": {
+                    "backgroundColor": "#5D4037",
+                    "color": "#FFF8E1",
+                    "circleMarker": {
+                        "color": "#5D4037"
+                    }
                 }
             }
         }
@@ -504,6 +532,13 @@
                             "color": "#99AA99"
                         }
                     }
+                },
+                "timeTag": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#66CC66",
+                    "circleMarker": {
+                        "color": "#66CC66"
+                    }
                 }
             }
         }
@@ -595,6 +630,13 @@
                         "axisLabels": {
                             "show": false
                         }
+                    }
+                },
+                "timeTag": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "circleMarker": {
+                        "color": "#8A9892"
                     }
                 }
             }
@@ -689,6 +731,13 @@
                         "axisLabels": {
                             "color": "#61747E"
                         }
+                    }
+                },
+                "timeTag": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "circleMarker": {
+                        "color": "#50606C"
                     }
                 }
             }

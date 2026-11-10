@@ -238,6 +238,19 @@ test('dense axes retain source indices and full data while bounding standard tic
         expect(wrapper.vm.getData()[0].points).toHaveLength(1000);
         s.selectedSerieIndex = 123;
         await nextTick();
+        expect(s.selectedTimeLabel).toBeNull();
+        await wrapper.setProps({
+            config: {
+                ...wrapper.props('config'),
+                style: {
+                    chart: {
+                        ...wrapper.props('config').style.chart,
+                        timeTag: { show: true },
+                    },
+                },
+            },
+        });
+        await flushPromises();
         expect(s.selectedTimeLabel).toMatchObject({
             index: 123,
             timeLabel: { text: 'P123' },
@@ -400,3 +413,182 @@ test('dot visibility independently controls persistent and hover-only rendering'
         wrapper.unmount();
     }
 });
+
+test('time tag follows chart and minimap selection, with zero taking priority', async () => {
+    const wrapper = mount(VueUiStackline, {
+        props: {
+            dataset,
+            config: {
+                userOptions: { show: false },
+                style: {
+                    chart: {
+                        legend: { show: false },
+                        zoom: { show: false },
+                        timeTag: { show: true },
+                        grid: {
+                            x: {
+                                timeLabels: {
+                                    autoRotate: { enable: false },
+                                    values: dataset[0].series.map(
+                                        (_, i) => `P${i}`,
+                                    ),
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    });
+    try {
+        await flushPromises();
+        expect(wrapper.find('[data-cy="time-tag"]').exists()).toBe(false);
+        const s = wrapper.vm.$.setupState;
+        s.selectedMinimapIndex = 3;
+        await nextTick();
+        expect(wrapper.get('[data-cy="time-tag"]').text()).toBe('P3');
+        s.selectedSerieIndex = 0;
+        await nextTick();
+        expect(wrapper.get('[data-cy="time-tag"]').text()).toBe('P0');
+        expect(
+            Number(
+                wrapper
+                    .get('[data-cy="time-tag"]')
+                    .element.parentElement.nextElementSibling.getAttribute(
+                        'cx',
+                    ),
+            ),
+        ).toBeCloseTo(s.xAtVisibleIndex(0));
+        s.selectedSerieIndex = null;
+        s.selectedMinimapIndex = null;
+        await nextTick();
+        expect(wrapper.find('[data-cy="time-tag"]').exists()).toBe(false);
+    } finally {
+        await vi.dynamicImportSettled();
+        wrapper.unmount();
+    }
+});
+
+test('time tag formats absolute dates after zoom and falls back from invalid custom output', async () => {
+    const customFormat = vi.fn(() => null);
+    const wrapper = mountChart({
+        config: {
+            style: {
+                chart: {
+                    timeTag: {
+                        show: true,
+                        useDefaultFormat: false,
+                        timeFormat: 'yyyy-MM-dd',
+                        customFormat,
+                    },
+                    grid: {
+                        x: {
+                            timeLabels: {
+                                values: Array.from({ length: 8 }, (_, i) =>
+                                    Date.UTC(2024, i, 1),
+                                ),
+                                datetimeFormatter: {
+                                    enable: true,
+                                    useUTC: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    });
+    try {
+        await flushPromises();
+        wrapper.vm.setZoomState({ start: 3, end: 7 }, { transition: false });
+        await flushPromises();
+        const s = wrapper.vm.$.setupState;
+        s.selectedMinimapIndex = 0;
+        expect(s.timeTagContent).toBe('2024-04-01');
+        expect(customFormat).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                absoluteIndex: 3,
+                seriesIndex: 0,
+                datapoint: expect.arrayContaining([
+                    expect.objectContaining({ name: 'A', value: 20 }),
+                ]),
+            }),
+        );
+        customFormat.mockReturnValue('<b>Custom</b>');
+        s.selectedMinimapIndex = 1;
+        expect(s.timeTagContent).toBe('<b>Custom</b>');
+        customFormat.mockImplementation(() => {
+            throw new Error('Invalid');
+        });
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        s.selectedMinimapIndex = 2;
+        expect(s.timeTagContent).toBe('2024-06-01');
+        expect(warn).toHaveBeenCalledWith(
+            'Custom format cannot be applied on timeTag.',
+        );
+    } finally {
+        wrapper.unmount();
+    }
+});
+
+test.each([false, true])(
+    'hidden time tag does not reveal filtered hover labels (dense=%s)',
+    async (dense) => {
+        const wrapper = mountChart({
+            dataset: [{ name: 'A', series: Array(dense ? 100 : 8).fill(1) }],
+            config: {
+                style: {
+                    chart: {
+                        timeTag: { show: false },
+                        grid: {
+                            x: {
+                                timeLabels: {
+                                    values: Array.from(
+                                        { length: dense ? 100 : 8 },
+                                        (_, i) => `P${i}`,
+                                    ),
+                                    showOnlyAtModulo: true,
+                                    modulo: 4,
+                                    showFirstAndLast: false,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        try {
+            await flushPromises();
+            const s = wrapper.vm.$.setupState;
+            s.selectedSerieIndex = 1;
+            await nextTick();
+            expect(s.displayedTimeLabels[1].text).toBe('');
+            expect(s.selectedTimeLabel).toBeNull();
+            await wrapper.setProps({
+                config: {
+                    style: {
+                        chart: {
+                            timeTag: { show: false },
+                            grid: {
+                                x: {
+                                    timeLabels: {
+                                        values: Array.from(
+                                            { length: dense ? 100 : 8 },
+                                            (_, i) => `P${i}`,
+                                        ),
+                                        showOnlyFirstAndLast: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+            await flushPromises();
+            expect(s.displayedTimeLabels[1].text).toBe('');
+            expect(s.selectedTimeLabel).toBeNull();
+        } finally {
+            wrapper.unmount();
+        }
+    },
+);
