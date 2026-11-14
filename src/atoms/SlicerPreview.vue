@@ -2459,7 +2459,7 @@ defineExpose({
                                     >
                                         <path
                                             v-if="handleType === 'arrow'"
-                                            d="M 7 7 L 3 10 L 7 13 L 7 7 M 13 7 L 17 10 L 13 13 L 13 7"
+                                            d="M7 7 3 10l4 3V7m6 0 4 3-4 3V7"
                                             :fill="borderColor"
                                             :stroke="
                                                 handleIconColor || textColor
@@ -2471,7 +2471,7 @@ defineExpose({
 
                                         <path
                                             v-else-if="handleType === 'chevron'"
-                                            d="M 6 7 L 4 10 L 6 13 M 14 7 L 16 10 L 14 13"
+                                            d="M6 7 4 10l2 3m8-6 2 3-2 3"
                                             fill="none"
                                             :stroke="
                                                 handleIconColor || textColor
@@ -2483,7 +2483,7 @@ defineExpose({
 
                                         <path
                                             v-else-if="handleType === 'grab'"
-                                            d="M 8 5 A 1 1 0 0 0 8 7 A 1 1 0 0 0 8 5 M 8 9 A 1 1 0 0 0 8 11 A 1 1 0 0 0 8 9 M 8 13 A 1 1 0 0 0 8 15 A 1 1 0 0 0 8 13 M 12 5 A 1 1 0 0 0 12 7 A 1 1 0 0 0 12 5 M 12 9 A 1 1 0 0 0 12 11 A 1 1 0 0 0 12 9 M 12 13 A 1 1 0 0 0 12 15 A 1 1 0 0 0 12 13"
+                                            d="M8 5A1 1 0 008 7 1 1 0 008 5M8 9a1 1 0 000 2A1 1 0 008 9m0 4a1 1 0 000 2 1 1 0 000-2m4-8a1 1 0 000 2 1 1 0 000-2m0 4a1 1 0 000 2 1 1 0 000-2m0 4a1 1 0 000 2 1 1 0 000-2"
                                             :fill="handleIconColor || textColor"
                                             stroke="none"
                                             opacity="0.6"

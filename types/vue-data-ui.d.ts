@@ -475,9 +475,15 @@ declare module 'vue-data-ui' {
         component?: string;
         dataset: VueDataUiAnyDataset;
         config?: VueDataUiAnyConfig;
+        points?: VueUiWorldPoint[];
+        selectedCountries?: string[];
     };
 
     export type VueDataUiExpose = {
+        focusCountry?: (code: string) => boolean | null;
+        fitCountries?: (codes: string[]) => boolean | null;
+        resetView?: () => void;
+        clearSelection?: () => void;
         fitToView(): void;
         focusNode(id: VueUiGraphId): void;
         resetLayout(): void;
@@ -16092,9 +16098,42 @@ declare module 'vue-data-ui' {
         path: string;
         uid: string;
         value: number | null;
+        valueStatus: 'valid' | 'missing' | 'invalid';
     };
 
+    export type VueUiWorldPoint = {
+        id?: string | number;
+        name?: string;
+        /** Longitude, latitude in degrees. */
+        coordinates: [number, number];
+        value?: number;
+        radius?: number;
+        color?: string;
+    };
+    export type VueUiWorldView = {
+        projection: NonNullable<VueUiWorldConfig['projection']>;
+        center: [number, number];
+        zoom: number;
+        viewBox: {
+            minX: number;
+            minY: number;
+            width: number;
+            height: number;
+            str: string;
+        };
+    };
     export type VueUiWorldConfig = {
+        theme?: Theme;
+        normalizeCountryCodes?: boolean;
+        countryNames?: Record<string, string>;
+        countryNameFormatter?:
+            | null
+            | ((params: {
+                  code: string;
+                  name: string;
+                  feature: VueUiWorldDatapoint['geo'];
+              }) => string);
+        selection?: { enabled?: boolean; multiple?: boolean; color?: string };
         devHints?: DevHints;
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiWorldConfig> | null;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiWorldDataset> | null;
@@ -16124,6 +16163,20 @@ declare module 'vue-data-ui' {
         style?: {
             fontFamily?: string;
             chart?: {
+                zoom?: {
+                    show?: boolean;
+                    minZoom?: number;
+                    maxZoom?: number;
+                    region?:
+                        | null
+                        | 'africa'
+                        | 'europe'
+                        | 'asia'
+                        | 'northAmerica'
+                        | 'southAmerica'
+                        | 'oceania';
+                    countries?: string[];
+                };
                 backgroundColor?: string;
                 color?: string;
                 padding?: ChartPadding;
@@ -16144,9 +16197,44 @@ declare module 'vue-data-ui' {
                     };
                     waterColor?: string;
                 };
+                points?: {
+                    show?: boolean;
+                    radius?: number;
+                    maxRadius?: number;
+                    color?: string;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    opacity?: number;
+                };
+                colorScale?: {
+                    type?:
+                        | 'linear'
+                        | 'log'
+                        | 'quantile'
+                        | 'threshold'
+                        | 'diverging';
+                    domain?: [number, number] | null;
+                    center?: number;
+                    middleColor?: string;
+                    quantileSteps?: number;
+                    thresholds?: number[];
+                    colors?: string[];
+                    legend?: {
+                        show?: boolean;
+                        position?: 'top' | 'bottom';
+                        title?: string;
+                        fontSize?: number;
+                        gradient?: {
+                            borderRadius?: number;
+                            height?: number;
+                        };
+                        formatter?: null | ((value: number) => string | number);
+                    };
+                };
                 territory?: {
                     stroke?: string;
                     emptyColor?: string;
+                    invalidColor?: string;
                     strokeWidth?: number;
                     strokeWidthSelected?: number;
                     colors?: {
@@ -16159,9 +16247,7 @@ declare module 'vue-data-ui' {
                     showMinimap?: boolean;
                     customFormat?:
                         | null
-                        | ((
-                              params: VueUiTooltipParams<any, any, any>,
-                          ) => string);
+                        | ((params: VueUiWorldTooltipSlotProps) => string);
                 };
                 title?: ChartTitle;
                 legend?: ChartBaseLegend & {
@@ -16188,14 +16274,21 @@ declare module 'vue-data-ui' {
 
     export type VueUiWorldDataset = {
         [key: string]: {
-            value: number;
+            value?: number | null;
             category?: string;
             color?: string;
         };
     };
 
     export type VueUiWorldExpose = {
-        getData(): Promise<Array<Record<string, any>>>;
+        getData(): VueUiWorldDatapoint[];
+        focusCountry(code: string): boolean;
+        fitCountries(codes: string[]): boolean;
+        resetView(animated?: boolean): void;
+        resetZoom(animated?: boolean): void;
+        zoomIn(): void;
+        zoomOut(): void;
+        clearSelection(): void;
         getImage(options?: { scale?: number }): GetImagePromise;
         generatePdf(): void;
         generateCsv(): void;
@@ -16203,8 +16296,14 @@ declare module 'vue-data-ui' {
         generateImage(): void;
         toggleTable(): void;
         toggleTooltip(): void;
+        toggleZoom(): void;
         toggleAnnotator(): void;
         toggleFullscreen(): void;
+    };
+
+    export type VueUiWorldOptionZoomSlotProps = {
+        toggleZoom: () => void;
+        isZoomLocked: boolean;
     };
 
     export type VueUiWorldPatternSlotProps = VueUiWorldDatapoint & {
@@ -16234,15 +16333,24 @@ declare module 'vue-data-ui' {
         legend: VueUiWorldLegendItem[];
     };
 
-    export type VueUiWorldTooltipSlotProps = {
-        config: VueUiWorldConfig;
-        datapoint: VueUiWorldDatapoint;
-        series: VueUiWordCloudDatapoint[];
-    };
+    export type VueUiWorldTooltipSlotProps = { config: VueUiWorldConfig } & (
+        | {
+              kind: 'country';
+              datapoint: VueUiWorldDatapoint;
+              series: VueUiWorldDatapoint[];
+          }
+        | {
+              kind: 'point';
+              datapoint: VueUiWorldPoint;
+              series: VueUiWorldPoint[];
+          }
+    );
 
     export type VueUiWorldProps = {
         config?: VueUiWorldConfig;
         dataset?: VueUiWorldDataset;
+        points?: VueUiWorldPoint[];
+        selectedCountries?: string[];
     };
 
     export type VueUiWorldEmitSelectLegend = {
@@ -16257,6 +16365,9 @@ declare module 'vue-data-ui' {
     };
 
     export type VueUiWorldEmits = {
+        'update:selectedCountries': (payload: string[]) => void;
+        selectPoint: (payload: VueUiWorldPoint) => void;
+        viewChange: (payload: VueUiWorldView) => void;
         selectLegend: (payload: VueUiWorldEmitSelectLegend) => void;
         selectDatapoint: (payload: VueUiWorldEmitSelectDatapoint) => void;
         copyAlt: (payload: VueUiWorldEmitCopyAlt) => void;
@@ -16285,6 +16396,9 @@ declare module 'vue-data-ui' {
                 optionImg?: () => VNodeChild;
                 optionSvg?: () => VNodeChild;
                 optionTable?: () => VNodeChild;
+                optionZoom?: (
+                    props: VueUiWorldOptionZoomSlotProps,
+                ) => VNodeChild;
                 optionFullscreen?: (
                     props: VueUiOptionFullscreenSlotProps,
                 ) => VNodeChild;
@@ -16299,6 +16413,9 @@ declare module 'vue-data-ui' {
                     props: VueUiWorldSvgSlotProps,
                 ) => VNodeChild;
                 watermark?: (props: VueUiWatermarkSlotProps) => VNodeChild;
+                ['reset-action']?: (
+                    props: VueUiResetActionSlotProps,
+                ) => VNodeChild;
                 source?: () => VNodeChild;
                 skeleton?: () => VNodeChild;
                 legend?: (props: VueUiWorldLegendSlotProps) => VNodeChild;

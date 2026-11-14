@@ -68,6 +68,34 @@ describe('published theme modules', () => {
         expect(unpackTheme(encoded, shapes)).toEqual(original);
     });
 
+    test('shared encoded data preserves literal values and mutation isolation', async () => {
+        const block = {
+            color: '#AABBCC',
+            values: [-1, -2, -100, -0.5, 0, 1, null, false, ''],
+            nested: { colors: ['#AABBCC', '#AABBCC'], empty: {} },
+        };
+        const original = {
+            default: {},
+            first: {
+                left: structuredClone(block),
+                right: structuredClone(block),
+            },
+            second: {
+                left: structuredClone(block),
+                right: structuredClone(block),
+            },
+        };
+        const code = generateThemeModule(original, unpacker);
+        const result = await import(/* @vite-ignore */ moduleUrl(code));
+        expect(JSON.stringify(result.default)).toBe(JSON.stringify(original));
+        assertIndependentObjects(result.default);
+        result.first.left.values.push('changed');
+        result.first.left.nested.colors[0] = 'changed';
+        result.first.left.nested.empty.color = 'changed';
+        expect(result.first.right).toEqual(block);
+        expect(result.second).toEqual(original.second);
+    });
+
     test('preserves own __proto__ properties without changing prototypes', () => {
         const original = JSON.parse('{"__proto__":{"color":"red"}}');
         const shapes = [];
@@ -84,7 +112,10 @@ describe('published theme modules', () => {
                 {
                     default: {},
                     minimal: { color: 'USED_THEME' },
-                    dark: { color: 'UNUSED_THEME' },
+                    dark: {
+                        first: { color: 'UNUSED_THEME'.repeat(8) },
+                        second: { color: 'UNUSED_THEME'.repeat(8) },
+                    },
                 },
                 'unpacker',
             ),

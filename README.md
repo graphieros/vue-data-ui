@@ -557,125 +557,135 @@ Type definitions are available in the `vue-data-ui.d.ts` file in the `dist/types
 
 ### Universal component
 
-| Name        | dataset type           | config type            | emits / exposed methods | slots                  | custom tooltip         | themes                 |
-| ----------- | ---------------------- | ---------------------- | ----------------------- | ---------------------- | ---------------------- | ---------------------- |
-| `VueDataUi` | (depends on component) | (depends on component) | (depends on component)  | (depends on component) | (depends on component) | (depends on component) |
+<!-- prettier-ignore -->
+| Name | dataset type | config type | emits / exposed methods | slots | custom tooltip | themes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `VueDataUi` | (depends on component) | (depends on component) | (depends on component) | (depends on component) | (depends on component) | (depends on component) |
 
 ### Quick chart
 
 From the dataset you pass into the props, this component will produce the most adapted chart (either a line, bar or donut chart)
 
-| Name              | dataset type             | config type             | emits / exposed methods                                                                                                                  | slots                                                                                                          | custom tooltip | themes |
-| ----------------- | ------------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------- | ------ |
-| `VueUiQuickChart` | `VueUiQuickChartDataset` | `VueUiQuickChartConfig` | `@zoomStart`, `@zoomEnd`, `@zoomReset`, `@copyAlt`, `@selectDatapoint`, `@selectLegend`, `generatePdf`, `generateImage`, `toggleTooltip` | `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background` | ✅             | ✅     |
+<!-- prettier-ignore -->
+| Name | dataset type | config type | emits / exposed methods | slots | custom tooltip | themes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `VueUiQuickChart` | `VueUiQuickChartDataset` | `VueUiQuickChartConfig` | `@zoomStart`, `@zoomEnd`, `@zoomReset`, `@copyAlt`, `@selectDatapoint`, `@selectLegend`, `generatePdf`, `generateImage`, `toggleTooltip` | `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background` | ✅ | ✅ |
 
 ### Mini charts
 
-| Name                  | dataset type                       | config type                 | emits / exposed methods                                  | slots                                                                          | custom tooltip | themes |
-| --------------------- | ---------------------------------- | --------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------- | ------ |
-| `VueUiSparkline`      | `VueUiSparklineDatasetItem[]`      | `VueUiSparklineConfig`      | `@selectDatapoint`, `@hoverIndex`, `@zoom`, `@zoomReset` | `#svg`, `#svg-underlayer`, `#before`, `#chart-background`, `#tooltip`, `#hint` | ✅             | ✅     |
-| `VueUiSparkbar`       | `VueUiSparkbarDatasetItem[]`       | `VueUiSparkbarConfig`       | `@selectDatapoint`                                       | `#data-label`, `#title`                                                        | ❌             | ✅     |
-| `VueUiSparkStackbar`  | `VueUiSparkStackbarDatasetItem[]`  | `VueUiSparkStackbarConfig`  | `@selectDatapoint`, `@selectLegend`                      | `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#hint`                       | ✅             | ✅     |
-| `VueUiSparkHistogram` | `VueUiSparkHistogramDatasetItem[]` | `VueUiSparkHistogramConfig` | `@selectDatapoint`                                       | `#chart-background`, `#hint`                                                   | ❌             | ✅     |
-| `VueUiSparkGauge`     | `VueUiSparkGaugeDataset`           | `VueUiSparkGaugeConfig`     | ❌                                                       | `#chart-background`                                                            | ❌             | ✅     |
-| `VueUiSparkTrend`     | `number[]`                         | `VueUiSparkTrendConfig`     | ❌                                                       | `#chart-background`                                                            | ❌             | ✅     |
-| `VueUiGizmo`          | `VueUiGizmoDataset`                | `VueUiGizmoConfig`          | ❌                                                       | ❌                                                                             | ❌             | ❌     |
-| `VueUiBullet`         | `VueUiBulletDataset`               | `VueUiBulletConfig`         | `generatePdf`, `generateImg`, `getData`, `getImage`      | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`        | ❌             | ✅     |
+<!-- prettier-ignore -->
+| Name | dataset type | config type | emits / exposed methods | slots | custom tooltip | themes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `VueUiSparkline` | `VueUiSparklineDatasetItem[]` | `VueUiSparklineConfig` | `@selectDatapoint`, `@hoverIndex`, `@zoom`, `@zoomReset` | `#svg`, `#svg-underlayer`, `#before`, `#chart-background`, `#tooltip`, `#hint` | ✅ | ✅ |
+| `VueUiSparkbar` | `VueUiSparkbarDatasetItem[]` | `VueUiSparkbarConfig` | `@selectDatapoint` | `#data-label`, `#title` | ❌ | ✅ |
+| `VueUiSparkStackbar` | `VueUiSparkStackbarDatasetItem[]` | `VueUiSparkStackbarConfig` | `@selectDatapoint`, `@selectLegend` | `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#hint` | ✅ | ✅ |
+| `VueUiSparkHistogram` | `VueUiSparkHistogramDatasetItem[]` | `VueUiSparkHistogramConfig` | `@selectDatapoint` | `#chart-background`, `#hint` | ❌ | ✅ |
+| `VueUiSparkGauge` | `VueUiSparkGaugeDataset` | `VueUiSparkGaugeConfig` | ❌ | `#chart-background` | ❌ | ✅ |
+| `VueUiSparkTrend` | `number[]` | `VueUiSparkTrendConfig` | ❌ | `#chart-background` | ❌ | ✅ |
+| `VueUiGizmo` | `VueUiGizmoDataset` | `VueUiGizmoConfig` | ❌ | ❌ | ❌ | ❌ |
+| `VueUiBullet` | `VueUiBulletDataset` | `VueUiBulletConfig` | `generatePdf`, `generateImg`, `getData`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background` | ❌ | ✅ |
 
 ### Charts
 
-| Name                          | dataset type                               | config type                         | emits / exposed methods                                                                                                                                                                                                                                                                                                                                      | slots                                                                                                                                                                                                                   | custom tooltip | themes |
-| ----------------------------- | ------------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------ |
-| `VueUiAgePyramid`             | `Array<Array<string / number>>`            | `VueUiSparklineConfig`              | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`, `getImage`                                                                                                                                                                                                                                                                    | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint`                                                                                       | ✅             | ✅     |
-| `VueUiBump`                   | `VueUiBumpDatapointItem[]`                 | `VueUiBumpConfig`                   | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `getData`, `getImage`                                                                                                                                                                                                                                                                          | `#svg`, `#svg-underlayer`, `#watermark`, `#chart-background`, `#time-label`, `#hint`                                                                                                                                    | ❌             | ✅     |
-| `VueUiCandlestick`            | `Array<Array<string / number>>`            | `VueUiCandlestickConfig`            | `@selectX`, `@zoomStart`, `@zoomEnd`, `@zoomReset`, `@copyAlt`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`, `getImage`                                                                                                                                                                                                    | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background`, `#hint`                                                                      | ✅             | ✅     |
-| `VueUiChestnut`               | `VueUiChestnutDatasetRoot[]`               | `VueUiChestnutConfig`               | `@selectRoot`, `@selectBranch`, `@selectNut`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage`                                                                                                                                                                                                                            | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`, `#hint`, `#hint`                                                                                                                               | ❌             | ✅     |
-| `VueUiChord`                  | `VueUiChordDataset`                        | `VueUiChordConfig`                  | `@selectLegend`, `@selectGroup`, `@selectRibbon`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage`                                                                                                                                                                                                                        | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`, `#pattern`, `#hint`                                                                                                                            | ❌             | ✅     |
-| `VueUiCirclePack`             | `VueUiCirclePackDatasetItem[]`             | `VueUiCirclePackConfig`             | `@selectDatapoint`, `getData`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `getImage`                                                                                                                                                                                                                                                      | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background` , `#pattern`, `#zoom-label`, `#data-label`, `#tooltip-before`, `#tooltip-after`, `#hint`                                                        | ✅             | ✅     |
-| `VueUiDag`                    | `VueUiDagDataset`                          | `VueUiDagConfig`                    | `@onNodeClick`, `@onMidpointEnter`, `@onMidpointLeave`, `focusOnNode`, `getData`, `getImage`, `generatePdf`, `generateImage`, `generateSvg`, `toggleAnnotator`, `toggleFullscreen`, `zoomIn`, `zoomOut`, `resetZoom`, `switchDirection`                                                                                                                      | `#svg`, `#svg-underlayer`, `#source`, `#node-label`, `#node`, `#tooltip-midpoint`, `#tooltip-node`, `#background-pattern`, `#hint`                                                                                      | ❌             | ✅     |
-| `VueUiDonutEvolution`         | `VueUiDonutEvolutionDatasetItem[]`         | `VueUiDonutEvolutionConfig`         | `@zoomStart`, `@zoomEnd`, `@zoomReset`, `@copyAlt`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable` , `getImage`                                                                                                                                                                        | `#svg`, `#svg-underlayer`, `#legend`, `#reset-action`, `#watermark`, `#chart-background`, `#hint`                                                                                                                       | ❌             | ✅     |
-| `VueUiDonut`                  | `VueUiDonutDatasetItem[]`                  | `VueUiDonutConfig`                  | `@selectDatapoint`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`, `getImage`                                                                                                                                                                        | `#svg`, `#svg-underlayer`, `#legend`, `#dataLabel`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#plot-comment`, `#watermark`, `#chart-background`, `#pattern`, `#hint`                                            | ✅             | ✅     |
-| `VueUiDumbbell`               | `VueUiDumbbellDataset[]`                   | `VueUiDumbbellConfig`               | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage`                                                                                                                                                                                                                                                                          | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`, `#hint`                                                                                                                                        | ❌             | ✅     |
-| `VueUiFlow`                   | `VueUiFlowDatasetItem[]`                   | `VueUiFlowConfig`                   | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`, `getImage`                                                                                                                                                                                                                                                         | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#hint`                                                                                       | ✅             | ✅     |
-| `VueUiFunnel`                 | `VueUiFunnelDatasetItem[]`                 | `VueUiFunnelConfig`                 | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage`                                                                                                                                                                                                                                                                          | `#svg`, `#svg-underlayer`, `#watermark`, `#chart-background`, `#hint`                                                                                                                                                   | ❌             | ✅     |
-| `VueUiGalaxy`                 | `VueUiGalaxyDatasetItem[]`                 | `VueUiGalaxyConfig`                 | `@selectDatapoint`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage`                                                                                                                                                                                       | `#svg`, `#svg-underlayer`, `#legend`,`#tooltip`, `#tooltip-before`, `#tooltip-after`, `#chart-background`, `#hint`                                                                                                      | ✅             | ✅     |
-| `VueUiGauge`                  | `VueUiGaugeDataset`                        | `VueUiGaugeConfig`                  | `generatePdf`, `generateImage`, `getImage`                                                                                                                                                                                                                                                                                                                   | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`, `#pattern`                                                                                                                                     | ❌             | ✅     |
-| `VueUiGraph`                  | `VueUiGraphDataset`                        | `VueUiGraphConfig`                  | `@selectNode`, `@hoverNode`, `@zoom`, `@zoomReset`, `@layoutStart`, `@layoutEnd`, `@copyAlt`, `zoomIn`, `zoomOut`, `resetZoom`, `fitToView`, `focusNode`, `resetLayout`, `getData`, `getImage`, `generatePdf`, `generateImage`, `generateSvg`, `generateCsv`, `toggleTable`, `toggleTooltip`, `toggleFullscreen`, `toggleZoom`, `toggleAnnotator`, `copyAlt` | `#node`, `#svg`, `#svg-underlayer`, `#chart-background`, `#watermark`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#hint`, `#source`, `#skeleton`                                                                 | ✅             | ✅     |
-| `VueUiHeatmap`                | `VueUiHeatmapDatasetItem[]`                | `VueUiHeatmapConfig`                | `@selectDatapoint`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`, `getImage`                                                                                                                                                                                                                                                | `#svg`, `#svg-underlayer`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint`                                                                                                  | ✅             | ✅     |
-| `VueUiHistoryPlot`            | `VueUiHistoryPlotDatasetItem[]`            | `VueUiHistoryPlotConfig`            | `@selectDatapoint`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`, `getImage`                                                                                                                                                                                        | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint`                                                                                       | ✅             | ✅     |
-| `VueUiHorizontalBar`          | `VueUiHorizontalBarDatasetItem[]`          | `VueUiWheelConfig`                  | `@selectDatapoint`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleSort`, `toggleTooltip` , `getImage`                                                                                                                                                                         | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#pattern`, `#hint`                                                                           | ✅             | ✅     |
-| `VueUiMolecule`               | `VueUiMoleculeDatasetNode[]`               | `VueUiMoleculeConfig`               | `@selectNode`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`, `getImage`                                                                                                                                                                                                                          | `#node`, `#svg`, `#svg-underlayer`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`                                                                                                  | ✅             | ✅     |
-| `VueUiMoodRadar`              | `VueUiMoodRadarDataset`                    | `VueUiMoodRadarConfig`              | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable` , `getImage`                                                                                                                                                                                                                                                                         | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`, `#hint`                                                                                                                                        | ❌             | ✅     |
-| `VueUiNestedDonuts`           | `VueUiNestedDonutsDatasetItem[]`           | `VueUiNestedDonutsConfig`           | `@selectDatapoint`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip` , `getImage`                                                                                                                                                                       | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint`                                                                                       | ✅             | ✅     |
-| `VueUiOnion`                  | `VueUiOnionDatasetItem[]`                  | `VueUiOnionConfig`                  | `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`, `getImage`                                                                                                                                                                                                            | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint`                                                                                       | ✅             | ✅     |
-| `VueUiParallelCoordinatePlot` | `VueUiParallelCoordinatePlotDatasetItem[]` | `VueUiParallelCoordinatePlotConfig` | `@selectLegend`, `@selectDatapoint`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`, `getImage`                                                                                                                                                                        | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#plot-comment`, `#watermark`, `#chart-background`, `#hint`                                                                      | ✅             | ✅     |
-| `VueUiQuadrant`               | `VueUiQuadrantDatasetItem[]`               | `VueUiQuadrantConfig`               | `@selectLegend`, `@selectPlot`, `@selectSide`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`, `getImage`                                                                                                                                                              | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#datapoint`, `#hint`                                                                         | ✅             | ✅     |
-| `VueUiRadar`                  | `VueUiRadarDataset`                        | `VueUiRadarConfig`                  | `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage`                                                                                                                                                                                                           | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint`                                                                                       | ✅             | ✅     |
-| `VueUiRidgeline`              | `VueUiRidgelineDatasetItem[]`              | `VueUiRidgelineConfig`              | `@selectLegend`, `@selectX`, `@selectDatapoint`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable` , `getImage`                                                                                                                                                                                            | `#svg`, `#svg-underlayer`, `#legend`, `#time-label`,`#watermark`, `#chart-background`, `#pattern`, `#hint`                                                                                                              | ❌             | ✅     |
-| `VueUiRings`                  | `VueUiRingsDatasetItem[]`                  | `VueUiRingsConfig`                  | `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `toggleLabels`, `getImage`                                                                                                                                                                                           | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#pattern`, `#hint`                                                                           | ✅             | ✅     |
-| `VueUiScatter`                | `VueUiScatterDatasetItem[]`                | `VueUiScatterConfig`                | `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage`                                                                                                                                                                                                                            | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint`                                                                                       | ✅             | ✅     |
-| `VueUiStackbar`               | `VueUiStackbarDatasetItem[]`               | `VueUiStackbarConfig`               | `@selectX`, `@zoomStart`, `@zoomEnd`, `@zoomReset`, `@copyAlt`, `@selectLegend`, `@selectDatapoint`, `@selectTimeLabel`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip` , `getImage`                                                                                                               | `#svg`, `#svg-underlayer`, `#legend`, `#time-label`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background`, `#pattern`, `#hint`                                           | ✅             | ✅     |
-| `VueUiStackline`              | `VueUiStacklineDatasetItem[]`              | `VueUiStacklineConfig`              | `@selectX`, `@zoomStart`, `@zoomEnd`, `@zoomReset`, `@copyAlt`, `@selectLegend`, `@selectDatapoint`, `@selectTimeLabel`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip` , `getImage`                                                                                                               | `#svg`, `#svg-underlayer`, `#legend`, `#time-label`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background`, `#pattern`, `#hint`                                           | ✅             | ✅     |
-| `VueUiStripPlot`              | `VueUiStripPlotDataset[]`                  | `VueUiStripPlotConfig`              | `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip` , `getImage`                                                                                                                                                                                                                    | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint`                                                                                       | ✅             | ✅     |
-| `VueUiThermometer`            | `VueUiThermometerDataset`                  | `VueUiThermometerConfig`            | `generatePdf`, `generateImage` , `getImage`                                                                                                                                                                                                                                                                                                                  | `#svg`, `#svg-underlayer`, `#watermark`, `#chart-background`                                                                                                                                                            | ❌             | ✅     |
-| `VueUiTiremarks`              | `VueUiTiremarksDataset`                    | `VueUiTiremarksConfig`              | `generatePdf`, `generateImage` , `getImage`                                                                                                                                                                                                                                                                                                                  | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`                                                                                                                                                 | ❌             | ✅     |
-| `VueUiTreemap`                | `VueUiTreemapDatasetItem[]`                | `VueUiTreemapConfig`                | `@selectLegend`, `@selectDatapoint`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage`, `#hint`                                                                                                                                                                              | `#svg`, `#svg-underlayer`, `#rect`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#breadcrumb-label`, `#breadcrumb-arrow`, `#group-label`                                                  | ✅             | ✅     |
-| `VueUiWaffle`                 | `VueUiWaffleDatasetItem[]`                 | `VueUiWaffleConfig`                 | `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage`, `#hint`                                                                                                                                                                                                  | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#pattern`                                                                                                         | ✅             | ✅     |
-| `VueUiWheel`                  | `VueUiWheelDataset`                        | `VueUiWheelConfig`                  | `generatePdf`, `generateImage` , `getImage`                                                                                                                                                                                                                                                                                                                  | `#svg`, `#svg-underlayer`, `#watermark`, `#chart-background`                                                                                                                                                            | ❌             | ✅     |
-| `VueUiWordCloud`              | `VueUiWordCloudDatasetItem[] / string`     | `VueUiWordCloudConfig`              | `getData`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTooltip` , `getImage`, `#hint`                                                                                                                                                                                                                                                              | `#svg`, `#svg-underlayer`, `#reset-action`, `#watermark`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#chart-background`                                                                                          | ✅             | ✅     |
-| `VueUiXyCanvas`               | `VueUiXyCanvasDatasetItem[]`               | `VueUiXyCanvasConfig`               | `@selectX`, `@zoomStart`, `@zoomEnd`, `@zoomReset`, `@copyAlt`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleStack`, `toggleTooltip` , `getImage`, `#hint`                                                                                                   | `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`                                                                                                                               | ✅             | ✅     |
-| `VueUiXy`                     | `VueUiXyDatasetItem[]`                     | `VueUiXyConfig`                     | `@selectLegend`, `@selectX`, `@selectTimeLabel`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleStack`, `toggleTooltip` , `getImage`, `#hint`                                                                                                                                   | `#svg`, `#svg-underlayer`, `#legend`, `#time-label`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#plot-comment`,`#watermark`, `#chart-background`, `#pattern`, `#area-gradient`, `#bar-gradient` | ✅             | ✅     |
+<!-- prettier-ignore -->
+| Name | dataset type | config type | emits / exposed methods | slots | custom tooltip | themes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `VueUiAgePyramid` | `Array<Array<string / number>>` | `VueUiSparklineConfig` | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint` | ✅ | ✅ |
+| `VueUiBump` | `VueUiBumpDatapointItem[]` | `VueUiBumpConfig` | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `getData`, `getImage` | `#svg`, `#svg-underlayer`, `#watermark`, `#chart-background`, `#time-label`, `#hint` | ❌ | ✅ |
+| `VueUiCandlestick` | `Array<Array<string / number>>` | `VueUiCandlestickConfig` | `@selectX`, `@zoomStart`, `@zoomEnd`, `@zoomReset`, `@copyAlt`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background`, `#hint` | ✅ | ✅ |
+| `VueUiChestnut` | `VueUiChestnutDatasetRoot[]` | `VueUiChestnutConfig` | `@selectRoot`, `@selectBranch`, `@selectNut`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`, `#hint`, `#hint` | ❌ | ✅ |
+| `VueUiChord` | `VueUiChordDataset` | `VueUiChordConfig` | `@selectLegend`, `@selectGroup`, `@selectRibbon`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`, `#pattern`, `#hint` | ❌ | ✅ |
+| `VueUiCirclePack` | `VueUiCirclePackDatasetItem[]` | `VueUiCirclePackConfig` | `@selectDatapoint`, `getData`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background` , `#pattern`, `#zoom-label`, `#data-label`, `#tooltip-before`, `#tooltip-after`, `#hint` | ✅ | ✅ |
+| `VueUiDag` | `VueUiDagDataset` | `VueUiDagConfig` | `@onNodeClick`, `@onMidpointEnter`, `@onMidpointLeave`, `focusOnNode`, `getData`, `getImage`, `generatePdf`, `generateImage`, `generateSvg`, `toggleAnnotator`, `toggleFullscreen`, `zoomIn`, `zoomOut`, `resetZoom`, `switchDirection` | `#svg`, `#svg-underlayer`, `#source`, `#node-label`, `#node`, `#tooltip-midpoint`, `#tooltip-node`, `#background-pattern`, `#hint` | ❌ | ✅ |
+| `VueUiDonutEvolution` | `VueUiDonutEvolutionDatasetItem[]` | `VueUiDonutEvolutionConfig` | `@zoomStart`, `@zoomEnd`, `@zoomReset`, `@copyAlt`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable` , `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#reset-action`, `#watermark`, `#chart-background`, `#hint` | ❌ | ✅ |
+| `VueUiDonut` | `VueUiDonutDatasetItem[]` | `VueUiDonutConfig` | `@selectDatapoint`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#dataLabel`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#plot-comment`, `#watermark`, `#chart-background`, `#pattern`, `#hint` | ✅ | ✅ |
+| `VueUiDumbbell` | `VueUiDumbbellDataset[]` | `VueUiDumbbellConfig` | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`, `#hint` | ❌ | ✅ |
+| `VueUiFlow` | `VueUiFlowDatasetItem[]` | `VueUiFlowConfig` | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#hint` | ✅ | ✅ |
+| `VueUiFunnel` | `VueUiFunnelDatasetItem[]` | `VueUiFunnelConfig` | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage` | `#svg`, `#svg-underlayer`, `#watermark`, `#chart-background`, `#hint` | ❌ | ✅ |
+| `VueUiGalaxy` | `VueUiGalaxyDatasetItem[]` | `VueUiGalaxyConfig` | `@selectDatapoint`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage` | `#svg`, `#svg-underlayer`, `#legend`,`#tooltip`, `#tooltip-before`, `#tooltip-after`, `#chart-background`, `#hint` | ✅ | ✅ |
+| `VueUiGauge` | `VueUiGaugeDataset` | `VueUiGaugeConfig` | `generatePdf`, `generateImage`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`, `#pattern` | ❌ | ✅ |
+| `VueUiGraph` | `VueUiGraphDataset` | `VueUiGraphConfig` | `@selectNode`, `@hoverNode`, `@zoom`, `@zoomReset`, `@layoutStart`, `@layoutEnd`, `@copyAlt`, `zoomIn`, `zoomOut`, `resetZoom`, `fitToView`, `focusNode`, `resetLayout`, `getData`, `getImage`, `generatePdf`, `generateImage`, `generateSvg`, `generateCsv`, `toggleTable`, `toggleTooltip`, `toggleFullscreen`, `toggleZoom`, `toggleAnnotator`, `copyAlt` | `#node`, `#svg`, `#svg-underlayer`, `#chart-background`, `#watermark`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#hint`, `#source`, `#skeleton` | ✅ | ✅ |
+| `VueUiHeatmap` | `VueUiHeatmapDatasetItem[]` | `VueUiHeatmapConfig` | `@selectDatapoint`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`, `getImage` | `#svg`, `#svg-underlayer`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint` | ✅ | ✅ |
+| `VueUiHistoryPlot` | `VueUiHistoryPlotDatasetItem[]` | `VueUiHistoryPlotConfig` | `@selectDatapoint`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint` | ✅ | ✅ |
+| `VueUiHorizontalBar` | `VueUiHorizontalBarDatasetItem[]` | `VueUiWheelConfig` | `@selectDatapoint`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleSort`, `toggleTooltip` , `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#pattern`, `#hint` | ✅ | ✅ |
+| `VueUiMolecule` | `VueUiMoleculeDatasetNode[]` | `VueUiMoleculeConfig` | `@selectNode`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`, `getImage` | `#node`, `#svg`, `#svg-underlayer`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background` | ✅ | ✅ |
+| `VueUiMoodRadar` | `VueUiMoodRadarDataset` | `VueUiMoodRadarConfig` | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable` , `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background`, `#hint` | ❌ | ✅ |
+| `VueUiNestedDonuts` | `VueUiNestedDonutsDatasetItem[]` | `VueUiNestedDonutsConfig` | `@selectDatapoint`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip` , `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint` | ✅ | ✅ |
+| `VueUiOnion` | `VueUiOnionDatasetItem[]` | `VueUiOnionConfig` | `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint` | ✅ | ✅ |
+| `VueUiParallelCoordinatePlot` | `VueUiParallelCoordinatePlotDatasetItem[]` | `VueUiParallelCoordinatePlotConfig` | `@selectLegend`, `@selectDatapoint`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#plot-comment`, `#watermark`, `#chart-background`, `#hint` | ✅ | ✅ |
+| `VueUiQuadrant` | `VueUiQuadrantDatasetItem[]` | `VueUiQuadrantConfig` | `@selectLegend`, `@selectPlot`, `@selectSide`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#datapoint`, `#hint` | ✅ | ✅ |
+| `VueUiRadar` | `VueUiRadarDataset` | `VueUiRadarConfig` | `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint` | ✅ | ✅ |
+| `VueUiRidgeline` | `VueUiRidgelineDatasetItem[]` | `VueUiRidgelineConfig` | `@selectLegend`, `@selectX`, `@selectDatapoint`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable` , `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#time-label`,`#watermark`, `#chart-background`, `#pattern`, `#hint` | ❌ | ✅ |
+| `VueUiRings` | `VueUiRingsDatasetItem[]` | `VueUiRingsConfig` | `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `toggleLabels`, `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#pattern`, `#hint` | ✅ | ✅ |
+| `VueUiScatter` | `VueUiScatterDatasetItem[]` | `VueUiScatterConfig` | `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint` | ✅ | ✅ |
+| `VueUiStackbar` | `VueUiStackbarDatasetItem[]` | `VueUiStackbarConfig` | `@selectX`, `@zoomStart`, `@zoomEnd`, `@zoomReset`, `@copyAlt`, `@selectLegend`, `@selectDatapoint`, `@selectTimeLabel`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip` , `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#time-label`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background`, `#pattern`, `#hint` | ✅ | ✅ |
+| `VueUiStackline` | `VueUiStacklineDatasetItem[]` | `VueUiStacklineConfig` | `@selectX`, `@zoomStart`, `@zoomEnd`, `@zoomReset`, `@copyAlt`, `@selectLegend`, `@selectDatapoint`, `@selectTimeLabel`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip` , `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#time-label`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background`, `#pattern`, `#hint` | ✅ | ✅ |
+| `VueUiStripPlot` | `VueUiStripPlotDataset[]` | `VueUiStripPlotConfig` | `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip` , `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#hint` | ✅ | ✅ |
+| `VueUiThermometer` | `VueUiThermometerDataset` | `VueUiThermometerConfig` | `generatePdf`, `generateImage` , `getImage` | `#svg`, `#svg-underlayer`, `#watermark`, `#chart-background` | ❌ | ✅ |
+| `VueUiTiremarks` | `VueUiTiremarksDataset` | `VueUiTiremarksConfig` | `generatePdf`, `generateImage` , `getImage` | `#svg`, `#svg-underlayer`, `#legend`, `#watermark`, `#chart-background` | ❌ | ✅ |
+| `VueUiTreemap` | `VueUiTreemapDatasetItem[]` | `VueUiTreemapConfig` | `@selectLegend`, `@selectDatapoint`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage`, `#hint` | `#svg`, `#svg-underlayer`, `#rect`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#breadcrumb-label`, `#breadcrumb-arrow`, `#group-label` | ✅ | ✅ |
+| `VueUiWaffle` | `VueUiWaffleDatasetItem[]` | `VueUiWaffleConfig` | `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage`, `#hint` | `#svg`, `#svg-underlayer`, `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#pattern` | ✅ | ✅ |
+| `VueUiWheel` | `VueUiWheelDataset` | `VueUiWheelConfig` | `generatePdf`, `generateImage` , `getImage` | `#svg`, `#svg-underlayer`, `#watermark`, `#chart-background` | ❌ | ✅ |
+| `VueUiWordCloud` | `VueUiWordCloudDatasetItem[] / string` | `VueUiWordCloudConfig` | `getData`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTooltip` , `getImage`, `#hint` | `#svg`, `#svg-underlayer`, `#reset-action`, `#watermark`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#chart-background` | ✅ | ✅ |
+| `VueUiXyCanvas` | `VueUiXyCanvasDatasetItem[]` | `VueUiXyCanvasConfig` | `@selectX`, `@zoomStart`, `@zoomEnd`, `@zoomReset`, `@copyAlt`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleStack`, `toggleTooltip` , `getImage`, `#hint` | `#legend`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark` | ✅ | ✅ |
+| `VueUiXy` | `VueUiXyDatasetItem[]` | `VueUiXyConfig` | `@selectLegend`, `@selectX`, `@selectTimeLabel`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleStack`, `toggleTooltip` , `getImage`, `#hint` | `#svg`, `#svg-underlayer`, `#legend`, `#time-label`, `#tooltip`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#plot-comment`,`#watermark`, `#chart-background`, `#pattern`, `#area-gradient`, `#bar-gradient` | ✅ | ✅ |
 
 ### 3D charts
 
-| Name         | dataset type        | config type        | emits / exposed methods                                   | slots                                                                 | custom tooltip | themes |
-| ------------ | ------------------- | ------------------ | --------------------------------------------------------- | --------------------------------------------------------------------- | -------------- | ------ |
-| `VueUi3dBar` | `VueUi3dBarDataset` | `VueUi3dBarConfig` | `generatePdf`, `generateImage`, `toggleTable`, `getImage` | `#svg`, `#svg-underlayer`, `#watermark`, `#chart-background`, `#hint` | ❌             | ✅     |
+<!-- prettier-ignore -->
+| Name | dataset type | config type | emits / exposed methods | slots | custom tooltip | themes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `VueUi3dBar` | `VueUi3dBarDataset` | `VueUi3dBarConfig` | `generatePdf`, `generateImage`, `toggleTable`, `getImage` | `#svg`, `#svg-underlayer`, `#watermark`, `#chart-background`, `#hint` | ❌ | ✅ |
 
 ### Maps
 
-| Name         | dataset type            | config type        | emits / exposed methods                                                                                                                    | slots                                                                                  | custom tooltip | themes |
-| ------------ | ----------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | -------------- | ------ |
-| `VueUiGeo`   | `VueUiGeoDatasetItem[]` | `VueUiGeoConfig`   | `generatePdf`, `generateImage`, `toggleTooltip`, `toggleAnnotator`, `getImage`, `zoomIn`, `zoomOut`, `resetZoom`, `focusLocation`, `#hint` | `#svg`, `#svg-underlayer`, `#watermark`, `#pattern`, `#chart-background`, `#datapoint` | ✅             | ✅     |
-| `VueUiWorld` | `VueUiWorldDataset`     | `VueUiWorldConfig` | `getData`, `generatePdf`, `generateImage`, `toggleTable`, `toggleTooltip`, `toggleAnnotator`, `getImage`                                   | `#svg`, `#svg-underlayer`, `#watermark`, `#pattern`, `#chart-background`               | ✅             | ❌     |
+<!-- prettier-ignore -->
+| Name | dataset type | config type | emits / exposed methods | slots | custom tooltip | themes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `VueUiGeo` | `VueUiGeoDatasetItem[]` | `VueUiGeoConfig` | `generatePdf`, `generateImage`, `toggleTooltip`, `toggleAnnotator`, `getImage`, `zoomIn`, `zoomOut`, `resetZoom`, `focusLocation`, `#hint` | `#svg`, `#svg-underlayer`, `#watermark`, `#pattern`, `#chart-background`, `#datapoint` | ✅ | ✅ |
+| `VueUiWorld` | `VueUiWorldDataset` | `VueUiWorldConfig` | `getData`, `generatePdf`, `generateImage`, `toggleTable`, `toggleTooltip`, `toggleAnnotator`, `getImage` | `#svg`, `#svg-underlayer`, `#watermark`, `#pattern`, `#chart-background` | ✅ | ✅ |
 
 ### Data tables
 
-| Name                  | dataset type                       | config type                 | emits / exposed methods                                                                               | slots                                                           | themes |
-| --------------------- | ---------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------ |
-| `VueUiTable`          | `VueUiTableDataset`                | `VueUiTableConfig`          | ❌                                                                                                    | ❌                                                              | ❌     |
-| `VueUiTableHeatmap`   | `VueUiTableHeatmapDatasetItem[]`   | `VueUiTableHeatmapConfig`   | `generatePdf`, `generateCsv`, `generateImage`                                                         | `#caption`, `#rowTitle`, `#cell`, `#sum`, `#average`, `#median` | ✅     |
-| `VueUiTableSparkline` | `VueUiTableSparklineDatasetItem[]` | `VueUiTableSparklineConfig` | `generatePdf`, `generateCsv`, `generateImage`                                                         | ❌                                                              | ✅     |
-| `VueUiCarouselTable`  | `VueUiCarouselTableDataset`        | `VueUiCarouselTableConfig`  | `generatePdf`, `generateImage`, `generateCsv`, `toggleAnimation`, `pauseAnimation`, `resumeAnimation` | `#caption`, `#th`, `#td`                                        | ❌     |
+<!-- prettier-ignore -->
+| Name | dataset type | config type | emits / exposed methods | slots | themes |
+| --- | --- | --- | --- | --- | --- |
+| `VueUiTable` | `VueUiTableDataset` | `VueUiTableConfig` | ❌ | ❌ | ❌ |
+| `VueUiTableHeatmap` | `VueUiTableHeatmapDatasetItem[]` | `VueUiTableHeatmapConfig` | `generatePdf`, `generateCsv`, `generateImage` | `#caption`, `#rowTitle`, `#cell`, `#sum`, `#average`, `#median` | ✅ |
+| `VueUiTableSparkline` | `VueUiTableSparklineDatasetItem[]` | `VueUiTableSparklineConfig` | `generatePdf`, `generateCsv`, `generateImage` | ❌ | ✅ |
+| `VueUiCarouselTable` | `VueUiCarouselTableDataset` | `VueUiCarouselTableConfig` | `generatePdf`, `generateImage`, `generateCsv`, `toggleAnimation`, `pauseAnimation`, `resumeAnimation` | `#caption`, `#th`, `#td` | ❌ |
 
 ### Rating
 
-| Name          | dataset type         | config type         | emits / exposed methods             | slots                          |
-| ------------- | -------------------- | ------------------- | ----------------------------------- | ------------------------------ |
+<!-- prettier-ignore -->
+| Name | dataset type | config type | emits / exposed methods | slots |
+| --- | --- | --- | --- | --- |
 | `VueUiRating` | `VueUiRatingDataset` | `VueUiRatingConfig` | `@rate`, `getData`,`toggleReadonly` | `#layer-under`, `#layer-above` |
-| `VueUiSmiley` | `VueUiRatingDataset` | `VueUiSmileyConfig` | `@rate`, `getData`,`toggleReadonly` |                                |
+| `VueUiSmiley` | `VueUiRatingDataset` | `VueUiSmileyConfig` | `@rate`, `getData`,`toggleReadonly` |  |
 
 ### Productivity
 
-| Name        | dataset type           | config type       | emits / exposed methods                                                                                                                                        | slots                                                                                                                             | custom tooltip | themes |
-| ----------- | ---------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------ |
-| `VueUiHill` | `VueUiHillDatasetItem` | `VueUiHillConfig` | `edit`, `save`, `cancel`, `copyAlt`, `dragStart`, `dragEnd`, `datapointEnter`, `datapointLeave`, `selectDatapoint`, `generatePdf`, `generateImage`, `getImage` | `#svg`, `#svg-underlayer`, `#analysis`, `#loading`, `#watermark`, `#chart-background`, `#hill-edit`, `#hill-cancel`, `#hill-save` | ❌             | ✅     |
+<!-- prettier-ignore -->
+| Name | dataset type | config type | emits / exposed methods | slots | custom tooltip | themes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `VueUiHill` | `VueUiHillDatasetItem` | `VueUiHillConfig` | `edit`, `save`, `cancel`, `copyAlt`, `dragStart`, `dragEnd`, `datapointEnter`, `datapointLeave`, `selectDatapoint`, `generatePdf`, `generateImage`, `getImage` | `#svg`, `#svg-underlayer`, `#analysis`, `#loading`, `#watermark`, `#chart-background`, `#hill-edit`, `#hill-cancel`, `#hill-save` | ❌ | ✅ |
 
 ### Utilities
 
-| Name              | dataset type              | config type             | emits / exposed methods                                                                                 | slots                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ----------------- | ------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `VueUiAccordion`  | ❌                        | `VueUiAccordionConfig`  | ❌                                                                                                      | `#arrow`, `#title`, `#content`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `VueUiAnnotator`  | `VueUiAnnotatorDataset`   | `VueUiAnnotatorConfig`  | `@toggleOpenState`, `@saveAnnotations`                                                                  | `#toggle`, `#icon-move`, `#icon-resize`, `#icon-delete`, `#icon-select-group`, `#icon-bring-to-front`, `#icon-bring-to-back`, `#icon-copy`, `#icon-undo`, `#icon-redo`, `#icon-print`, `#icon-export-image`, `#icon-save`, `#icon-circle`, `#icon-rect`, `#icon-arrow`, `#icon-freehand`, `#icon-text`, `#icon-text-align-left`, `#icon-text-align-center`, `#icon-text-align-right`, `#icon-text-bullet-points`, `#icon-text-bold`, `#icon-text-bold`, `#icon-text-italic`, `#icon-text-underline`, `#icon-color` |
-| `VueUiCursor`     | ❌                        | `VueUiCursorConfig`     | ❌                                                                                                      | ❌                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `VueUiDashboard`  | `VueUiDashboardElement[]` | `VueUiDashboardConfig`  | `@change`                                                                                               | `#content`, `#top`, `#bottom`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `VueUiDigits`     | `number`                  | `VueUiDigitsConfig`     | ❌                                                                                                      | ❌                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `VueUiKpi`        | `number`                  | `VueUiKpiConfig`        | ❌                                                                                                      | `#title`, `#value`, `#comment-before`, `#comment-after`                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `VueUiLabel`      | `VueUiLabelDataset`       | `VueUiLabelConfig`      | `@dragStart`, `@drag`, `@dragEnd`, `@mouseenter`, `@mouseleave`, `@click`, `@focus`, `@blur`, `reorder` | `#before`, `#after`, `#title`, `#content`                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `VueUiMiniLoader` | ❌                        | `VueUiMiniLoaderConfig` | ❌                                                                                                      | ❌                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `VueUiSkeleton`   | ❌                        | `VueUiSkeletonConfig`   | ❌                                                                                                      | ❌                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `VueUiTimer`      | ❌                        | `VueUiTimerConfig`      | `@start`, `@pause`, `@reset`, `@restart`, `@lap`                                                        | `#time`, `#controls`, `#laps`, `#chart-background`                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `VueUiIcon`       | see below                 | -                       | -                                                                                                       | `#exp`, `#sub`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+<!-- prettier-ignore -->
+| Name | dataset type | config type | emits / exposed methods | slots |
+| --- | --- | --- | --- | --- |
+| `VueUiAccordion` | ❌ | `VueUiAccordionConfig` | ❌ | `#arrow`, `#title`, `#content` |
+| `VueUiAnnotator` | `VueUiAnnotatorDataset` | `VueUiAnnotatorConfig` | `@toggleOpenState`, `@saveAnnotations` | `#toggle`, `#icon-move`, `#icon-resize`, `#icon-delete`, `#icon-select-group`, `#icon-bring-to-front`, `#icon-bring-to-back`, `#icon-copy`, `#icon-undo`, `#icon-redo`, `#icon-print`, `#icon-export-image`, `#icon-save`, `#icon-circle`, `#icon-rect`, `#icon-arrow`, `#icon-freehand`, `#icon-text`, `#icon-text-align-left`, `#icon-text-align-center`, `#icon-text-align-right`, `#icon-text-bullet-points`, `#icon-text-bold`, `#icon-text-bold`, `#icon-text-italic`, `#icon-text-underline`, `#icon-color` |
+| `VueUiCursor` | ❌ | `VueUiCursorConfig` | ❌ | ❌ |
+| `VueUiDashboard` | `VueUiDashboardElement[]` | `VueUiDashboardConfig` | `@change` | `#content`, `#top`, `#bottom` |
+| `VueUiDigits` | `number` | `VueUiDigitsConfig` | ❌ | ❌ |
+| `VueUiKpi` | `number` | `VueUiKpiConfig` | ❌ | `#title`, `#value`, `#comment-before`, `#comment-after` |
+| `VueUiLabel` | `VueUiLabelDataset` | `VueUiLabelConfig` | `@dragStart`, `@drag`, `@dragEnd`, `@mouseenter`, `@mouseleave`, `@click`, `@focus`, `@blur`, `reorder` | `#before`, `#after`, `#title`, `#content` |
+| `VueUiMiniLoader` | ❌ | `VueUiMiniLoaderConfig` | ❌ | ❌ |
+| `VueUiSkeleton` | ❌ | `VueUiSkeletonConfig` | ❌ | ❌ |
+| `VueUiTimer` | ❌ | `VueUiTimerConfig` | `@start`, `@pause`, `@reset`, `@restart`, `@lap` | `#time`, `#controls`, `#laps`, `#chart-background` |
+| `VueUiIcon` | see below | - | - | `#exp`, `#sub` |
 
 ### Icons
 
@@ -689,14 +699,15 @@ All names of available icons are available in the vue-data-ui.d.ts file under th
 
 `VueUiIcon` props:
 
-| Name           | type             | Default value |
-| -------------- | ---------------- | ------------- |
-| `name`         | `VueUiIconName`  | `undefined`   |
-| `size`         | `number`         | `24`          |
-| `stroke`       | `string` (color) | `'#CCCCCC'`   |
-| `strokeWidth`  | `number`         | `1.5`         |
-| `isSpin`       | `boolean`        | `false`       |
-| `spinDuration` | `string`         | `'1s'`        |
+<!-- prettier-ignore -->
+| Name | type | Default value |
+| --- | --- | --- |
+| `name` | `VueUiIconName` | `undefined` |
+| `size` | `number` | `24` |
+| `stroke` | `string` (color) | `'#CCCCCC'` |
+| `strokeWidth` | `number` | `1.5` |
+| `isSpin` | `boolean` | `false` |
+| `spinDuration` | `string` | `'1s'` |
 
 Icons have 2 slots that can be used to display exp or sub icons:
 
@@ -797,63 +808,64 @@ const config = {
 
 User options actions available per chart:
 
-| Chart name                  | User options actions slot names                                                                                                                     |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| VueUi3dBar                  | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
-| VueUiAgePyramid             | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
-| VueUiBump                   | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
-| VueUiBullet                 | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                                   |
-| VueUiCandlestick            | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
-| VueUiCarouselTable          | optionAltCopy, optionPdf, optionImg, optionCsv, optionAnimation, optionFullscreen                                                                   |
-| VueUiChestnut               | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
-| VueUiChord                  | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
-| VueUiCirclePack             | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
-| VueUiDag                    | optionAltCopy, optionPdf, optionImg, optionSvg, optionFullscreen, optionAnnotator, optionZoom                                                       |
-| VueUiDonut                  | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
-| VueUiDonutEvolution         | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
-| VueUiDumbbell               | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
-| VueUiFlow                   | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
-| VueUiFunnel                 | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
-| VueUiGalaxy                 | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
-| VueUiGauge                  | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                                   |
-| VueUiGraph                  | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionZoom, optionSvg                |
-| VueUiGeo                    | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionZoom, optionSvg                                                       |
-| VueUiHeatmap                | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
-| VueUiHistoryPlot            | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
-| VueUiHorizontalBar          | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen, optionAnnotator, optionSvg                |
-| VueUiMolecule               | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionZoom, optionSvg  |
-| VueUiMoodRadar              | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
-| VueUiNestedDonuts           | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
-| VueUiOnion                  | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
-| VueUiParallelCoordinatePlot | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
-| VueUiQuadrant               | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
-| VueUiQuickChart             | optionAltCopy, optionTooltip, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                    |
-| VueUiRadar                  | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
-| VueUiRelationCircle         | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                                   |
-| VueUiRidgeline              | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
-| VueUiRings                  | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionLabels, optionSvg              |
-| VueUiScatter                | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
-| VueUiSparkHistogram         | (no user options menu)                                                                                                                              |
-| VueUiSparkStackbar          | (no user options menu)                                                                                                                              |
-| VueUiSparkTrend             | (no user options menu)                                                                                                                              |
-| VueUiSparkbar               | (no user options menu)                                                                                                                              |
-| VueUiSparkgauge             | (no user options menu)                                                                                                                              |
-| VueUiSparkline              | (no user options menu)                                                                                                                              |
-| VueUiStackbar               | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
-| VueUiStackline              | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
-| VueUiStripPlot              | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
-| VueUiTableHeatmap           | optionAltCopy, optionPdf, optionImg, optionCsv, optionFullscreen                                                                                    |
-| VueUiTableSparkline         | optionAltCopy, optionPdf, optionImg, optionCsv, optionFullscreen                                                                                    |
-| VueUiThermometer            | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                                   |
-| VueUiTiremarks              | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                                   |
-| VueUiTreemap                | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator , optionSvg                           |
-| VueUiWaffle                 | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator , optionSvg                           |
-| VueUiWheel                  | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                                   |
-| VueUiWordCloud              | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionZoom, optionSvg                               |
-| VueUiWorld                  | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
-| VueUiXy                     | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator, optionSvg |
-| VueUiXyCanvas               | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator            |
-| VueUiHill                   | optionAltCopy, optionPdf, optionImg, optionCsv optionLabels, optionFullscreen, optionAnnotator, hill-edit, hill-cancel, hill-save                   |
+<!-- prettier-ignore -->
+| Chart name | User options actions slot names |
+| --- | --- |
+| VueUi3dBar | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiAgePyramid | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiBump | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiBullet | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiCandlestick | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiCarouselTable | optionAltCopy, optionPdf, optionImg, optionCsv, optionAnimation, optionFullscreen |
+| VueUiChestnut | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiChord | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiCirclePack | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiDag | optionAltCopy, optionPdf, optionImg, optionSvg, optionFullscreen, optionAnnotator, optionZoom |
+| VueUiDonut | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiDonutEvolution | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiDumbbell | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiFlow | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiFunnel | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiGalaxy | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiGauge | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiGraph | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionZoom, optionSvg |
+| VueUiGeo | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionZoom, optionSvg |
+| VueUiHeatmap | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiHistoryPlot | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiHorizontalBar | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiMolecule | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionZoom, optionSvg |
+| VueUiMoodRadar | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiNestedDonuts | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiOnion | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiParallelCoordinatePlot | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiQuadrant | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiQuickChart | optionAltCopy, optionTooltip, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiRadar | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiRelationCircle | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiRidgeline | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiRings | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionLabels, optionSvg |
+| VueUiScatter | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiSparkHistogram | (no user options menu) |
+| VueUiSparkStackbar | (no user options menu) |
+| VueUiSparkTrend | (no user options menu) |
+| VueUiSparkbar | (no user options menu) |
+| VueUiSparkgauge | (no user options menu) |
+| VueUiSparkline | (no user options menu) |
+| VueUiStackbar | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiStackline | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiStripPlot | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiTableHeatmap | optionAltCopy, optionPdf, optionImg, optionCsv, optionFullscreen |
+| VueUiTableSparkline | optionAltCopy, optionPdf, optionImg, optionCsv, optionFullscreen |
+| VueUiThermometer | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiTiremarks | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiTreemap | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator , optionSvg |
+| VueUiWaffle | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator , optionSvg |
+| VueUiWheel | optionAltCopy, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiWordCloud | optionAltCopy, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionZoom, optionSvg |
+| VueUiWorld | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg |
+| VueUiXy | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator, optionSvg |
+| VueUiXyCanvas | optionAltCopy, optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator |
+| VueUiHill | optionAltCopy, optionPdf, optionImg, optionCsv optionLabels, optionFullscreen, optionAnnotator, hill-edit, hill-cancel, hill-save |
 
 User options menu icon can be customized using the #menuIcon slot:
 
@@ -939,63 +951,64 @@ Accepted color formats: HEX, RGB, HSL, named colors.
 By default, all charts will scale to the width of their container.
 However the following charts can be made fully responsive, making them better to use in resizable containers:
 
-| Component                   | Responsive feature implemented |
-| --------------------------- | ------------------------------ |
-| VueUi3dBar                  | ✅                             |
-| VueUiAgePyramid             | ✅                             |
-| VueUiAgePyramid             | ✅                             |
-| VueUiBullet                 | ✅                             |
-| VueUiBump                   | ✅                             |
-| VueUiCarouselTable          | -                              |
-| VueUiChestnut               | -                              |
-| VueUiChord                  | ✅                             |
-| VueUiCirclePack             | ✅                             |
-| VueUiDag                    | ✅                             |
-| VueUiDonut                  | ✅                             |
-| VueUiDonutEvolution         | ✅                             |
-| VueUiDumbbell               | ✅                             |
-| VueUiFlow                   | ✅                             |
-| VueUiFunnel                 | ✅                             |
-| VueUiGalaxy                 | ✅                             |
-| VueUiGauge                  | ✅                             |
-| VueUiGeo                    | ✅                             |
-| VueUiGraph                  | ✅                             |
-| VueUiHeatmap                | ✅                             |
-| VueUiHistoryPlot            | ✅                             |
-| VueUiHorizontalBar          | ✅                             |
-| VueUiMolecule               | -                              |
-| VueUiMoodRadar              | ✅                             |
-| VueUiNestedDonuts           | ✅                             |
-| VueUiOnion                  | ✅                             |
-| VueUiParallelCoordinatePlot | ✅                             |
-| VueUiQuadrant               | ✅                             |
-| VueUiQuickChart             | ✅                             |
-| VueUiRadar                  | ✅                             |
-| VueUiRelationCircle         | ✅                             |
-| VueUiRidgeline              | ✅                             |
-| VueUiRings                  | ✅                             |
-| VueUiScatter                | ✅                             |
-| VueUiSparkHistogram         | ✅                             |
-| VueUiSparkStackbar          | -                              |
-| VueUiSparkTrend             | ✅                             |
-| VueUiSparkbar               | -                              |
-| VueUiSparkgauge             | -                              |
-| VueUiSparkline              | ✅                             |
-| VueUiStackbar               | ✅                             |
-| VueUiStackline              | ✅                             |
-| VueUiStripPlot              | ✅                             |
-| VueUiTableHeatmap           | -                              |
-| VueUiTableSparkline         | -                              |
-| VueUiThermometer            | ✅                             |
-| VueUiTimer                  | ✅                             |
-| VueUiTiremarks              | ✅                             |
-| VueUiTreemap                | ✅                             |
-| VueUiWaffle                 | ✅                             |
-| VueUiWheel                  | ✅                             |
-| VueUiWordCloud              | ✅                             |
-| VueUiWorld                  | -                              |
-| VueUiXy                     | ✅                             |
-| VueUiXyCanvas               | ✅                             |
+<!-- prettier-ignore -->
+| Component | Responsive feature implemented |
+| --- | --- |
+| VueUi3dBar | ✅ |
+| VueUiAgePyramid | ✅ |
+| VueUiAgePyramid | ✅ |
+| VueUiBullet | ✅ |
+| VueUiBump | ✅ |
+| VueUiCarouselTable | - |
+| VueUiChestnut | - |
+| VueUiChord | ✅ |
+| VueUiCirclePack | ✅ |
+| VueUiDag | ✅ |
+| VueUiDonut | ✅ |
+| VueUiDonutEvolution | ✅ |
+| VueUiDumbbell | ✅ |
+| VueUiFlow | ✅ |
+| VueUiFunnel | ✅ |
+| VueUiGalaxy | ✅ |
+| VueUiGauge | ✅ |
+| VueUiGeo | ✅ |
+| VueUiGraph | ✅ |
+| VueUiHeatmap | ✅ |
+| VueUiHistoryPlot | ✅ |
+| VueUiHorizontalBar | ✅ |
+| VueUiMolecule | - |
+| VueUiMoodRadar | ✅ |
+| VueUiNestedDonuts | ✅ |
+| VueUiOnion | ✅ |
+| VueUiParallelCoordinatePlot | ✅ |
+| VueUiQuadrant | ✅ |
+| VueUiQuickChart | ✅ |
+| VueUiRadar | ✅ |
+| VueUiRelationCircle | ✅ |
+| VueUiRidgeline | ✅ |
+| VueUiRings | ✅ |
+| VueUiScatter | ✅ |
+| VueUiSparkHistogram | ✅ |
+| VueUiSparkStackbar | - |
+| VueUiSparkTrend | ✅ |
+| VueUiSparkbar | - |
+| VueUiSparkgauge | - |
+| VueUiSparkline | ✅ |
+| VueUiStackbar | ✅ |
+| VueUiStackline | ✅ |
+| VueUiStripPlot | ✅ |
+| VueUiTableHeatmap | - |
+| VueUiTableSparkline | - |
+| VueUiThermometer | ✅ |
+| VueUiTimer | ✅ |
+| VueUiTiremarks | ✅ |
+| VueUiTreemap | ✅ |
+| VueUiWaffle | ✅ |
+| VueUiWheel | ✅ |
+| VueUiWordCloud | ✅ |
+| VueUiWorld | - |
+| VueUiXy | ✅ |
+| VueUiXyCanvas | ✅ |
 
 To activate responsiveness, set the config.responsive attribute to true:
 
@@ -1013,14 +1026,15 @@ const config = ref({
 Very large datasets (> 5k or > 10k datapoints) will cause the browsers rendering engines to slow down, caused by too many SVG DOM elements to render.
 The following charts use the LTTB algorithm (Largest-Triangle-Three-Bucket) beyond a certain threshold to downsample the rendered dataset while preserving its shape. These components are the most susceptible to be used with very large datasets:
 
-| Component       | Default Threshold | Remark                                                        |
-| --------------- | ----------------- | ------------------------------------------------------------- |
-| VueUiXy         | 1095              |                                                               |
-| VueUiXyCanvas   | 10000             | Since this chart uses canvas, the threshold can be set higher |
-| VueUiQuadrant   | 1095              |                                                               |
-| VueUiScatter    | 1095              |                                                               |
-| VueUiSparkline  | 1095              |                                                               |
-| VueUiSparkTrend | 1095              |                                                               |
+<!-- prettier-ignore -->
+| Component | Default Threshold | Remark |
+| --- | --- | --- |
+| VueUiXy | 1095 |  |
+| VueUiXyCanvas | 10000 | Since this chart uses canvas, the threshold can be set higher |
+| VueUiQuadrant | 1095 |  |
+| VueUiScatter | 1095 |  |
+| VueUiSparkline | 1095 |  |
+| VueUiSparkTrend | 1095 |  |
 
 The downsample threshold for each component can be set in the config prop passed to components:
 
@@ -1129,20 +1143,21 @@ VueUiPattern accepts the following props:
 
 List of available patterns:
 
-| pattern name     |
-| ---------------- |
-| bubbles          |
-| flooring         |
-| grid             |
-| hexagon-diamond  |
+<!-- prettier-ignore -->
+| pattern name |
+| --- |
+| bubbles |
+| flooring |
+| grid |
+| hexagon-diamond |
 | hexagon-flooring |
-| hexagon-grid     |
-| maze             |
-| redrum           |
-| scales           |
-| squares          |
-| wave             |
-| zigzag           |
+| hexagon-grid |
+| maze |
+| redrum |
+| scales |
+| squares |
+| wave |
+| zigzag |
 
 # Utility functions
 
@@ -1304,23 +1319,24 @@ const merged = mergeConfigs({
 Some components will display labels on multiple lines when the provided text contains a line break. (example: "I contain a\nline break").
 Below is a table of the places where such line breaks can be used:
 
-| Component                   | Label displayed      | Where to use line breaks                               |
-| --------------------------- | -------------------- | ------------------------------------------------------ |
-| VueUiBump                   | Series labels        | dataset names                                          |
-| VueUiDag                    | Node labels          | dataset label                                          |
-| VueUiGraph                  | Node labels          | dataset.nodes[].label                                  |
-| VueUiDonutEvolution         | Time labels (x axis) | config.style.chart.layout.grid.xAxis.dataLabels.values |
-| VueUiHistoryPlot            | Plot labels          | dataset names                                          |
-| VueUiHorizontalBar          | Series labels        | dataset names                                          |
-| VueUiParallelCoordinatePlot | Axis labels          | config.style.chart.yAxis.labels.axisNames              |
-| VueUiQuadrant               | Plot labels          | dataset names                                          |
-| VueUiQuickChart             | Time labels (x axis) | config.xyPeriods                                       |
-| VueUiRidgeline              | Time labels (x axis) | config.style.chart.xAxis.labels.values                 |
-| VueUiRings                  | Series labels        | dataset names                                          |
-| VueUiStackbar               | Time labels (x axis) | config.style.chart.grid.x.timeLabels.values            |
-| VueUiStackline              | Time labels (x axis) | config.style.chart.grid.x.timeLabels.values            |
-| VueUiStripPlot              | x axis labels        | dataset names                                          |
-| VueUiXy                     | Time labels (x axis) | config.chart.grid.labels.xAxisLabels.values            |
+<!-- prettier-ignore -->
+| Component | Label displayed | Where to use line breaks |
+| --- | --- | --- |
+| VueUiBump | Series labels | dataset names |
+| VueUiDag | Node labels | dataset label |
+| VueUiGraph | Node labels | dataset.nodes[].label |
+| VueUiDonutEvolution | Time labels (x axis) | config.style.chart.layout.grid.xAxis.dataLabels.values |
+| VueUiHistoryPlot | Plot labels | dataset names |
+| VueUiHorizontalBar | Series labels | dataset names |
+| VueUiParallelCoordinatePlot | Axis labels | config.style.chart.yAxis.labels.axisNames |
+| VueUiQuadrant | Plot labels | dataset names |
+| VueUiQuickChart | Time labels (x axis) | config.xyPeriods |
+| VueUiRidgeline | Time labels (x axis) | config.style.chart.xAxis.labels.values |
+| VueUiRings | Series labels | dataset names |
+| VueUiStackbar | Time labels (x axis) | config.style.chart.grid.x.timeLabels.values |
+| VueUiStackline | Time labels (x axis) | config.style.chart.grid.x.timeLabels.values |
+| VueUiStripPlot | x axis labels | dataset names |
+| VueUiXy | Time labels (x axis) | config.chart.grid.labels.xAxisLabels.values |
 
 ## PDF generation
 
@@ -1562,27 +1578,3 @@ const config = computed(() => ({
     useCursorPointer: true, // false by default
 }));
 ```
-
-## Component development and testing
-
-Storybook provides the component catalog, editable configurations, responsive
-previews, light/dark backgrounds, and automated interaction tests.
-
-Repository development uses **pnpm 12.15.0** (pinned in `packageManager`) and Node.js 24.
-Run `pnpm install --frozen-lockfile` to reproduce the committed dependencies.
-The `manual-testing` and `ts-playground` apps have separate installs and lockfiles;
-build the library before installing them. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-```sh
-pnpm install
-pnpm exec playwright install chromium
-pnpm run storybook        # http://localhost:6006
-pnpm run build:storybook  # storybook-static/
-pnpm run test:unit        # Vitest unit suite
-pnpm run test:storybook   # headless Chromium interaction suite
-pnpm run test:all         # both suites
-```
-
-Storybook replaces the previous Cypress component workflow. To add a component
-example or interaction test, see [CONTRIBUTING.md](./CONTRIBUTING.md#tests-and-component-development).
-The [migration coverage map](./docs/storybook-migration.md) records all migrated specs.

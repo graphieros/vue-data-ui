@@ -18,13 +18,55 @@ export function packTheme(value, shapes = [], indices = new Map()) {
     ];
 }
 
+// Intern repeated encoded subtrees and strings within each chart module.
+// Constants contain data only; unpacking each occurrence creates fresh objects.
+// Separate bindings let consumers discard data used only by unused theme exports.
+function shareThemeValues(values) {
+    const counts = new Map();
+    function count(value) {
+        if (!Array.isArray(value) && typeof value !== 'string') return;
+        const key = JSON.stringify(value);
+        counts.set(key, (counts.get(key) || 0) + 1);
+        if (Array.isArray(value)) value.forEach(count);
+    }
+    values.forEach(count);
+
+    const shared = [];
+    const memo = new Map();
+    function intern(value) {
+        if (!Array.isArray(value) && typeof value !== 'string') return value;
+        const key = JSON.stringify(value);
+        if (memo.has(key)) return memo.get(key);
+        const packed = Array.isArray(value) ? value.map(intern) : value;
+        const uses = counts.get(key);
+        const size = emitThemeValue(packed).length;
+        const reference = { index: shared.length };
+        const name = emitThemeValue(reference);
+        let result = packed;
+        // Include the constant declaration and reference sizes in the decision.
+        if ((uses - 1) * size > uses * name.length + name.length + 8) {
+            result = reference;
+            shared.push(packed);
+        }
+        memo.set(key, result);
+        return result;
+    }
+    return { values: values.map(intern), shared };
+}
+
+function emitThemeValue(value) {
+    if (Array.isArray(value)) return `[${value.map(emitThemeValue).join(',')}]`;
+    if (value && typeof value === 'object') return `_s${value.index}`;
+    return JSON.stringify(value);
+}
+
 // Keep editable JSON as the source of truth; compact only the published modules.
 export function generateThemeModule(themes, unpacker) {
     const shapes = [];
     const indices = new Map();
     const entries = Object.entries(themes);
-    const values = entries.map(([, theme]) =>
-        packTheme(theme, shapes, indices),
+    const { values, shared } = shareThemeValues(
+        entries.map(([, theme]) => packTheme(theme, shapes, indices)),
     );
     const namedExports = entries
         .map(([key], i) => (key === 'default' ? null : `_t${i} as ${key}`))
@@ -35,9 +77,10 @@ export function generateThemeModule(themes, unpacker) {
     return [
         `import { unpackTheme } from ${JSON.stringify(unpacker)};`,
         `const shapes=${JSON.stringify(shapes)};`,
+        ...shared.map((value, i) => `const _s${i}=${emitThemeValue(value)};`),
         ...values.map(
             (value, i) =>
-                `const _t${i}=/* @__PURE__ */ unpackTheme(${JSON.stringify(value)},shapes);`,
+                `const _t${i}=/* @__PURE__ */ unpackTheme(${emitThemeValue(value)},shapes);`,
         ),
         `export {${namedExports}};`,
         `export default {${defaultProperties}};`,

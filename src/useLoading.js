@@ -1,4 +1,4 @@
-import { computed, ref, unref, watch } from 'vue';
+import { computed, ref, unref, watch, toValue } from 'vue';
 
 /**
  * Switches chart data and configuration between loading skeletons and real inputs.
@@ -13,7 +13,7 @@ import { computed, ref, unref, watch } from 'vue';
  * @param {() => object} options.prepareConfig - Builds the configuration for real data.
  * @param {Function | null} [options.callback=null] - Runs after replacing the active data and config.
  * @param {boolean} [options.dsIsNumber=false] - Treat numeric zero as valid data.
- * @param {boolean} [options.allowEmptyDataset=false] - Do not infer loading from empty data.
+ * @param {import('vue').MaybeRefOrGetter<boolean>} [options.allowEmptyDataset=false] - Do not infer loading from empty data.
  * @returns {object} loading, FINAL_DATASET, manualLoading refs and the skeleton inputs.
  */
 export function useLoading({
@@ -32,7 +32,7 @@ export function useLoading({
     const loading = computed(() => {
         const configLoading = unref(config)?.loading ?? false;
         const ds = unref(dataset);
-        const datasetEmpty = allowEmptyDataset
+        const datasetEmpty = toValue(allowEmptyDataset)
             ? false
             : dsIsNumber
               ? [null, undefined].includes(ds)

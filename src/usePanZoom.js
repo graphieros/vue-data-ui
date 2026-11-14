@@ -1,12 +1,4 @@
-import {
-    ref,
-    onMounted,
-    onBeforeUnmount,
-    watch,
-    watchEffect,
-    computed,
-    toValue,
-} from 'vue';
+import { ref, onBeforeUnmount, watch, computed, toValue } from 'vue';
 
 /**
  * Controls an SVG viewBox with wheel, pointer, and touch pan/zoom gestures.
@@ -16,7 +8,8 @@ import {
  * @param {import('vue').MaybeRefOrGetter<number>} [speed=1] - Zoom sensitivity.
  * @param {import('vue').Ref<boolean>} activeRef - Enables gesture handling.
  * @param {Function | null} [callbackOnZoom=null] - Called on zoom changes.
- * @returns {object} viewBox, scale, isZoom, resetZoom, setInitialViewBox, zoomByFactor, and cancelAnimation.
+ * @param {object} [options={}] - Optional reactive minScale/maxScale, panEnabled/zoomEnabled, bindEvents, eventMode ('legacy' or 'pointer'), dragThreshold, wheelFactor, onDragStart, and onDrag settings. A drag callback returning true handles the movement itself.
+ * @returns {object} Viewport state, zoom/reset/set controls, animation cancellation, pointer handlers, dragging, and click suppression.
  */
 export default function usePanZoom(
     svgRef,
@@ -24,6 +17,7 @@ export default function usePanZoom(
     speed = 1,
     activeRef,
     callbackOnZoom = null,
+    options = {},
 ) {
     const initial = ref({ ...initialViewBox });
     const viewBox = ref({ ...initial.value });
@@ -36,13 +30,42 @@ export default function usePanZoom(
     const pinchStartScale = ref(1);
     const startClient = ref({ x: 0, y: 0 });
 
-    const isZoom = computed(
-        () =>
-            viewBox.value.x !== initial.value.x ||
-            viewBox.value.y !== initial.value.y ||
-            viewBox.value.width !== initial.value.width ||
-            viewBox.value.height !== initial.value.height,
-    );
+    function resetViewBox() {
+        const targetScale = clampScale(1);
+        return {
+            x:
+                initial.value.x +
+                (initial.value.width * (1 - 1 / targetScale)) / 2,
+            y:
+                initial.value.y +
+                (initial.value.height * (1 - 1 / targetScale)) / 2,
+            width: initial.value.width / targetScale,
+            height: initial.value.height / targetScale,
+        };
+    }
+    const isZoom = computed(() => {
+        const reset = resetViewBox();
+        return ['x', 'y', 'width', 'height'].some(
+            (key) => viewBox.value[key] !== reset[key],
+        );
+    });
+
+    const dragging = ref(false);
+    const suppressClick = ref(false);
+    const pointers = new Map();
+    let gesture = null;
+    let pendingGesture = null;
+    let suppressTimer = null;
+    const option = (key, fallback) => toValue(options[key]) ?? fallback;
+    const enabled = () => !activeRef || toValue(activeRef);
+    function clampScale(value) {
+        const min = Math.max(
+            Number.EPSILON,
+            option('minScale', Number.EPSILON),
+        );
+        const max = Math.max(min, option('maxScale', Infinity));
+        return Math.max(min, Math.min(max, value));
+    }
 
     let zoomAnimationFrame = null;
     let disposed = false;
@@ -52,6 +75,7 @@ export default function usePanZoom(
         if (zoomAnimationFrame !== null)
             cancelAnimationFrame(zoomAnimationFrame);
         zoomAnimationFrame = null;
+        pendingGesture = null;
     }
 
     function getTouchDistance(touches) {
@@ -63,12 +87,35 @@ export default function usePanZoom(
 
     function toSvgPoint(evt) {
         const svg = svgRef.value;
-        if (!svg) return { x: 0, y: 0 };
-        const pt = svg.createSVGPoint();
-        pt.x = evt.clientX;
-        pt.y = evt.clientY;
-        const inv = svg.getScreenCTM()?.inverse();
-        return inv ? pt.matrixTransform(inv) : { x: 0, y: 0 };
+        const inverse = svg?.getScreenCTM?.()?.inverse();
+        if (inverse && svg.createSVGPoint) {
+            const point = svg.createSVGPoint();
+            point.x = evt.clientX;
+            point.y = evt.clientY;
+            return point.matrixTransform(inverse);
+        }
+        const box = viewBox.value;
+        const rect = svg?.getBoundingClientRect();
+        if (!rect?.width || !rect?.height)
+            return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+        const ratio = Math.min(
+            rect.width / box.width,
+            rect.height / box.height,
+        );
+        return {
+            x:
+                box.x +
+                (evt.clientX -
+                    rect.left -
+                    (rect.width - box.width * ratio) / 2) /
+                    ratio,
+            y:
+                box.y +
+                (evt.clientY -
+                    rect.top -
+                    (rect.height - box.height * ratio) / 2) /
+                    ratio,
+        };
     }
 
     function pxToVb(dxPx, dyPx) {
@@ -89,6 +136,7 @@ export default function usePanZoom(
     }
 
     function startPan(e) {
+        if (!option('panEnabled', true)) return;
         cancelAnimation();
         isPanning.value = true;
         const t = e.touches?.[0] || e;
@@ -114,14 +162,20 @@ export default function usePanZoom(
     }
 
     function zoom(event) {
+        if (!enabled() || !option('zoomEnabled', true)) return;
         cancelAnimation();
         callbackOnZoom && callbackOnZoom();
         event.preventDefault();
-        const factor = event.deltaY > 0 ? 0.9 : 1.1;
+        const factor = options.wheelFactor
+            ? options.wheelFactor(event)
+            : event.deltaY > 0
+              ? 0.9
+              : 1.1;
         applyZoom(factor, toSvgPoint(event));
     }
 
     function doubleClickZoom(event) {
+        if (!option('zoomEnabled', true)) return;
         event.preventDefault();
         const cursorPoint = toSvgPoint(event);
         const factor = 1.5 * (1 + toValue(speed) / 100);
@@ -132,7 +186,7 @@ export default function usePanZoom(
         cancelAnimation();
         const generation = animationGeneration;
         const startScale = scale.value;
-        const targetScale = startScale * factor;
+        const targetScale = clampScale(startScale * factor);
         let t0 = null;
         const duration = 200;
 
@@ -158,7 +212,8 @@ export default function usePanZoom(
     }
 
     function applyZoom(zoomFactor, cursorPoint) {
-        const newScale = scale.value * zoomFactor;
+        if (!Number.isFinite(zoomFactor) || zoomFactor <= 0) return;
+        const newScale = clampScale(scale.value * zoomFactor);
         const k = newScale / scale.value;
         const newW = viewBox.value.width / k;
         const newH = viewBox.value.height / k;
@@ -219,14 +274,16 @@ export default function usePanZoom(
     function resetZoom(animated = false) {
         cancelAnimation();
         if (!animated) {
-            viewBox.value = { ...initial.value };
-            scale.value = 1;
+            viewBox.value = resetViewBox();
+            scale.value = clampScale(1);
             return;
         }
 
         const generation = animationGeneration;
         const from = { ...viewBox.value };
         const fromScale = scale.value;
+        const targetScale = clampScale(1);
+        const target = resetViewBox();
         const duration = 300;
         let t0 = null;
 
@@ -235,12 +292,16 @@ export default function usePanZoom(
             if (t0 == null) t0 = ts;
             const p = Math.min((ts - t0) / duration, 1);
             viewBox.value = {
-                x: from.x + (initial.value.x - from.x) * p,
-                y: from.y + (initial.value.y - from.y) * p,
-                width: from.width + (initial.value.width - from.width) * p,
-                height: from.height + (initial.value.height - from.height) * p,
+                x: from.x + (target.x - from.x) * p,
+                y: from.y + (target.y - from.y) * p,
+                width: from.width + (target.width - from.width) * p,
+                height: from.height + (target.height - from.height) * p,
             };
-            scale.value = fromScale + (1 - fromScale) * p;
+            scale.value = fromScale + (targetScale - fromScale) * p;
+            if (p === 1) {
+                viewBox.value = { ...target };
+                scale.value = targetScale;
+            }
             zoomAnimationFrame = p < 1 ? requestAnimationFrame(step) : null;
         };
         zoomAnimationFrame = requestAnimationFrame(step);
@@ -249,85 +310,251 @@ export default function usePanZoom(
     function setInitialViewBox(box, opts = {}) {
         cancelAnimation();
         const { overwriteCurrentIfNotZoomed = true } = opts;
-        const wasZoomed =
-            viewBox.value.x !== initial.value.x ||
-            viewBox.value.y !== initial.value.y ||
-            viewBox.value.width !== initial.value.width ||
-            viewBox.value.height !== initial.value.height;
+        const wasZoomed = isZoom.value;
 
         initial.value = { ...box };
         if (!wasZoomed && overwriteCurrentIfNotZoomed) {
-            viewBox.value = { ...initial.value };
-            scale.value = 1;
+            viewBox.value = resetViewBox();
+            scale.value = clampScale(1);
         }
     }
 
-    function addEventListeners() {
-        const svg = svgRef.value;
-        if (!svg) return;
-        svg.addEventListener('mousedown', startPan);
-        svg.addEventListener('mousemove', doPan);
-        svg.addEventListener('mouseup', endPan);
-        svg.addEventListener('mouseleave', endPan);
-
-        svg.addEventListener('wheel', zoom, { passive: false });
-        svg.addEventListener('dblclick', doubleClickZoom);
-
-        svg.addEventListener('touchstart', handleTouchStart, {
-            passive: false,
-        });
-        svg.addEventListener('touchmove', handleTouchMove, { passive: false });
-        svg.addEventListener('touchend', handleTouchEnd);
-        svg.addEventListener('touchcancel', handleTouchEnd);
+    function setViewBox(box) {
+        if (
+            ![box.x, box.y, box.width, box.height].every(Number.isFinite) ||
+            box.width <= 0 ||
+            box.height <= 0
+        )
+            return false;
+        cancelAnimation();
+        const requestedScale = initial.value.width / box.width;
+        const nextScale = clampScale(requestedScale);
+        const ratio = requestedScale / nextScale;
+        viewBox.value = {
+            x: box.x + (box.width * (1 - ratio)) / 2,
+            y: box.y + (box.height * (1 - ratio)) / 2,
+            width: box.width * ratio,
+            height: box.height * ratio,
+        };
+        scale.value = nextScale;
+        return true;
     }
-
-    function removeEventListeners() {
+    function zoomAt(factor, point, animated = false) {
+        cancelAnimation();
+        if (animated) animateZoom(factor, point);
+        else applyZoom(factor, point);
+    }
+    function flushGesture() {
+        zoomAnimationFrame = null;
+        const update = pendingGesture;
+        pendingGesture = null;
+        update?.();
+    }
+    function scheduleGesture(update) {
+        pendingGesture = update;
+        if (typeof requestAnimationFrame === 'undefined') {
+            flushGesture();
+            return;
+        }
+        if (zoomAnimationFrame !== null) return;
+        const generation = animationGeneration;
+        zoomAnimationFrame = requestAnimationFrame(() => {
+            if (disposed || generation !== animationGeneration) return;
+            flushGesture();
+        });
+    }
+    function startPointerGesture() {
+        const [a, b] = pointers.values();
+        if (!a) {
+            gesture = null;
+            return;
+        }
+        const rect = svgRef.value?.getBoundingClientRect();
+        const pixelScale =
+            rect?.width && rect?.height
+                ? Math.min(
+                      rect.width / viewBox.value.width,
+                      rect.height / viewBox.value.height,
+                  )
+                : 1;
+        const inverse = svgRef.value?.getScreenCTM?.()?.inverse();
+        gesture = {
+            a,
+            box: { ...viewBox.value },
+            scale: scale.value,
+            inverse,
+            pixelScale,
+            distance: b ? Math.hypot(a.x - b.x, a.y - b.y) : 0,
+            anchor: b
+                ? toSvgPoint({
+                      clientX: (a.x + b.x) / 2,
+                      clientY: (a.y + b.y) / 2,
+                  })
+                : null,
+            context: options.onDragStart?.(),
+        };
+    }
+    function onPointerDown(event) {
+        if (
+            !enabled() ||
+            (event.button != null && event.button !== 0) ||
+            (!option('panEnabled', true) && !option('zoomEnabled', true))
+        )
+            return;
+        if (!pointers.size) {
+            suppressClick.value = false;
+            clearTimeout(suppressTimer);
+        }
+        cancelAnimation();
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        startPointerGesture();
+    }
+    function onPointerMove(event) {
+        if (!enabled() || !pointers.has(event.pointerId) || !gesture) return;
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        const [a, b] = pointers.values();
+        const start = gesture;
+        const dx = a.x - start.a.x,
+            dy = a.y - start.a.y;
+        if (b && option('zoomEnabled', true) && start.distance > 0) {
+            const factor = Math.hypot(a.x - b.x, a.y - b.y) / start.distance;
+            scheduleGesture(() => {
+                viewBox.value = { ...start.box };
+                scale.value = start.scale;
+                applyZoom(factor, start.anchor);
+            });
+        } else if (
+            option('panEnabled', true) &&
+            (Math.hypot(dx, dy) >= option('dragThreshold', 0) || dragging.value)
+        ) {
+            scheduleGesture(() => {
+                if (
+                    options.onDrag?.({
+                        dx,
+                        dy,
+                        scale: start.scale,
+                        context: start.context,
+                    }) === true
+                )
+                    return;
+                const tx = start.inverse
+                    ? start.inverse.a * dx + start.inverse.c * dy
+                    : dx / start.pixelScale;
+                const ty = start.inverse
+                    ? start.inverse.b * dx + start.inverse.d * dy
+                    : dy / start.pixelScale;
+                viewBox.value = {
+                    ...start.box,
+                    x: start.box.x - tx,
+                    y: start.box.y - ty,
+                };
+            });
+        } else return;
+        svgRef.value?.setPointerCapture?.(event.pointerId);
+        dragging.value = true;
+        suppressClick.value = true;
+    }
+    function onPointerUp(event) {
+        if (!pointers.has(event.pointerId)) return;
+        if (zoomAnimationFrame !== null) {
+            cancelAnimationFrame(zoomAnimationFrame);
+            flushGesture();
+        }
+        pointers.delete(event.pointerId);
+        if (svgRef.value?.hasPointerCapture?.(event.pointerId))
+            svgRef.value.releasePointerCapture(event.pointerId);
+        startPointerGesture();
+        if (!pointers.size) {
+            dragging.value = false;
+            suppressTimer = setTimeout(() => {
+                suppressClick.value = false;
+            }, 0);
+        }
+    }
+    function stopGesture() {
+        cancelAnimation();
+        const ids = [...pointers.keys()];
+        pointers.clear();
+        gesture = null;
+        dragging.value = false;
+        suppressClick.value = false;
+        for (const id of ids)
+            if (svgRef.value?.hasPointerCapture?.(id))
+                svgRef.value.releasePointerCapture(id);
         endPan();
         isPinching.value = false;
-        const svg = svgRef.value;
-        if (!svg) return;
-
-        svg.removeEventListener('mousedown', startPan);
-        svg.removeEventListener('mousemove', doPan);
-        svg.removeEventListener('mouseup', endPan);
-        svg.removeEventListener('mouseleave', endPan);
-
-        svg.removeEventListener('wheel', zoom);
-        svg.removeEventListener('dblclick', doubleClickZoom);
-
-        svg.removeEventListener('touchstart', handleTouchStart);
-        svg.removeEventListener('touchmove', handleTouchMove);
-        svg.removeEventListener('touchend', handleTouchEnd);
-        svg.removeEventListener('touchcancel', handleTouchEnd);
+        clearTimeout(suppressTimer);
     }
-
-    onMounted(() => {
-        svgRef.value?.setAttribute('data-vdui-pan-zoom', '');
-        if (!activeRef || activeRef.value) addEventListeners();
-    });
-
+    const legacyListeners = {
+        mousedown: startPan,
+        mousemove: doPan,
+        mouseup: endPan,
+        mouseleave: endPan,
+        wheel: zoom,
+        dblclick: doubleClickZoom,
+        touchstart: handleTouchStart,
+        touchmove: handleTouchMove,
+        touchend: handleTouchEnd,
+        touchcancel: handleTouchEnd,
+    };
+    const pointerListeners = {
+        pointerdown: onPointerDown,
+        pointermove: onPointerMove,
+        pointerup: onPointerUp,
+        pointercancel: onPointerUp,
+        lostpointercapture: onPointerUp,
+        wheel: zoom,
+    };
+    let boundSvg = null;
+    let boundListeners = null;
+    let markedSvg = null;
+    function detachListeners() {
+        if (boundSvg && isPanning.value) boundSvg.style.cursor = '';
+        if (boundSvg)
+            for (const [event, handler] of Object.entries(boundListeners))
+                boundSvg.removeEventListener(event, handler);
+        boundSvg = null;
+        boundListeners = null;
+    }
+    watch(
+        [
+            svgRef,
+            () => enabled(),
+            () => option('bindEvents', true),
+            () => option('eventMode', 'legacy'),
+        ],
+        ([svg, active, bindEvents, eventMode]) => {
+            detachListeners();
+            stopGesture();
+            if (markedSvg !== svg)
+                markedSvg?.removeAttribute('data-vdui-pan-zoom');
+            markedSvg = svg;
+            svg?.setAttribute('data-vdui-pan-zoom', '');
+            if (!svg || !active || !bindEvents) return;
+            boundSvg = svg;
+            boundListeners =
+                eventMode === 'pointer' ? pointerListeners : legacyListeners;
+            for (const [event, handler] of Object.entries(boundListeners))
+                svg.addEventListener(event, handler, { passive: false });
+        },
+        { immediate: true, flush: 'post' },
+    );
+    watch(
+        [() => option('panEnabled', true), () => option('zoomEnabled', true)],
+        stopGesture,
+    );
+    watch(
+        [
+            () => option('minScale', Number.EPSILON),
+            () => option('maxScale', Infinity),
+        ],
+        () => setViewBox(viewBox.value),
+    );
     onBeforeUnmount(() => {
         disposed = true;
-        cancelAnimation();
-        removeEventListeners();
-        svgRef.value?.removeAttribute('data-vdui-pan-zoom');
-    });
-
-    watchEffect(() => {
-        if (!activeRef) return;
-        if (activeRef.value) addEventListeners();
-        else {
-            cancelAnimation();
-            removeEventListeners();
-        }
-        return () => removeEventListeners();
-    });
-
-    watch(svgRef, (svg, previous) => {
-        previous?.removeAttribute('data-vdui-pan-zoom');
-        svg?.setAttribute('data-vdui-pan-zoom', '');
-        removeEventListeners();
-        if (!activeRef || activeRef.value) addEventListeners();
+        detachListeners();
+        stopGesture();
+        markedSvg?.removeAttribute('data-vdui-pan-zoom');
     });
 
     function zoomByFactor(factor, animated = false) {
@@ -335,12 +562,7 @@ export default function usePanZoom(
             x: viewBox.value.x + viewBox.value.width / 2,
             y: viewBox.value.y + viewBox.value.height / 2,
         };
-        cancelAnimation();
-        if (animated) {
-            animateZoom(factor, center);
-        } else {
-            applyZoom(factor, center);
-        }
+        zoomAt(factor, center, animated);
     }
 
     return {
@@ -351,5 +573,14 @@ export default function usePanZoom(
         setInitialViewBox,
         scale,
         zoomByFactor,
+        zoomAt,
+        setViewBox,
+        dragging,
+        suppressClick,
+        stopGesture,
+        onPointerDown,
+        onPointerMove,
+        onPointerUp,
+        onWheel: zoom,
     };
 }

@@ -7742,6 +7742,7 @@ export function useConfig(options = {}) {
         skeletonConfig: null,
         debug: false, // v3
         loading: false, // v3
+        theme: '',
         events: {
             // v3
             datapointEnter: null, // v3
@@ -7759,12 +7760,24 @@ export function useConfig(options = {}) {
             stack: false,
             annotator: true,
             svg: true,
+            zoom: true,
         }),
         customPalette: [],
         projection: 'globe',
+        normalizeCountryCodes: false,
+        countryNames: {},
+        countryNameFormatter: null,
+        selection: { enabled: false, multiple: false, color: '#333333' },
         style: {
             fontFamily: 'inherit',
             chart: {
+                zoom: {
+                    show: false,
+                    minZoom: 1,
+                    maxZoom: 20,
+                    region: null,
+                    countries: [],
+                },
                 backgroundColor: COLOR_BACKGROUND,
                 color: COLOR_TEXT_PRIMARY,
                 padding: PADDING([12, 12, 12, 12]),
@@ -7791,9 +7804,39 @@ export function useConfig(options = {}) {
                     },
                     waterColor: COLOR_BLUE,
                 },
+                points: {
+                    show: true,
+                    radius: 5,
+                    maxRadius: 25,
+                    color: COLOR_BLUE,
+                    stroke: '#FFFFFF',
+                    strokeWidth: 1,
+                    opacity: 0.8,
+                },
+                colorScale: {
+                    type: 'linear',
+                    domain: null,
+                    center: 0,
+                    middleColor: '#FFFFFF',
+                    quantileSteps: 5,
+                    thresholds: [],
+                    colors: [],
+                    legend: {
+                        show: false,
+                        position: 'bottom',
+                        title: '',
+                        fontSize: 12,
+                        gradient: {
+                            borderRadius: 3,
+                            height: 12,
+                        },
+                        formatter: null,
+                    },
+                },
                 territory: {
                     stroke: '#666666',
                     emptyColor: '#E0E0E0',
+                    invalidColor: '#E0E0E0',
                     strokeWidth: 0.5,
                     strokeWidthSelected: 2,
                     colors: {
