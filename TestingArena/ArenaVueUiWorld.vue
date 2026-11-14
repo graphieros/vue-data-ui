@@ -1,4 +1,3 @@
-*
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import LocalVueUiWorld from '../src/components/vue-ui-world.vue';
@@ -10,6 +9,7 @@ import { VueUiWorld as VueUiWorldTreeshaken } from 'vue-data-ui/vue-ui-world';
 import ConfigKnobs from './ConfigKnobs.vue';
 import { useConfigurationControls } from './createConfigModel';
 import { useConfig } from '../src/useConfig';
+import useThemeOptions from './useThemeOptions';
 
 const { vue_ui_world: DEFAULT_CONFIG } = useConfig();
 
@@ -231,7 +231,87 @@ const model = createModel([
     CHECKBOX('debug', { def: true }),
     CHECKBOX('loading', { def: false }),
     CHECKBOX('userOptions.useCursorPointer', { def: false }),
+    CHECKBOX('userOptions.buttons.zoom'),
     CHECKBOX('style.chart.territory.showTaiwanAsPartOfChina', { def: false }),
+    CHECKBOX('normalizeCountryCodes'),
+    TEXT('countryNames', { def: '{}' }),
+    SELECT('countryNameFormatter', ['default', 'ISO prefix', 'uppercase'], {
+        def: 'default',
+    }),
+
+    CHECKBOX('style.chart.zoom.show', { def: true }),
+    NUMBER('style.chart.zoom.minZoom', { min: 1, max: 20, step: 0.5 }),
+    NUMBER('style.chart.zoom.maxZoom', { min: 1, max: 100, step: 1 }),
+    SELECT(
+        'style.chart.zoom.region',
+        [
+            'world',
+            'africa',
+            'europe',
+            'asia',
+            'northAmerica',
+            'southAmerica',
+            'oceania',
+        ],
+        { def: 'world' },
+    ),
+    TEXT('style.chart.zoom.countries', { def: 'countries' }),
+    CHECKBOX('selection.enabled', { def: true }),
+    CHECKBOX('selection.multiple', { def: true }),
+    COLOR('selection.color'),
+
+    SELECT('style.chart.colorScale.type', [
+        'linear',
+        'log',
+        'quantile',
+        'threshold',
+        'diverging',
+    ]),
+    TEXT('style.chart.colorScale.domain', { def: '' }),
+    NUMBER('style.chart.colorScale.center', {
+        min: -100000,
+        max: 100000,
+        step: 1,
+    }),
+    COLOR('style.chart.colorScale.middleColor'),
+    NUMBER('style.chart.colorScale.quantileSteps', {
+        min: 2,
+        max: 20,
+        step: 1,
+    }),
+    TEXT('style.chart.colorScale.thresholds', { def: '10, 100, 1000, 10000' }),
+    TEXT('style.chart.colorScale.colors', { def: '' }),
+    CHECKBOX('style.chart.colorScale.legend.show', { def: true }),
+    SELECT('style.chart.colorScale.legend.position', ['top', 'bottom']),
+    TEXT('style.chart.colorScale.legend.title', { def: 'Value' }),
+    NUMBER('style.chart.colorScale.legend.gradient.borderRadius', {
+        min: 0,
+        max: 40,
+        step: 1,
+    }),
+    NUMBER('style.chart.colorScale.legend.gradient.height', {
+        min: 0,
+        max: 100,
+        step: 1,
+    }),
+    NUMBER('style.chart.colorScale.legend.fontSize', {
+        min: 8,
+        max: 32,
+        step: 1,
+    }),
+    SELECT(
+        'style.chart.colorScale.legend.formatter',
+        ['default', 'compact', 'percent'],
+        { def: 'default' },
+    ),
+
+    CHECKBOX('style.chart.points.show'),
+    RANGE('style.chart.points.radius', { min: 0, max: 30, step: 1 }),
+    RANGE('style.chart.points.maxRadius', { min: 0, max: 60, step: 1 }),
+    COLOR('style.chart.points.color'),
+    COLOR('style.chart.points.stroke'),
+    NUMBER('style.chart.points.strokeWidth', { min: 0, max: 10, step: 0.5 }),
+    RANGE('style.chart.points.opacity', { min: 0, max: 1, step: 0.05 }),
 
     SELECT(
         'projection',
@@ -250,7 +330,7 @@ const model = createModel([
             'globe',
             'azimuthalEquidistant',
         ],
-        { def: 'globe' },
+        { def: 'equirectangular' },
     ),
 
     COLOR('style.chart.backgroundColor', { def: '#FFFFFF' }),
@@ -269,6 +349,8 @@ const model = createModel([
         max: 12,
         step: 0.1,
     }),
+    COLOR('style.chart.territory.emptyColor'),
+    COLOR('style.chart.territory.invalidColor'),
     COLOR('style.chart.territory.colors.min', { def: '#E0E0E0' }),
     COLOR('style.chart.territory.colors.max', { def: '#FF0000' }),
 
@@ -292,26 +374,111 @@ const model = createModel([
     CHECKBOX('table.useDialog', { def: true }),
 ]);
 
-const projections = ref([
-    'aitoff',
-    'azimuthalEquidistant',
-    'bonne',
-    'equirectangular',
-    'gallPeters',
-    'globe',
-    'hammer',
-    'mercator',
-    'mollweide',
-    'robinson',
-    'sinusoidal',
-    'vanDerGrinten',
-    'winkelTripel',
-]);
+const projectionControl = model.value.find(
+    (control) => control.key === 'projection',
+);
 
-const currentProjection = ref('mollweide');
+const currentProjection = computed({
+    get: () => projectionControl.def,
+    set: (value) => {
+        projectionControl.def = value;
+    },
+});
+
+const points = [
+    { id: 'paris', name: 'Paris', coordinates: [2.35, 48.86] },
+    { id: 'london', name: 'London', coordinates: [-0.13, 51.51], value: 100 },
+    {
+        id: 'tokyo',
+        name: 'Tokyo',
+        coordinates: [139.69, 35.68],
+        value: 25,
+        color: '#f97316',
+    },
+    {
+        id: 'new-york',
+        name: 'New York',
+        coordinates: [-74.01, 40.71],
+        value: 50,
+    },
+    { id: 'sydney', name: 'Sydney', coordinates: [151.21, -33.87], radius: 8 },
+];
+
+const selectedCountries = ref([]);
+const themeSelectedCountries = ref(['FRA', 'DEU']);
+const { themeOptions, currentTheme } = useThemeOptions();
+const configTheme = computed(() => ({
+    theme: currentTheme.value,
+    projection: currentProjection.value,
+
+    selection: { enabled: true, multiple: true },
+    style: {
+        chart: {
+            zoom: { show: true },
+            title: { text: 'World theme' },
+            colorScale: {
+                type: config.value.style.chart.colorScale.type,
+                legend: { show: true },
+            },
+        },
+    },
+}));
+
+const splitList = (value) =>
+    String(value)
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean);
+
+const splitNumbers = (value) =>
+    splitList(value).map(Number).filter(Number.isFinite);
+
+function parseCountryNames(value) {
+    try {
+        const parsed = JSON.parse(value);
+        return parsed && !Array.isArray(parsed) && typeof parsed === 'object'
+            ? parsed
+            : {};
+    } catch {
+        return {};
+    }
+}
+
+const compactNumber = new Intl.NumberFormat('en', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+});
+
+const percentNumber = new Intl.NumberFormat('en', {
+    style: 'percent',
+    maximumFractionDigits: 1,
+});
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
+    const scale = c.style.chart.colorScale;
+    const domain = splitNumbers(scale.domain);
+    c.countryNames = parseCountryNames(c.countryNames);
+    c.countryNameFormatter =
+        c.countryNameFormatter === 'ISO prefix'
+            ? ({ code, name }) => `${code} — ${name}`
+            : c.countryNameFormatter === 'uppercase'
+              ? ({ name }) => name.toUpperCase()
+              : null;
+    c.style.chart.zoom.region =
+        c.style.chart.zoom.region === 'world'
+            ? null
+            : c.style.chart.zoom.region;
+    c.style.chart.zoom.countries = splitList(c.style.chart.zoom.countries);
+    scale.domain = domain.length === 2 ? domain : null;
+    scale.thresholds = splitNumbers(scale.thresholds);
+    scale.colors = splitList(scale.colors);
+    scale.legend.formatter =
+        scale.legend.formatter === 'compact'
+            ? (value) => compactNumber.format(value)
+            : scale.legend.formatter === 'percent'
+              ? (value) => percentNumber.format(value)
+              : null;
     return {
         ...c,
         // skeletonConfig: {
@@ -341,7 +508,6 @@ const config = computed(() => {
                 console.log('click event', { datapoint, seriesIndex });
             },
         },
-        projection: currentProjection.value,
         style: {
             ...c.style,
             chart: {
@@ -365,14 +531,67 @@ onMounted(async () => {
 </script>
 
 <template>
-    <select v-model="currentProjection">
-        <option v-for="p in projections">{{ p }}</option>
-    </select>
+    <label
+        style="
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        "
+    >
+        Theme
+        <select v-model="currentTheme">
+            <option v-for="theme in themeOptions" :key="theme" :value="theme">
+                {{ theme || 'Default' }}
+            </option>
+        </select>
+    </label>
+    <label
+        style="
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        "
+    >
+        Projection
+        <select v-model="currentProjection">
+            <option
+                v-for="projection in projectionControl.options"
+                :key="projection"
+                :value="projection"
+            >
+                {{ projection }}
+            </option>
+        </select>
+    </label>
+    <p>
+        List knobs accept comma-separated values (domain: 0, 30000; countries:
+        FRA, DEU). An empty domain uses the dataset range. Country names accept
+        JSON, for example
+        {{ '{"FRA":"France personnalisée"}' }}.
+    </p>
+    <p>Selected countries: {{ selectedCountries.join(', ') || 'None' }}</p>
     <Box comp="VueUiWorld" :dataset="dataset" :config="config">
         <template #title>VueUiWorld</template>
 
+        <template #theme>
+            <LocalVueUiWorld
+                :dataset="dataset"
+                :points="points"
+                :config="configTheme"
+                v-model:selectedCountries="themeSelectedCountries"
+            />
+        </template>
+
         <template #local>
-            <LocalVueUiWorld :dataset="dataset" :config="config" ref="local">
+            <LocalVueUiWorld
+                :dataset="dataset"
+                :config="config"
+                :points="points"
+                v-model:selectedCountries="selectedCountries"
+                ref="local"
+            >
                 <template #svg-underlayer="{ svg }">
                     <rect
                         :x="0"
@@ -411,33 +630,43 @@ onMounted(async () => {
         <template #VDUI-local>
             <LocalVueDataUi
                 component="VueUiWorld"
+                :points="points"
+                v-model:selectedCountries="selectedCountries"
                 :dataset="dataset"
                 :config="config"
             />
         </template>
 
         <template #build>
-            <VueUiWorld :dataset="dataset" :config="config" />
+            <VueUiWorld
+                :dataset="dataset"
+                :config="config"
+                :points="points"
+                v-model:selectedCountries="selectedCountries"
+            />
         </template>
 
         <template #build-treesh>
-            <VueUiWorldTreeshaken :dataset="dataset" :config="config" />
+            <VueUiWorldTreeshaken
+                :dataset="dataset"
+                :config="config"
+                :points="points"
+                v-model:selectedCountries="selectedCountries"
+            />
         </template>
 
         <template #VDUI-build>
             <VueDataUi
                 component="VueUiWorld"
+                :points="points"
+                v-model:selectedCountries="selectedCountries"
                 :dataset="dataset"
                 :config="config"
             />
         </template>
 
         <template #knobs="{ summaryOpen }">
-            <ConfigKnobs
-                :model="model"
-                @change="step += 1"
-                :open="summaryOpen"
-            />
+            <ConfigKnobs :model="model" :open="summaryOpen" />
         </template>
     </Box>
 </template>

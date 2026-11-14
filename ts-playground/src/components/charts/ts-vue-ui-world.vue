@@ -29,6 +29,7 @@ import CommonOptionAnnotator from '../slots/common/option-annotator.vue';
 import WorldSvg from '../slots/vue-ui-world/world-svg.vue';
 import WorldLegend from '../slots/vue-ui-world/world-legend.vue';
 import WorldTooltip from '../slots/vue-ui-world/world-tooltip.vue';
+import WorldOptionZoom from '../slots/vue-ui-world/world-option-zoom.vue';
 
 const dataset = computed<VueUiWorldDataset>(() => {
     return {
@@ -45,6 +46,7 @@ const testPreconfig = computed<VueUiWorldConfig>(() => {
         skeletonConfig: null,
         debug: false,
         loading: false,
+        theme: '',
         events: {
             datapointEnter: null,
             datapointLeave: null,
@@ -68,7 +70,7 @@ const testPreconfig = computed<VueUiWorldConfig>(() => {
                 animation: false,
                 annotator: true,
                 svg: true,
-                zoom: false,
+                zoom: true,
                 altCopy: false,
             },
             callbacks: {
@@ -98,6 +100,7 @@ const testPreconfig = computed<VueUiWorldConfig>(() => {
                 fullscreen: 'Toggle fullscreen',
                 annotator: 'Toggle annotator',
                 svg: 'Download SVG',
+                zoom: 'Toggle zoom',
                 altCopy: 'Copy alt text',
             },
             print: {
@@ -109,9 +112,24 @@ const testPreconfig = computed<VueUiWorldConfig>(() => {
         },
         customPalette: [],
         projection: 'globe',
+        normalizeCountryCodes: false,
+        countryNames: {},
+        countryNameFormatter: null,
+        selection: {
+            enabled: false,
+            multiple: false,
+            color: '#333333',
+        },
         style: {
             fontFamily: 'inherit',
             chart: {
+                zoom: {
+                    show: false,
+                    minZoom: 1,
+                    maxZoom: 20,
+                    region: null,
+                    countries: [],
+                },
                 backgroundColor: '#FFFFFF',
                 color: '#2D353C',
                 padding: {
@@ -137,9 +155,39 @@ const testPreconfig = computed<VueUiWorldConfig>(() => {
                     },
                     waterColor: '#1f77b4',
                 },
+                points: {
+                    show: true,
+                    radius: 5,
+                    maxRadius: 25,
+                    color: '#1f77b4',
+                    stroke: '#FFFFFF',
+                    strokeWidth: 1,
+                    opacity: 0.8,
+                },
+                colorScale: {
+                    type: 'linear',
+                    domain: null,
+                    center: 0,
+                    middleColor: '#FFFFFF',
+                    quantileSteps: 5,
+                    thresholds: [],
+                    colors: [],
+                    legend: {
+                        show: false,
+                        position: 'bottom',
+                        title: '',
+                        fontSize: 12,
+                        gradient: {
+                            borderRadius: 3,
+                            height: 12,
+                        },
+                        formatter: null,
+                    },
+                },
                 territory: {
                     stroke: '#666666',
                     emptyColor: '#E0E0E0',
+                    invalidColor: '#E0E0E0',
                     strokeWidth: 0.5,
                     strokeWidthSelected: 2,
                     colors: {
@@ -366,6 +414,10 @@ function copyAlt(payload: VueUiWorldEmitCopyAlt) {
 
             <template #optionAnnotator="{ toggleAnnotator, isAnnotator }">
                 <CommonOptionAnnotator :toggle-annotator :is-annotator />
+            </template>
+
+            <template #optionZoom="{ toggleZoom, isZoomLocked }">
+                <WorldOptionZoom :toggle-zoom :is-zoom-locked />
             </template>
 
             <template #optionAltCopy>

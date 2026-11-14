@@ -93,8 +93,16 @@ function isCoordinatePair(value) {
     );
 }
 
-function encodeBase36(value) {
-    return value.toString(36);
+// Zigzag signed deltas, then encode five bits per printable character.
+// Arithmetic avoids 32-bit overflow at the supported maximum precision (8).
+function encodeDelta(value) {
+    let remaining = value < 0 ? -value * 2 - 1 : value * 2;
+    let encoded = '';
+    while (remaining >= 32) {
+        encoded += String.fromCharCode((remaining % 32) + 32 + 63);
+        remaining = Math.floor(remaining / 32);
+    }
+    return encoded + String.fromCharCode(remaining + 63);
 }
 
 function encodeRing(ring) {
@@ -120,9 +128,9 @@ function encodeRing(ring) {
             previousX = x;
             previousY = y;
 
-            return `${encodeBase36(dx)},${encodeBase36(dy)}`;
+            return `${encodeDelta(dx)}${encodeDelta(dy)}`;
         })
-        .join(';');
+        .join('');
 }
 
 function encodeGeometry(geometry) {
@@ -168,11 +176,30 @@ function encodeFeature(feature) {
 }
 
 function createGeneratedModule(packedFeatures) {
+    const propertyOption = keepAllProperties
+        ? '--keep-all-properties'
+        : `--keep=${keptPropertyKeys.join(',')}`;
+    const header =
+        [
+            '/*',
+            ' * Generated geographic data for vue-ui-world; do not edit directly.',
+            ` * Source: ${inputPath}`,
+            ` * Regenerate: node compress-world.mjs ${JSON.stringify(inputPath)} ${JSON.stringify(outputPath)} --precision=${precision} ${propertyOption}`,
+            ` * Coordinates: ${precision} decimal places (scale ${scale}).`,
+            ' * Encoding: ring-local coordinate deltas, zigzag signed integers,',
+            ' * then five-bit groups stored as printable characters (offset 63).',
+            ' * Payload strings contain geographic data only.',
+            ' * The decoder reconstructs GeoJSON without evaluating the payload.',
+        ]
+            .map((line) => line.replaceAll('*/', '* /').replaceAll('\n', ' '))
+            .join('\n') + '\n */\n';
+    const decodeRing =
+        'function r(s){let i=0,x=0,y=0;const a=[];function n(){let v=0,k=0,b;do{b=s.charCodeAt(i++)-63;v+=(b&31)*2**k;k+=5}while(b&32);return v%2?-(v+1)/2:v/2}while(i<s.length){x+=n();y+=n();a.push([x/S,y/S])}return a}';
     if (keepAllProperties) {
-        return `const S=${scale};const T=["Polygon","MultiPolygon"];const D=${JSON.stringify(packedFeatures)};function r(s){let x=0,y=0;return s?s.split(";").map(p=>{const i=p.indexOf(",");x+=parseInt(p.slice(0,i),36);y+=parseInt(p.slice(i+1),36);return[x/S,y/S]}):[]}function c(t,v){return t?v.map(p=>p.map(r)):v.map(r)}const worldGeo={type:"FeatureCollection",features:D.map(([p,t,v])=>({type:"Feature",properties:p,geometry:{type:T[t],coordinates:c(t,v)}}))};export default worldGeo;\n`;
+        return `${header}const S=${scale};const T=["Polygon","MultiPolygon"];const D=${JSON.stringify(packedFeatures)};${decodeRing}function c(t,v){return t?v.map(p=>p.map(r)):v.map(r)}const worldGeo={type:"FeatureCollection",features:D.map(([p,t,v])=>({type:"Feature",properties:p,geometry:{type:T[t],coordinates:c(t,v)}}))};export default worldGeo;\n`;
     }
 
-    return `const S=${scale};const K=${JSON.stringify(keptPropertyKeys)};const T=["Polygon","MultiPolygon"];const D=${JSON.stringify(packedFeatures)};function p(a){const o={};for(let i=0;i<K.length;i+=1)if(a[i]!=null)o[K[i]]=a[i];return o}function r(s){let x=0,y=0;return s?s.split(";").map(v=>{const i=v.indexOf(",");x+=parseInt(v.slice(0,i),36);y+=parseInt(v.slice(i+1),36);return[x/S,y/S]}):[]}function c(t,v){return t?v.map(g=>g.map(r)):v.map(r)}const worldGeo={type:"FeatureCollection",features:D.map(([a,t,v])=>({type:"Feature",properties:p(a),geometry:{type:T[t],coordinates:c(t,v)}}))};export default worldGeo;\n`;
+    return `${header}const S=${scale};const K=${JSON.stringify(keptPropertyKeys)};const T=["Polygon","MultiPolygon"];const D=${JSON.stringify(packedFeatures)};function p(a){const o={};for(let i=0;i<K.length;i+=1)if(a[i]!=null)o[K[i]]=a[i];return o}${decodeRing}function c(t,v){return t?v.map(g=>g.map(r)):v.map(r)}const worldGeo={type:"FeatureCollection",features:D.map(([a,t,v])=>({type:"Feature",properties:p(a),geometry:{type:T[t],coordinates:c(t,v)}}))};export default worldGeo;\n`;
 }
 
 const sourceText = fs.readFileSync(absoluteInputPath, 'utf8');
