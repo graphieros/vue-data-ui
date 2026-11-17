@@ -174,8 +174,8 @@ test.each(['linear', 'log'])(
                     config: config(false),
                 });
                 const before = visibleColors();
-                expect(before[0]).toBe('#0000ff');
-                expect(before).toContain('#ff0000');
+                expect(before[0]).toBe('#0000ffff');
+                expect(before).toContain('#ff0000ff');
                 await wrapper.setProps({ config: config(true) });
                 const after = visibleColors();
                 expect(after[0]).toBe(before[0]);

@@ -133,7 +133,7 @@ test('loading configuration is reactive and unrelated updates preserve table/too
             },
         },
     });
-    expect(s.cfgChart.backgroundColor).toBe('#abcdef');
+    expect(s.cfgChart.backgroundColor).toBe('#abcdefff');
     await w.setProps({
         config: {
             loading: true,
@@ -144,7 +144,7 @@ test('loading configuration is reactive and unrelated updates preserve table/too
         },
     });
     expect(s.radar).toHaveLength(1);
-    expect(s.cfgChart.backgroundColor).toBe('#123456');
+    expect(s.cfgChart.backgroundColor).toBe('#123456ff');
     await w.setProps({ config: {} });
     expect(s.loading).toBe(false);
     expect(s.mutableConfig).toEqual({ showTable: true, showTooltip: false });

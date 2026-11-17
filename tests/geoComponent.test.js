@@ -142,7 +142,7 @@ test('loading overrides stay reactive and recover real inputs', async () => {
         },
     });
     expect(s.FINAL_CONFIG.userOptions.show).toBe(false);
-    expect(s.cfgChart.backgroundColor).toBe('#abcdef');
+    expect(s.cfgChart.backgroundColor).toBe('#abcdefff');
     expect(s.points[0].name).toBe('Skeleton');
     await w.setProps({ config: {} });
     expect(s.loading).toBe(false);

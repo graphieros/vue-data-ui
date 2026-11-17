@@ -402,7 +402,7 @@ test('loading skeleton styles and data stay current and recover', async () => {
             },
         },
     });
-    expect(s.cfgChart.backgroundColor).toBe('#123456');
+    expect(s.cfgChart.backgroundColor).toBe('#123456ff');
     expect(s.layoutData.nodes[0].label).toBe('Placeholder');
     await w.setProps({ config: {} });
     expect(s.loading).toBe(false);
