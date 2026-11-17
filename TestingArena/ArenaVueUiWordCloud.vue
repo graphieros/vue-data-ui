@@ -44,7 +44,6 @@ const model = createModel([
     CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX('userOptions.show', { def: true }),
     CHECKBOX('strictPixelPadding', { def: true }),
-    SELECT('quality', ['fast', 'balanced', 'precise'], { def: 'fast' }),
 
     CHECKBOX('userOptions.buttons.tooltip', { def: true }),
     CHECKBOX('userOptions.buttons.pdf', { def: true }),
@@ -70,6 +69,22 @@ const model = createModel([
     NUMBER('style.chart.words.maxFontSize', { def: 100, min: 10, max: 300 }),
     NUMBER('style.chart.words.minFontSize', { def: 10, min: 10, max: 300 }),
     NUMBER('style.chart.words.proximity', { def: 0, min: 0, max: 20 }),
+    SELECT(
+        'style.chart.words.angles',
+        ['0,-90', '0', '-45,0,45,90', '-20,0,20'],
+        {
+            def: '0,-90',
+            label: 'Word angles (degrees)',
+        },
+    ),
+    CHECKBOX('style.chart.words.randomizeAngles', { def: false }),
+    RANGE('style.chart.words.randomness', {
+        def: 0.2,
+        min: 0,
+        max: 1,
+        step: 0.05,
+    }),
+    NUMBER('style.chart.words.seed', { def: 42, min: 1, max: 1000 }),
 
     COLOR('style.chart.words.color', { def: '#1A1A1A' }),
     CHECKBOX('style.chart.words.usePalette', { def: true }),
@@ -148,6 +163,9 @@ const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
+    c.style.chart.words.angles = c.style.chart.words.angles
+        .split(',')
+        .map(Number);
     return {
         ...c,
         // skeletonConfig: {

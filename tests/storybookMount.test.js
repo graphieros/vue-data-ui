@@ -27,7 +27,7 @@ function mountComponent() {
 }
 
 describe('Storybook mounts with an installed Vue devtools hook', () => {
-    it('keeps the original receiver when the global hook changes before cleanup', () => {
+    it('forwards cleanup to the current global hook exactly once', () => {
         const hook = createHook();
         const emit = hook.emit;
         const onUnmount = vi.fn();
@@ -35,14 +35,19 @@ describe('Storybook mounts with an installed Vue devtools hook', () => {
         globalThis.__VUE_DEVTOOLS_GLOBAL_HOOK__ = hook;
         const story = mountComponent();
 
-        globalThis.__VUE_DEVTOOLS_GLOBAL_HOOK__ = { emit() {} };
+        const replacementHook = createHook();
+        const onReplacementUnmount = vi.fn();
+        replacementHook.listeners.set('app:unmount', onReplacementUnmount);
+        globalThis.__VUE_DEVTOOLS_GLOBAL_HOOK__ = replacementHook;
         story.wrapper.vm.$emit('change', 7);
         expect(story.wrapper.emitted('change')).toEqual([[7]]);
         expect(() => story.unmount()).not.toThrow();
-        expect(onUnmount).toHaveBeenCalledTimes(1);
+        expect(onUnmount).not.toHaveBeenCalled();
+        expect(onReplacementUnmount).toHaveBeenCalledTimes(1);
         expect(hook.emit).toBe(emit);
         story.unmount();
-        expect(onUnmount).toHaveBeenCalledTimes(1);
+        expect(onUnmount).not.toHaveBeenCalled();
+        expect(onReplacementUnmount).toHaveBeenCalledTimes(1);
     });
 
     it('records events once across remounts and hook replacements', () => {

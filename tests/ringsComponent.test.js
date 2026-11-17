@@ -125,7 +125,7 @@ test('configuration updates preserve manual preferences and apply live skeleton 
         },
     });
     expect(s.convertedDataset).toHaveLength(1);
-    expect(s.cfgChart.backgroundColor).toBe('#abcdef');
+    expect(s.cfgChart.backgroundColor).toBe('#abcdefff');
     expect(s.showLabels).toBe(false);
     await w.setProps({
         config: {
@@ -137,7 +137,7 @@ test('configuration updates preserve manual preferences and apply live skeleton 
         },
     });
     expect(s.convertedDataset).toHaveLength(2);
-    expect(s.cfgChart.backgroundColor).toBe('#123456');
+    expect(s.cfgChart.backgroundColor).toBe('#123456ff');
     await w.setProps({ config: {} });
     expect(s.loading).toBe(false);
     expect(s.mutableConfig).toEqual({

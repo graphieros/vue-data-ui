@@ -216,7 +216,7 @@ test('loading styles and skeleton data follow config updates and recover', async
             },
         },
     });
-    expect(s.cfgChart.backgroundColor).toBe('#ff0000');
+    expect(s.cfgChart.backgroundColor).toBe('#ff0000ff');
     expect(s.FINAL_DATASET.value).toBe(25);
     await w.setProps({ config: noAnimation });
     expect(s.loading).toBe(false);

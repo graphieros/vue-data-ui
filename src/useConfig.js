@@ -5797,8 +5797,8 @@ export function useConfig(options = {}) {
         customPalette: [],
         useCssAnimation: false, // v2 = true
         animationDelayMs: 20,
-        quality: 'fast', // 'fast' | 'balanced' | 'precise'
-        strictPixelPadding: true, // If true, strict per-pixel padding is used (dilateWordMask); if false, just rectangular bounding box (or pad).
+        quality: 'fast', // Legacy compatibility setting; glyph packing uses one placement strategy.
+        strictPixelPadding: true, // Add one extra pixel of padding to each glyph sprite.
         userOptions: USER_OPTIONS({
             tooltip: true,
             pdf: true,
@@ -5838,6 +5838,10 @@ export function useConfig(options = {}) {
                     minFontSize: FONT._10,
                     bold: false,
                     proximity: 0,
+                    angles: [0],
+                    randomizeAngles: false,
+                    randomness: 0.2,
+                    seed: 42,
                     packingWeight: 1, // deprecated
                     color: COLOR_TEXT_PRIMARY,
                     usePalette: true,

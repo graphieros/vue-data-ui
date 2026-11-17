@@ -196,9 +196,9 @@ function createCases(env) {
                             '[data-cy="interline-area"]',
                         ),
                     ].map((path) => path.getAttribute('fill'));
-                    expect(colors[0]).toBe('#0000ff');
-                    expect(colors).toContain('#ff0000');
-                    expect(colors.at(-1)).toBe('#0000ff');
+                    expect(colors[0]).toBe('#0000ffff');
+                    expect(colors).toContain('#ff0000ff');
+                    expect(colors.at(-1)).toBe('#0000ffff');
                 });
             }
         }

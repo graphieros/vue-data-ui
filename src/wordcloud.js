@@ -10,71 +10,6 @@
  * - position words inside a given area using a spiral placement algorithm
  */
 
-const QUALITY_PRESETS = {
-    fast: {
-        spiralStep: 6,
-        fallbackSpiralStep: 2,
-        spiralRadiusStep: 2,
-        fallbackSpiralRadiusStep: 1,
-        primaryAttempts: 10000,
-        fallbackAttempts: 25000,
-        minimumVisualPadding: 2,
-        scaleStep: 0.9,
-    },
-    balanced: {
-        spiralStep: 4,
-        fallbackSpiralStep: 1,
-        spiralRadiusStep: 1.5,
-        fallbackSpiralRadiusStep: 1,
-        primaryAttempts: 20000,
-        fallbackAttempts: 50000,
-        minimumVisualPadding: 3,
-        scaleStep: 0.92,
-    },
-    precise: {
-        spiralStep: 2,
-        fallbackSpiralStep: 1,
-        spiralRadiusStep: 1,
-        fallbackSpiralRadiusStep: 0.75,
-        primaryAttempts: 50000,
-        fallbackAttempts: 100000,
-        minimumVisualPadding: 4,
-        scaleStep: 0.95,
-    },
-};
-
-const DEFAULT_QUALITY = 'fast';
-
-function getQualityPreset(quality) {
-    return QUALITY_PRESETS[quality] || QUALITY_PRESETS[DEFAULT_QUALITY];
-}
-
-const spiralLookupCache = new Map();
-
-function getSpiralLookup(step) {
-    const key = String(step);
-    const cached = spiralLookupCache.get(key);
-    if (cached) return cached;
-
-    const degreesToRadians = Math.PI / 180;
-    const cosineArray = [];
-    const sineArray = [];
-
-    for (let angleDegrees = 0; angleDegrees < 360; angleDegrees += step) {
-        const angle = angleDegrees * degreesToRadians;
-        cosineArray.push(Math.cos(angle));
-        sineArray.push(Math.sin(angle));
-    }
-
-    const lookup = {
-        cosineArray,
-        sineArray,
-    };
-
-    spiralLookupCache.set(key, lookup);
-    return lookup;
-}
-
 /* ------------------------------------------------------------------------- */
 /* Bitmap generation                                                         */
 /* ------------------------------------------------------------------------- */
@@ -82,7 +17,6 @@ function getSpiralLookup(step) {
 /**
  * Generates a bitmap and mask representing a word, given font size and padding.
  * Computes:
- *  - per-pixel mask: wordMask = Array<[x,y]>
  *  - per-row run-length encoding: runs = Array<[y, xStart, xEnd]>
  *    where xStart and xEnd are inclusive and describe contiguous opaque pixels.
  *
@@ -96,7 +30,6 @@ function getSpiralLookup(step) {
  * @returns {{
  *   w: number,
  *   h: number,
- *   wordMask: Array<[number, number]>,
  *   runs: Array<[number, number, number]>,
  *   minX: number,
  *   minY: number,
@@ -111,6 +44,7 @@ export function getWordBitmap({
     canvas,
     ctx: context,
     svg,
+    angle = 0,
 }) {
     const isBold = svg.style && svg.style.bold;
     const fontFamily =
@@ -122,19 +56,20 @@ export function getWordBitmap({
     const hasArabic = /[\u0600-\u06FF]/.test(wordName);
 
     context.font = font;
+    context.textRendering = 'optimizeLegibility';
     context.direction = hasArabic ? 'rtl' : 'ltr';
     context.textAlign = 'left';
     context.textBaseline = 'alphabetic';
 
     const metrics = context.measureText(wordName);
 
-    const actualLeft = Math.ceil(Math.abs(metrics.actualBoundingBoxLeft || 0));
+    const actualLeft = Math.ceil(metrics.actualBoundingBoxLeft ?? 0);
     const actualRight = Math.ceil(
-        Math.abs(metrics.actualBoundingBoxRight || metrics.width),
+        metrics.actualBoundingBoxRight ?? metrics.width,
     );
-    const actualAscent = Math.ceil(metrics.actualBoundingBoxAscent || fontSize);
+    const actualAscent = Math.ceil(metrics.actualBoundingBoxAscent ?? fontSize);
     const actualDescent = Math.ceil(
-        metrics.actualBoundingBoxDescent || fontSize * 0.25,
+        metrics.actualBoundingBoxDescent ?? fontSize * 0.25,
     );
 
     const basePadding = Math.max(0, Math.round(pad || 0));
@@ -143,31 +78,52 @@ export function getWordBitmap({
     // strokes can extend beyond the simple text advance box. A safety
     // padding makes the collision bitmap closer to the final rendering
     const visualSafetyPadding = Math.ceil(fontSize * (hasArabic ? 0.22 : 0.12));
-    const totalPadding = basePadding + visualSafetyPadding;
+    // Include the SVG stroke and browser rasterization tolerance in the canvas.
+    const totalPadding = basePadding + visualSafetyPadding + 3;
 
-    const textWidth = Math.max(1, actualLeft + actualRight + totalPadding * 2);
-    const textHeight = Math.max(
+    const baseWidth = Math.max(1, actualLeft + actualRight + totalPadding * 2);
+    const baseHeight = Math.max(
         1,
         actualAscent + actualDescent + totalPadding * 2,
+    );
+    const radians = (angle * Math.PI) / 180;
+    // Snap cardinal angles to avoid adding a row from floating-point residue.
+    const cosine = Math.abs(Math.cos(radians)) < 1e-12 ? 0 : Math.cos(radians);
+    const sine = Math.abs(Math.sin(radians)) < 1e-12 ? 0 : Math.sin(radians);
+    const textWidth = Math.ceil(
+        Math.abs(baseWidth * cosine) + Math.abs(baseHeight * sine),
+    );
+    const textHeight = Math.ceil(
+        Math.abs(baseWidth * sine) + Math.abs(baseHeight * cosine),
     );
 
     canvas.width = textWidth;
     canvas.height = textHeight;
     context.font = font;
+    context.textRendering = 'optimizeLegibility';
     context.direction = hasArabic ? 'rtl' : 'ltr';
     context.textAlign = 'left';
     context.textBaseline = 'alphabetic';
     context.fillStyle = 'black';
 
-    const drawX = totalPadding + actualLeft;
-    const drawY = totalPadding + actualAscent;
+    const originX = totalPadding + actualLeft - baseWidth / 2;
+    const originY = totalPadding + actualAscent - baseHeight / 2;
+    const drawX = textWidth / 2 + originX * cosine - originY * sine;
+    const drawY = textHeight / 2 + originX * sine + originY * cosine;
 
-    context.fillText(wordName, drawX, drawY);
+    if (angle === 0) {
+        context.fillText(wordName, drawX, drawY);
+    } else {
+        context.save();
+        context.translate(drawX, drawY);
+        context.rotate(radians);
+        context.fillText(wordName, 0, 0);
+        context.restore();
+    }
 
     const image = context.getImageData(0, 0, textWidth, textHeight);
     const data = image.data;
 
-    const wordMask = [];
     const runs = [];
 
     let minimumX = textWidth;
@@ -186,7 +142,6 @@ export function getWordBitmap({
             const isOpaque = data[alphaIndex] > 1;
 
             if (isOpaque) {
-                wordMask.push([x, y]);
                 hasOpaquePixel = true;
 
                 if (x < minimumX) minimumX = x;
@@ -220,8 +175,13 @@ export function getWordBitmap({
     return {
         w: textWidth,
         h: textHeight,
-        wordMask,
         runs,
+        textX: drawX,
+        textY: drawY,
+        direction: hasArabic ? 'rtl' : 'ltr',
+        fontFamily,
+        angle,
+        strokeWidth: baseHeight * 0.05,
         minX: minimumX,
         minY: minimumY,
         maxX: maximumX,
@@ -229,62 +189,6 @@ export function getWordBitmap({
     };
 }
 
-/* ------------------------------------------------------------------------- */
-/* Helpers: convert pixel mask -> runs                                       */
-/* ------------------------------------------------------------------------- */
-
-/**
- * Builds run-length encoded rows from a wordMask (Array<[x,y]>).
- * Assumes wordMask is sorted by (y,x).
- *
- * Each run is [y, xStart, xEnd] with xEnd inclusive.
- *
- * @param {Array<[number, number]>} wordMask
- * @returns {Array<[number, number, number]>}
- */
-function createRunsFromMask(wordMask) {
-    const runs = [];
-    if (!wordMask.length) return runs;
-
-    let currentRowY = wordMask[0][1];
-    let currentRunStart = wordMask[0][0];
-    let previousX = currentRunStart;
-
-    for (let index = 1; index < wordMask.length; index += 1) {
-        const x = wordMask[index][0];
-        const y = wordMask[index][1];
-
-        if (y !== currentRowY) {
-            runs.push([currentRowY, currentRunStart, previousX]);
-            currentRowY = y;
-            currentRunStart = x;
-            previousX = x;
-        } else if (x === previousX + 1) {
-            previousX = x;
-        } else {
-            runs.push([currentRowY, currentRunStart, previousX]);
-            currentRunStart = x;
-            previousX = x;
-        }
-    }
-
-    runs.push([currentRowY, currentRunStart, previousX]);
-
-    return runs;
-}
-
-/* ------------------------------------------------------------------------- */
-/* Bit-packed mask helpers                                                   */
-/* ------------------------------------------------------------------------- */
-
-/**
- * Builds a 32-bit mask for a contiguous run of bits between bitStart and bitEnd (inclusive).
- * Example: bitStart = 2, bitEnd = 4 -> 0b00011100
- *
- * @param {number} bitStart - Index of the first bit in the run (0–31).
- * @param {number} bitEnd - Index of the last bit in the run (0–31), inclusive.
- * @returns {number} A 32-bit unsigned integer with bits [bitStart, bitEnd] set to 1.
- */
 export function buildSingleWordMask(bitStart, bitEnd) {
     const widthBits = bitEnd - bitStart + 1;
     // 0xFFFFFFFF >>> (32 - widthBits) => low `widthBits` bits set to 1
@@ -292,1183 +196,330 @@ export function buildSingleWordMask(bitStart, bitEnd) {
     return ((0xffffffff >>> (32 - widthBits)) << bitStart) >>> 0;
 }
 
-/**
- * Builds a 32-bit mask for all bits from bitStart to the most-significant bit (31) set to 1.
- * Example: bitStart = 3 -> 0b11111000 (for a truncated 8-bit view).
- *
- * @param {number} bitStart - Index of the first bit to set (0–31).
- * @returns {number} A 32-bit unsigned integer with bits [bitStart, 31] set to 1.
- */
-export function buildFirstWordMask(bitStart) {
-    // Shift an all-ones word left; bits below bitStart become 0, above remain 1.
-    return (0xffffffff << bitStart) >>> 0;
-}
-
-/**
- * Builds a 32-bit mask for all bits from the least-significant bit (0) up to bitEnd set to 1.
- * Example: bitEnd = 4 -> 0b00011111 (for a truncated 8-bit view).
- *
- * @param {number} bitEnd - Index of the last bit to set (0–31), inclusive.
- * @returns {number} A 32-bit unsigned integer with bits [0, bitEnd] set to 1.
- */
-export function buildLastWordMask(bitEnd) {
-    // Shift an all-ones word right; bits above bitEnd become 0, below remain 1.
-    return (0xffffffff >>> (31 - bitEnd)) >>> 0;
-}
-/* ------------------------------------------------------------------------- */
-/* Bit-packed mask and run-based collision                                   */
-/* ------------------------------------------------------------------------- */
-
-/**
- * Internal: check if a word (encoded as row runs) can be placed at (wordX, wordY)
- * on a bit-packed occupancy mask without overlap or out-of-bounds.
- *
- * maskBits layout:
- *  - 1 bit per pixel (0 = empty, 1 = occupied)
- *  - row stride: maskRowStride 32-bit integers per row
- *
- * runs: Array<[localY, localXStart, localXEndInclusive]>
- */
-function canPlaceAtRuns({
-    maskBits,
-    maskRowStride,
-    maskW: maskWidth,
-    maskH: maskHeight,
-    wx: wordX,
-    wy: wordY,
-    runs,
-}) {
-    for (let index = 0; index < runs.length; index += 1) {
-        const localY = runs[index][0];
-        const localXStart = runs[index][1];
-        const localXEnd = runs[index][2];
-
-        const absoluteY = wordY + localY;
-        if (absoluteY < 0 || absoluteY >= maskHeight) return false;
-
-        const absoluteXStart = wordX + localXStart;
-        const absoluteXEnd = wordX + localXEnd;
-        if (absoluteXStart < 0 || absoluteXEnd >= maskWidth) return false;
-
-        const rowBaseIndex = absoluteY * maskRowStride;
-
-        const firstWordIndex = absoluteXStart >>> 5;
-        const lastWordIndex = absoluteXEnd >>> 5;
-
-        const bitStart = absoluteXStart & 31;
-        const bitEnd = absoluteXEnd & 31;
-
-        if (firstWordIndex === lastWordIndex) {
-            const maskWord = maskBits[rowBaseIndex + firstWordIndex];
-            const maskRun = buildSingleWordMask(bitStart, bitEnd);
-            if (maskWord & maskRun) return false;
-        } else {
-            {
-                const maskWord = maskBits[rowBaseIndex + firstWordIndex];
-                const maskRun = buildFirstWordMask(bitStart);
-                if (maskWord & maskRun) return false;
-            }
-
-            for (
-                let wordIndex = firstWordIndex + 1;
-                wordIndex < lastWordIndex;
-                wordIndex += 1
-            ) {
-                if (maskBits[rowBaseIndex + wordIndex]) return false;
-            }
-
-            {
-                const maskWord = maskBits[rowBaseIndex + lastWordIndex];
-                const maskRun = buildLastWordMask(bitEnd);
-                if (maskWord & maskRun) return false;
-            }
+// Square dilation is separable: expand row intervals horizontally, then OR the
+// neighboring rows vertically. This produces the exact same clipped pixels as
+// the former run-bucket expansion, without sorting temporary interval arrays.
+export function makeSprite(runs, width, height, dilation, boardStride) {
+    const stride = (width + 31) >>> 5;
+    const horizontal = new Uint32Array(stride * height);
+    for (const [y, start, end] of runs) {
+        const left = Math.max(0, start - dilation);
+        const right = Math.min(width - 1, end + dilation);
+        const first = left >>> 5;
+        const last = right >>> 5;
+        for (let block = first; block <= last; block += 1) {
+            horizontal[y * stride + block] |= buildSingleWordMask(
+                block === first ? left & 31 : 0,
+                block === last ? right & 31 : 31,
+            );
         }
     }
-
-    return true;
-}
-
-/**
- * Internal: mark a placed word (runs) into the bit-packed mask.
- * Assumes the placement is valid (no out-of-bounds).
- */
-function markMaskRuns({
-    maskBits,
-    maskRowStride,
-    maskW: maskWidth,
-    maskH: maskHeight,
-    wx: wordX,
-    wy: wordY,
-    runs,
-}) {
-    for (let index = 0; index < runs.length; index += 1) {
-        const localY = runs[index][0];
-        const localXStart = runs[index][1];
-        const localXEnd = runs[index][2];
-
-        const absoluteY = wordY + localY;
-        if (absoluteY < 0 || absoluteY >= maskHeight) continue;
-
-        const absoluteXStart = wordX + localXStart;
-        const absoluteXEnd = wordX + localXEnd;
-        if (absoluteXEnd < 0 || absoluteXStart >= maskWidth) continue;
-
-        const rowBaseIndex = absoluteY * maskRowStride;
-
-        const firstWordIndex = absoluteXStart >>> 5;
-        const lastWordIndex = absoluteXEnd >>> 5;
-
-        const bitStart = absoluteXStart & 31;
-        const bitEnd = absoluteXEnd & 31;
-
-        if (firstWordIndex === lastWordIndex) {
-            const maskRun = buildSingleWordMask(bitStart, bitEnd);
-            maskBits[rowBaseIndex + firstWordIndex] |= maskRun;
-        } else {
-            {
-                const maskRun = buildFirstWordMask(bitStart);
-                maskBits[rowBaseIndex + firstWordIndex] |= maskRun;
-            }
-
-            for (
-                let wordIndex = firstWordIndex + 1;
-                wordIndex < lastWordIndex;
-                wordIndex += 1
-            ) {
-                maskBits[rowBaseIndex + wordIndex] = 0xffffffff >>> 0;
-            }
-
-            {
-                const maskRun = buildLastWordMask(bitEnd);
-                maskBits[rowBaseIndex + lastWordIndex] |= maskRun;
-            }
-        }
-    }
-}
-
-/**
- * Encodes a byte mask (0/1 per pixel) into a bit-packed mask representation.
- */
-function encodeMaskToBits(mask, maskWidth, maskHeight, maskRowStride) {
-    const maskBits = new Uint32Array(maskRowStride * maskHeight);
-
-    for (let y = 0; y < maskHeight; y += 1) {
-        const rowBaseByteIndex = y * maskWidth;
-        const rowBaseBitIndex = y * maskRowStride;
-
-        for (let x = 0; x < maskWidth; x += 1) {
-            if (!mask[rowBaseByteIndex + x]) continue;
-
-            const wordIndex = x >>> 5;
-            const bitIndex = x & 31;
-            maskBits[rowBaseBitIndex + wordIndex] |= (1 << bitIndex) >>> 0;
-        }
-    }
-
-    return maskBits;
-}
-
-/**
- * Public helper: test placement given a byte mask and a word pixel mask.
- */
-export function canPlaceAt({
-    mask,
-    maskW: maskWidth,
-    maskH: maskHeight,
-    wx: wordX,
-    wy: wordY,
-    wordMask,
-}) {
-    const maskRowStride = (maskWidth + 31) >>> 5;
-    const maskBits = encodeMaskToBits(
-        mask,
-        maskWidth,
-        maskHeight,
-        maskRowStride,
-    );
-    const runs = createRunsFromMask(wordMask);
-
-    return canPlaceAtRuns({
-        maskBits,
-        maskRowStride,
-        maskW: maskWidth,
-        maskH: maskHeight,
-        wx: wordX,
-        wy: wordY,
-        runs,
-    });
-}
-
-/**
- * Public helper: mark placement into a byte mask given a word pixel mask.
- */
-export function markMask({
-    mask,
-    maskW: maskWidth,
-    maskH: maskHeight,
-    wx: wordX,
-    wy: wordY,
-    wordMask,
-}) {
-    const maskRowStride = (maskWidth + 31) >>> 5;
-    const maskBits = new Uint32Array(maskRowStride * maskHeight);
-    const runs = createRunsFromMask(wordMask);
-
-    markMaskRuns({
-        maskBits,
-        maskRowStride,
-        maskW: maskWidth,
-        maskH: maskHeight,
-        wx: wordX,
-        wy: wordY,
-        runs,
-    });
-
-    for (let y = 0; y < maskHeight; y += 1) {
-        const rowBaseBitIndex = y * maskRowStride;
-        const rowBaseByteIndex = y * maskWidth;
-
-        for (let wordIndex = 0; wordIndex < maskRowStride; wordIndex += 1) {
-            const bits = maskBits[rowBaseBitIndex + wordIndex];
-            if (!bits) continue;
-
-            const baseX = wordIndex << 5;
-
-            for (let bit = 0; bit < 32; bit += 1) {
-                if (bits & (1 << bit)) {
-                    const x = baseX + bit;
-                    if (x >= 0 && x < maskWidth) {
-                        mask[rowBaseByteIndex + x] = 1;
-                    }
-                }
-            }
-        }
-    }
-}
-
-/* ------------------------------------------------------------------------- */
-/* Dilation (legacy pixel-mask version, kept for compatibility)              */
-/* ------------------------------------------------------------------------- */
-
-export function dilateWordMask({ wordMask, w: width, h: height, dilation }) {
-    const grid = new Uint8Array(width * height);
-    const seeds = [];
-
-    for (let index = 0; index < wordMask.length; index += 1) {
-        const x = wordMask[index][0];
-        const y = wordMask[index][1];
-        const flatIndex = y * width + x;
-
-        if (!grid[flatIndex]) {
-            grid[flatIndex] = 1;
-            seeds.push(flatIndex);
-        }
-    }
-
-    for (let seedIndex = 0; seedIndex < seeds.length; seedIndex += 1) {
-        const flatIndex = seeds[seedIndex];
-        const y = (flatIndex / width) | 0;
-        const x = flatIndex - y * width;
-
-        for (let deltaY = -dilation; deltaY <= dilation; deltaY += 1) {
-            const neighborY = y + deltaY;
-            if (neighborY < 0 || neighborY >= height) continue;
-
-            const neighborRowOffset = neighborY * width;
-
-            for (let deltaX = -dilation; deltaX <= dilation; deltaX += 1) {
-                if (deltaX === 0 && deltaY === 0) continue;
-
-                const neighborX = x + deltaX;
-                if (neighborX < 0 || neighborX >= width) continue;
-
-                grid[neighborRowOffset + neighborX] = 1;
-            }
-        }
-    }
-
-    const dilatedMask = [];
-
-    for (let flatIndex = 0; flatIndex < grid.length; flatIndex += 1) {
-        if (grid[flatIndex]) {
-            const y = (flatIndex / width) | 0;
-            const x = flatIndex - y * width;
-            dilatedMask.push([x, y]);
-        }
-    }
-
-    return dilatedMask;
-}
-
-/* ------------------------------------------------------------------------- */
-/* Dilation from runs (layout path)                                          */
-/* ------------------------------------------------------------------------- */
-
-/**
- * Internal: merge per-row run buckets into a sorted, non-overlapping run list.
- * Each bucket entry is an `[xStart, xEnd]` pair for a given row. Runs that
- * overlap or touch are merged into a single `[y, xStart, xEnd]` output run
- */
-function mergeRunBuckets(rowBuckets, height) {
-    const outputRuns = [];
-
+    // Sparse [board-relative offset, bits] pairs remove row multiplications
+    // from every collision probe. All placements in a layout share a stride.
+    const blocks = [];
     for (let y = 0; y < height; y += 1) {
-        const bucket = rowBuckets[y];
-        if (!bucket || bucket.length === 0) continue;
-
-        bucket.sort((a, b) => a[0] - b[0]);
-
-        let currentStart = bucket[0][0];
-        let currentEnd = bucket[0][1];
-
-        for (let index = 1; index < bucket.length; index += 1) {
-            const start = bucket[index][0];
-            const end = bucket[index][1];
-
-            if (start <= currentEnd + 1) {
-                if (end > currentEnd) currentEnd = end;
-            } else {
-                outputRuns.push([y, currentStart, currentEnd]);
-                currentStart = start;
-                currentEnd = end;
+        const firstRow = Math.max(0, y - dilation);
+        const lastRow = Math.min(height - 1, y + dilation);
+        for (let x = 0; x < stride; x += 1) {
+            let value = 0;
+            for (let row = firstRow; row <= lastRow; row += 1) {
+                value |= horizontal[row * stride + x];
             }
+            if (value) blocks.push(y * boardStride + x, value);
         }
-
-        outputRuns.push([y, currentStart, currentEnd]);
     }
-
-    return outputRuns;
+    return new Uint32Array(blocks);
 }
 
-/**
- * Internal: dilate a bitmap expressed as runs and return new runs.
- * This avoids building a per-pixel coordinate list in the hot path.
- */
-function dilateRunsToRuns({ runs, w: width, h: height, dilation }) {
-    if (!runs.length || dilation <= 0) return runs;
-
-    const rowBuckets = new Array(height);
-
-    for (let index = 0; index < runs.length; index += 1) {
-        const row = runs[index];
-        const y = row[0];
-        const xStart = Math.max(0, row[1] - dilation);
-        const xEnd = Math.min(width - 1, row[2] + dilation);
-
-        const yStart = Math.max(0, y - dilation);
-        const yEnd = Math.min(height - 1, y + dilation);
-
-        for (let expandedY = yStart; expandedY <= yEnd; expandedY += 1) {
-            let bucket = rowBuckets[expandedY];
-
-            if (!bucket) {
-                bucket = [];
-                rowBuckets[expandedY] = bucket;
-            }
-
-            bucket.push([xStart, xEnd]);
+function collideSprite(board, sprite, x, y, mark = false) {
+    const offset = x & 31;
+    const base = y * board.stride + (x >>> 5);
+    for (let i = 0; i < sprite.length; i += 2) {
+        const index = base + sprite[i];
+        const bits = sprite[i + 1];
+        const low = bits << offset;
+        const high = offset === 0 ? 0 : bits >>> (32 - offset);
+        if (mark) {
+            board.bits[index] |= low;
+            if (high) board.bits[index + 1] |= high;
+        } else if (
+            board.bits[index] & low ||
+            (high && board.bits[index + 1] & high)
+        ) {
+            return true;
         }
     }
-
-    return mergeRunBuckets(rowBuckets, height);
+    return false;
 }
 
-/* ------------------------------------------------------------------------- */
-/* Scaling from a base bitmap (runs)                                         */
-/* ------------------------------------------------------------------------- */
-
-/**
- * Internal: scale a bitmap (runs) by a scalar factor.
- * This is cheaper than re-rasterizing the text on a canvas for each size.
- */
-function scaleBitmap(bitmap, scaleFactor) {
-    const sourceRuns = bitmap.runs;
-    const sourceWidth = bitmap.w;
-    const sourceHeight = bitmap.h;
-
-    const destinationWidth = Math.max(1, Math.round(sourceWidth * scaleFactor));
-    const destinationHeight = Math.max(
-        1,
-        Math.round(sourceHeight * scaleFactor),
-    );
-
-    const rowBuckets = new Array(destinationHeight);
-
-    let minimumX = destinationWidth;
-    let minimumY = destinationHeight;
-    let maximumX = 0;
-    let maximumY = 0;
-    let hasOpaquePixel = false;
-
-    for (let index = 0; index < sourceRuns.length; index += 1) {
-        const row = sourceRuns[index];
-        const y = row[0];
-        const xStart = row[1];
-        const xEnd = row[2];
-
-        const newY = Math.round(y * scaleFactor);
-        if (newY < 0 || newY >= destinationHeight) continue;
-
-        const newXStart = Math.round(xStart * scaleFactor);
-        const newXEnd = Math.round((xEnd + 1) * scaleFactor) - 1;
-        if (newXEnd < newXStart) continue;
-
-        let bucket = rowBuckets[newY];
-        if (!bucket) {
-            bucket = [];
-            rowBuckets[newY] = bucket;
-        }
-
-        bucket.push([newXStart, newXEnd]);
-        hasOpaquePixel = true;
-
-        if (newXStart < minimumX) minimumX = newXStart;
-        if (newXEnd > maximumX) maximumX = newXEnd;
-        if (newY < minimumY) minimumY = newY;
-        if (newY > maximumY) maximumY = newY;
-    }
-
-    if (!hasOpaquePixel) {
-        return {
-            w: destinationWidth,
-            h: destinationHeight,
-            runs: [],
-            minX: 0,
-            minY: 0,
-            maxX: 0,
-            maxY: 0,
-        };
-    }
-
-    const outputRuns = [];
-
-    for (let y = 0; y < destinationHeight; y += 1) {
-        const bucket = rowBuckets[y];
-        if (!bucket || bucket.length === 0) continue;
-
-        bucket.sort((a, b) => a[0] - b[0]);
-
-        let currentStart = bucket[0][0];
-        let currentEnd = bucket[0][1];
-
-        for (let index = 1; index < bucket.length; index += 1) {
-            const start = bucket[index][0];
-            const end = bucket[index][1];
-
-            if (start <= currentEnd + 1) {
-                if (end > currentEnd) currentEnd = end;
-            } else {
-                outputRuns.push([y, currentStart, currentEnd]);
-                currentStart = start;
-                currentEnd = end;
-            }
-        }
-
-        outputRuns.push([y, currentStart, currentEnd]);
-    }
-
+// A golden-angle disc search samples equal areas as the radius grows. The
+// two-pixel spacing and normalized ellipse keep coverage independent of canvas
+// aspect ratio. Cache floating offsets once, then translate them per word.
+function createDiscSearch(width, height) {
+    const aspect = width / height;
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    const limit = Math.ceil((height * height) / 4);
+    const chunks = [];
     return {
-        w: destinationWidth,
-        h: destinationHeight,
-        runs: outputRuns,
-        minX: minimumX,
-        minY: minimumY,
-        maxX: maximumX,
-        maxY: maximumY,
+        aspect,
+        get(index) {
+            const chunkIndex = Math.floor(index / 256);
+            if (!chunks[chunkIndex]) {
+                const start = chunkIndex * 256;
+                const end = Math.min(limit, start + 256);
+                const offsets = new Float64Array((end - start) * 2);
+                for (let i = start; i < end; i += 1) {
+                    const radius = 2 * Math.sqrt(i);
+                    const offset = (i - start) * 2;
+                    offsets[offset] =
+                        aspect * radius * Math.cos(i * goldenAngle);
+                    offsets[offset + 1] = radius * Math.sin(i * goldenAngle);
+                }
+                chunks[chunkIndex] = offsets;
+            }
+            return chunks[chunkIndex];
+        },
+        limit,
     };
 }
 
-/* ------------------------------------------------------------------------- */
-/* Global caches (bitmap + dilated masks)                                    */
-/* ------------------------------------------------------------------------- */
-
-const bitmapCache = new Map(); // key -> { w, h, wordMask, runs, minX, minY, maxX, maxY }
-const dilatedMaskCache = new Map(); // key -> { wordMask, runs }
-
-function makeBitmapKey({ word, fontSize, pad, svg }) {
-    const boldFlag = svg.style && svg.style.bold ? 1 : 0;
-    const padding = pad || 0;
-    return `${word.name}::${fontSize}::${padding}::${boldFlag}`;
-}
-
-function getCachedWordBitmap({
-    word,
-    fontSize,
-    pad,
-    canvas,
-    ctx: context,
-    svg,
-}) {
-    const key = makeBitmapKey({ word, fontSize, pad, svg });
-    const cached = bitmapCache.get(key);
-    if (cached) return { key, bitmap: cached };
-
-    const bitmap = getWordBitmap({
-        word,
-        fontSize,
-        pad,
-        canvas,
-        ctx: context,
-        svg,
-    });
-    bitmapCache.set(key, bitmap);
-    return { key, bitmap };
-}
-
-function getCachedDilatedMask({
-    bitmapKey,
-    wordMask,
-    w: width,
-    h: height,
-    dilation,
-}) {
-    const key = `${bitmapKey}::d${dilation}`;
-    const cached = dilatedMaskCache.get(key);
-    if (cached) return cached;
-
-    const dilatedWordMask = dilateWordMask({
-        wordMask,
-        w: width,
-        h: height,
-        dilation,
-    });
-    const runs = createRunsFromMask(dilatedWordMask);
-    const result = { wordMask: dilatedWordMask, runs };
-
-    dilatedMaskCache.set(key, result);
-    return result;
-}
-
-/* ------------------------------------------------------------------------- */
-/* Layout scaling                                                            */
-/* ------------------------------------------------------------------------- */
-
-/**
- * Uniformly scales all placed words around the center so that the occupied
- * area fills more of the available region, without creating overlaps.
- */
-function scaleLayoutToFillArea(positionedWords, maskWidth, maskHeight) {
-    if (!positionedWords.length) return;
-
-    let minimumRelativeX = Infinity;
-    let maximumRelativeX = -Infinity;
-    let minimumRelativeY = Infinity;
-    let maximumRelativeY = -Infinity;
-
-    for (let index = 0; index < positionedWords.length; index += 1) {
-        const word = positionedWords[index];
-
-        const left = word.x + word.minX;
-        const right = word.x + word.maxX;
-        const top = word.y + word.minY;
-        const bottom = word.y + word.maxY;
-
-        if (left < minimumRelativeX) minimumRelativeX = left;
-        if (right > maximumRelativeX) maximumRelativeX = right;
-        if (top < minimumRelativeY) minimumRelativeY = top;
-        if (bottom > maximumRelativeY) maximumRelativeY = bottom;
-    }
-
-    if (!isFinite(minimumRelativeX) || !isFinite(maximumRelativeX)) return;
-    if (!isFinite(minimumRelativeY) || !isFinite(maximumRelativeY)) return;
-
-    const maximumAbsoluteX = Math.max(
-        Math.abs(minimumRelativeX),
-        Math.abs(maximumRelativeX),
-    );
-    const maximumAbsoluteY = Math.max(
-        Math.abs(minimumRelativeY),
-        Math.abs(maximumRelativeY),
-    );
-
-    if (maximumAbsoluteX === 0 || maximumAbsoluteY === 0) return;
-
-    const marginFactor = 0.9;
-    const allowedScaleX = (maskWidth * 0.5 * marginFactor) / maximumAbsoluteX;
-    const allowedScaleY = (maskHeight * 0.5 * marginFactor) / maximumAbsoluteY;
-
-    let scaleFactor = Math.min(allowedScaleX, allowedScaleY);
-
-    if (scaleFactor <= 1) return;
-
-    const maximumScaleFactor = 4;
-    if (scaleFactor > maximumScaleFactor) {
-        scaleFactor = maximumScaleFactor;
-    }
-
-    for (let index = 0; index < positionedWords.length; index += 1) {
-        const word = positionedWords[index];
-
-        word.x *= scaleFactor;
-        word.y *= scaleFactor;
-        word.width *= scaleFactor;
-        word.height *= scaleFactor;
-        word.fontSize *= scaleFactor;
-        word.minX *= scaleFactor;
-        word.maxX *= scaleFactor;
-        word.minY *= scaleFactor;
-        word.maxY *= scaleFactor;
-    }
-}
-
-/* ------------------------------------------------------------------------- */
-/* Time helper (when config.debug === true)                                  */
-/* ------------------------------------------------------------------------- */
-
-function getNowFunction() {
-    const hasPerformance =
-        typeof performance !== 'undefined' &&
-        typeof performance.now === 'function';
-
-    if (hasPerformance) {
-        return () => performance.now();
-    }
-
-    return () => Date.now();
-}
-
-/* ------------------------------------------------------------------------- */
-/* Font size helper                                                          */
-/* ------------------------------------------------------------------------- */
-
-function computeTargetFontSize({
-    value,
-    minimumValue,
-    maximumValue,
-    configuredMinimumFontSize,
-    maximumFontSize,
-}) {
-    if (maximumValue === minimumValue) {
-        return maximumFontSize;
-    }
-
-    const ratio = (value - minimumValue) / (maximumValue - minimumValue);
-
-    const interpolated =
-        ratio * (maximumFontSize - configuredMinimumFontSize) +
-        configuredMinimumFontSize;
-
-    const clamped = Math.max(
-        configuredMinimumFontSize,
-        Math.min(maximumFontSize, interpolated),
-    );
-
-    return clamped;
-}
-
-/* ------------------------------------------------------------------------- */
-/* Placement helpers                                                         */
-/* ------------------------------------------------------------------------- */
-
-function getCollisionDilation({
-    bitmapHeight,
-    proximity,
-    strictPixelPadding,
-    minimumVisualPadding,
-}) {
-    const proximityPadding = Math.max(0, Math.round(proximity || 0));
-
-    // SVG rendering can extend slightly beyond the canvas glyph mask because
-    // of stroke, antialiasing, font hinting, and browser text rendering.
-    const strokePadding = Math.ceil(bitmapHeight * 0.035) + 2;
-
-    const strictPadding = strictPixelPadding ? 3 : 0;
-
-    return Math.max(
-        proximityPadding,
-        strokePadding,
-        strictPadding,
-        minimumVisualPadding,
-    );
-}
-
-function buildRunsForBitmap({
-    currentBitmap,
-    strictPixelPadding,
-    scaleFactor,
-    baseBitmap,
-    bitmapKey,
-    proximity,
-    minimumVisualPadding,
-}) {
-    let runs = currentBitmap.runs;
-    const bitmapWidth = currentBitmap.w;
-    const bitmapHeight = currentBitmap.h;
-    const bitmapMinimumX = currentBitmap.minX;
-    const bitmapMinimumY = currentBitmap.minY;
-    const bitmapMaximumX = currentBitmap.maxX;
-    const bitmapMaximumY = currentBitmap.maxY;
-
-    if (!runs.length) {
-        return {
-            runs,
-            bitmapWidth,
-            bitmapHeight,
-            bitmapMinimumX,
-            bitmapMinimumY,
-            bitmapMaximumX,
-            bitmapMaximumY,
-        };
-    }
-
-    const dilation = getCollisionDilation({
-        bitmapHeight,
-        proximity,
-        strictPixelPadding,
-        minimumVisualPadding,
-    });
-
-    if (dilation <= 0) {
-        return {
-            runs,
-            bitmapWidth,
-            bitmapHeight,
-            bitmapMinimumX,
-            bitmapMinimumY,
-            bitmapMaximumX,
-            bitmapMaximumY,
-        };
-    }
-
-    if (scaleFactor === 1 && dilation === 2 && strictPixelPadding) {
-        const dilated = getCachedDilatedMask({
-            bitmapKey,
-            wordMask: baseBitmap.wordMask,
-            w: baseBitmap.w,
-            h: baseBitmap.h,
-            dilation,
-        });
-
-        return {
-            runs: dilated.runs,
-            bitmapWidth,
-            bitmapHeight,
-            bitmapMinimumX,
-            bitmapMinimumY,
-            bitmapMaximumX,
-            bitmapMaximumY,
-        };
-    }
-
-    const dilatedRuns = dilateRunsToRuns({
-        runs,
-        w: bitmapWidth,
-        h: bitmapHeight,
-        dilation,
-    });
-
-    return {
-        runs: dilatedRuns,
-        bitmapWidth,
-        bitmapHeight,
-        bitmapMinimumX,
-        bitmapMinimumY,
-        bitmapMaximumX,
-        bitmapMaximumY,
+function seededRandom(seed) {
+    let state = seed || 1;
+    return () => {
+        state ^= state << 13;
+        state ^= state >>> 17;
+        state ^= state << 5;
+        return (state >>> 0) / 4294967296;
     };
 }
 
-async function tryPlaceWordOnSpiral({
-    baseBitmap,
-    baseFontSize,
-    minimumScaleFactor,
-    maskBits,
-    maskRowStride,
-    maskWidth,
-    maskHeight,
-    centerX,
-    centerY,
-    maximumRadius,
-    scaleStep,
-    strictPixelPadding,
-    bitmapKey,
-    minimumFontSize,
-    rawWord,
-    cosineArray,
-    sineArray,
-    radiusStep,
-    maximumAttempts,
-    maybeYield,
-    proximity,
-    minimumVisualPadding,
-}) {
-    let scaleFactor = 1;
-
-    while (scaleFactor >= minimumScaleFactor) {
-        const currentBitmap =
-            scaleFactor === 1
-                ? baseBitmap
-                : scaleBitmap(baseBitmap, scaleFactor);
-
-        const placementData = buildRunsForBitmap({
-            currentBitmap,
-            strictPixelPadding,
-            scaleFactor,
-            baseBitmap,
-            bitmapKey,
-            proximity,
-            minimumVisualPadding,
-        });
-
-        const {
-            runs,
-            bitmapWidth,
-            bitmapHeight,
-            bitmapMinimumX,
-            bitmapMinimumY,
-            bitmapMaximumX,
-            bitmapMaximumY,
-        } = placementData;
-
-        let radius = 0;
-        let attempts = 0;
-
-        while (radius < maximumRadius && attempts < maximumAttempts) {
-            for (
-                let angleIndex = 0;
-                angleIndex < cosineArray.length;
-                angleIndex += 1
-            ) {
-                attempts += 1;
-
-                const placementX = Math.round(
-                    centerX +
-                        radius * cosineArray[angleIndex] -
-                        bitmapWidth / 2,
-                );
-                const placementY = Math.round(
-                    centerY + radius * sineArray[angleIndex] - bitmapHeight / 2,
-                );
-
-                if (
-                    placementX < 0 ||
-                    placementY < 0 ||
-                    placementX + bitmapWidth > maskWidth ||
-                    placementY + bitmapHeight > maskHeight
-                ) {
-                    continue;
-                }
-
-                const canPlace = canPlaceAtRuns({
-                    maskBits,
-                    maskRowStride,
-                    maskW: maskWidth,
-                    maskH: maskHeight,
-                    wx: placementX,
-                    wy: placementY,
-                    runs,
-                });
-
-                if (canPlace) {
-                    const { __wcIndex: _ignore, ...cleanWord } = rawWord;
-                    const effectiveFontSize = Math.max(
-                        minimumFontSize,
-                        Math.round(baseFontSize * scaleFactor),
-                    );
-
-                    const placedWord = {
-                        ...cleanWord,
-                        x: placementX - maskWidth / 2,
-                        y: placementY - maskHeight / 2,
-                        fontSize: effectiveFontSize,
-                        width: bitmapWidth,
-                        height: bitmapHeight,
-                        angle: 0,
-                        minX: bitmapMinimumX,
-                        minY: bitmapMinimumY,
-                        maxX: bitmapMaximumX,
-                        maxY: bitmapMaximumY,
-                    };
-
-                    markMaskRuns({
-                        maskBits,
-                        maskRowStride,
-                        maskW: maskWidth,
-                        maskH: maskHeight,
-                        wx: placementX,
-                        wy: placementY,
-                        runs,
-                    });
-
-                    return placedWord;
-                }
-            }
-
-            radius += radiusStep;
-
-            if ((attempts & 1023) === 0) {
-                await maybeYield();
-            }
-        }
-
-        scaleFactor *= scaleStep;
-        await maybeYield();
-    }
-
-    return null;
-}
-
-async function attemptPlaceWordWithFallback({
-    baseBitmap,
-    baseFontSize,
-    minimumScaleFactor,
-    maskBits,
-    maskRowStride,
-    maskWidth,
-    maskHeight,
-    centerX,
-    centerY,
-    maximumRadius,
-    scaleStep,
-    strictPixelPadding,
-    bitmapKey,
-    minimumFontSize,
-    rawWord,
-    maybeYield,
-    proximity,
-    qualityPreset,
-    primarySpiral,
-    fallbackSpiral,
-}) {
-    const primaryPlacement = await tryPlaceWordOnSpiral({
-        baseBitmap,
-        baseFontSize,
-        minimumScaleFactor,
-        maskBits,
-        maskRowStride,
-        maskWidth,
-        maskHeight,
-        centerX,
-        centerY,
-        maximumRadius,
-        scaleStep,
-        strictPixelPadding,
-        bitmapKey,
-        minimumFontSize,
-        rawWord,
-        cosineArray: primarySpiral.cosineArray,
-        sineArray: primarySpiral.sineArray,
-        radiusStep: qualityPreset.spiralRadiusStep,
-        maximumAttempts: qualityPreset.primaryAttempts,
-        maybeYield,
-        proximity,
-        minimumVisualPadding: qualityPreset.minimumVisualPadding,
-    });
-
-    if (primaryPlacement) {
-        return primaryPlacement;
-    }
-
-    const fallbackPlacement = await tryPlaceWordOnSpiral({
-        baseBitmap,
-        baseFontSize,
-        minimumScaleFactor,
-        maskBits,
-        maskRowStride,
-        maskWidth,
-        maskHeight,
-        centerX,
-        centerY,
-        maximumRadius,
-        scaleStep,
-        strictPixelPadding,
-        bitmapKey,
-        minimumFontSize,
-        rawWord,
-        cosineArray: fallbackSpiral.cosineArray,
-        sineArray: fallbackSpiral.sineArray,
-        radiusStep: qualityPreset.fallbackSpiralRadiusStep,
-        maximumAttempts: qualityPreset.fallbackAttempts,
-        maybeYield,
-        proximity,
-        minimumVisualPadding: qualityPreset.minimumVisualPadding,
-    });
-
-    return fallbackPlacement;
-}
-
-/* ------------------------------------------------------------------------- */
-/* Main layout                                                               */
-/* ------------------------------------------------------------------------- */
-
 /**
- * Attempts to position an array of words inside a given SVG region without overlap.
- * Words are sorted by value and placed largest-first.
+ * Glyph packing: golden-angle disc sampling, exact font metrics,
+ * and sparse bit-packed masks. Words keep their assigned size and orientation.
+ * Unplaceable words are omitted.
  */
 export async function positionWordsAsync({
     words,
     proximity = 0,
     svg,
     strictPixelPadding,
-    quality = DEFAULT_QUALITY,
     onProgress,
     debugTiming = false,
+    signal,
+    angles = [0],
+    randomizeAngles = false,
+    randomness = 0.2,
+    seed = 42,
 }) {
-    const now = getNowFunction();
-    const startTime = now();
+    const now = () =>
+        typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const started = now();
+    let lastYield = started;
 
-    const yieldBudgetMs = 12;
-    let lastYieldTime = startTime;
-
-    async function maybeYield() {
-        const currentTime = now();
-        if (currentTime - lastYieldTime >= yieldBudgetMs) {
-            await new Promise((resolve) => setTimeout(resolve, 0));
-            lastYieldTime = now();
-        }
+    async function yieldIfNeeded() {
+        if (now() - lastYield < 12) return;
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        lastYield = now();
     }
 
-    const width = svg.width;
-    const height = svg.height;
-    const maskWidth = Math.round(width);
-    const maskHeight = Math.round(height);
+    const width = Math.round(svg.width),
+        height = Math.round(svg.height);
 
-    const qualityPreset = getQualityPreset(quality);
-    const primarySpiral = getSpiralLookup(qualityPreset.spiralStep);
-    const fallbackSpiral = getSpiralLookup(qualityPreset.fallbackSpiralStep);
-
-    const minimumFontSize = 1;
-    const configuredMinimumFontSize = svg.minFontSize;
-    const maximumFontSize = Math.min(svg.maxFontSize, 100);
-
-    const values = words.map((word) => word.value);
-    const minimumValue = Math.min(...values);
-    const maximumValue = Math.max(...values);
-
-    if (maskWidth <= 0 || maskHeight <= 0) return [];
-
-    const maskRowStride = (maskWidth + 31) >>> 5;
-    const maskBits = new Uint32Array(maskRowStride * maskHeight);
-
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d', { willReadFrequently: true });
-    canvas.width = maskWidth;
-    canvas.height = maskHeight;
-
-    const maximumRadius = Math.max(maskWidth, maskHeight);
-    const centerX = Math.floor(maskWidth / 2);
-    const centerY = Math.floor(maskHeight / 2);
-
-    const wordsWithInternalIndex = words.map((word, index) => ({
-        ...word,
-        __wcIndex: index,
-        id: word.id != null ? word.id : `${word.name}__${index}`,
-    }));
-
-    const sortedWords = [...wordsWithInternalIndex].sort(
-        (a, b) => b.value - a.value,
-    );
-
-    const positionedWords = [];
-    const scaleStep = qualityPreset.scaleStep;
-
-    for (
-        let sortedIndex = 0;
-        sortedIndex < sortedWords.length;
-        sortedIndex += 1
+    if (
+        !Number.isFinite(width) ||
+        !Number.isFinite(height) ||
+        width <= 0 ||
+        height <= 0 ||
+        !words.length ||
+        signal?.aborted
     ) {
-        const rawWord = sortedWords[sortedIndex];
-        const previouslyPlacedCount = positionedWords.length;
-
-        const targetFontSize = computeTargetFontSize({
-            value: rawWord.value,
-            minimumValue,
-            maximumValue,
-            configuredMinimumFontSize,
-            maximumFontSize,
-        });
-
-        const baseFontSize = targetFontSize;
-
-        const cacheEntry = getCachedWordBitmap({
-            word: rawWord,
-            fontSize: baseFontSize,
-            pad: proximity,
-            canvas,
-            ctx: context,
-            svg,
-        });
-
-        const bitmapKey = cacheEntry.key;
-        const baseBitmap = cacheEntry.bitmap;
-
-        const baseWidth = baseBitmap.w;
-        const baseHeight = baseBitmap.h;
-
-        if (baseWidth <= 0 || baseHeight <= 0) {
-            await maybeYield();
-            continue;
-        }
-
-        const minimumScaleFactor = Math.max(
-            minimumFontSize / baseFontSize,
-            0.1,
-        );
-
-        const placedWord = await attemptPlaceWordWithFallback({
-            baseBitmap,
-            baseFontSize,
-            minimumScaleFactor,
-            maskBits,
-            maskRowStride,
-            maskWidth,
-            maskHeight,
-            centerX,
-            centerY,
-            maximumRadius,
-            scaleStep,
-            strictPixelPadding,
-            bitmapKey,
-            minimumFontSize,
-            rawWord,
-            maybeYield,
-            proximity,
-            qualityPreset,
-            primarySpiral,
-            fallbackSpiral,
-        });
-
-        if (placedWord) {
-            positionedWords.push(placedWord);
-
-            if (onProgress && positionedWords.length > previouslyPlacedCount) {
-                const lastPlaced = positionedWords[positionedWords.length - 1];
-                onProgress({ word: lastPlaced, all: positionedWords });
-            }
-        }
-
-        await maybeYield();
-    }
-
-    if (!positionedWords.length) {
         return [];
     }
 
-    scaleLayoutToFillArea(positionedWords, maskWidth, maskHeight);
+    const allowedAngles = (Array.isArray(angles) ? angles : [])
+        .filter(Number.isFinite)
+        .map((angle) => ((((angle + 180) % 360) + 360) % 360) - 180);
 
-    const endTime = now();
-    const durationMs = endTime - startTime;
-
-    if (debugTiming && typeof console !== 'undefined' && console.log) {
-        console.log(
-            '[vue-data-ui][word-cloud] positionWordsAsync:',
-            `${durationMs.toFixed(2)} ms for ${words.length} words`,
-        );
+    if (!allowedAngles.length) {
+        allowedAngles.push(0);
     }
 
-    return positionedWords.sort((a, b) => b.fontSize - a.fontSize);
+    const scatter = Number.isFinite(randomness)
+        ? Math.max(0, Math.min(1, randomness))
+        : 0.2;
+
+    const random = seededRandom(Number.isFinite(seed) ? seed | 0 : 42);
+
+    const maxFont = Math.max(1, Math.min(svg.maxFontSize, 100));
+    const minFont = Math.max(1, Math.min(svg.minFontSize, maxFont));
+    const minimumValue = Math.min(...words.map((word) => word.value));
+    const maximumValue = Math.max(...words.map((word) => word.value));
+
+    const entries = words
+        .map((word, index) => ({
+            word,
+            index,
+            size: Math.round(
+                maximumValue === minimumValue
+                    ? maxFont
+                    : minFont +
+                          ((word.value - minimumValue) /
+                              (maximumValue - minimumValue)) *
+                              (maxFont - minFont),
+            ),
+            angle: allowedAngles[
+                randomizeAngles
+                    ? Math.floor(random() * allowedAngles.length)
+                    : index % allowedAngles.length
+            ],
+        }))
+        .sort((a, b) => b.size - a.size || a.index - b.index);
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return [];
+
+    const board = { stride: (width + 31) >>> 5 };
+    board.bits = new Uint32Array(board.stride * height);
+
+    const disc = createDiscSearch(width, height);
+    const gap =
+        Math.ceil(Math.max(0, proximity || 0) / 2) +
+        (strictPixelPadding ? 1 : 0);
+
+    const cache = new Map();
+    const positioned = [];
+    const bounds = {
+        left: Infinity,
+        top: Infinity,
+        right: -Infinity,
+        bottom: -Infinity,
+    };
+
+    for (const entry of entries) {
+        if (signal?.aborted) return [];
+        const key = JSON.stringify([entry.word.name, entry.size, entry.angle]);
+        let glyph = cache.get(key);
+        if (!glyph) {
+            const bitmap = getWordBitmap({
+                word: entry.word,
+                fontSize: entry.size,
+                pad: gap,
+                canvas,
+                ctx,
+                svg,
+                angle: entry.angle,
+            });
+            const dilation = gap + Math.ceil(bitmap.strokeWidth / 2) + 1;
+            glyph = {
+                bitmap,
+                sprite: makeSprite(
+                    bitmap.runs,
+                    bitmap.w,
+                    bitmap.h,
+                    dilation,
+                    board.stride,
+                ),
+            };
+            cache.set(key, glyph);
+        }
+        const { bitmap, sprite } = glyph;
+        if (!sprite.length || bitmap.w > width || bitmap.h > height) continue;
+        const originX =
+            width * (0.5 + (random() - 0.5) * scatter) - bitmap.w / 2;
+        const originY =
+            height * (0.5 + (random() - 0.5) * scatter) - bitmap.h / 2;
+        const farX =
+            Math.max(
+                Math.abs(originX + 0.5),
+                Math.abs(width - bitmap.w + 0.5 - originX),
+            ) / disc.aspect;
+        const farY = Math.max(
+            Math.abs(originY + 0.5),
+            Math.abs(height - bitmap.h + 0.5 - originY),
+        );
+        const attempts = Math.min(
+            disc.limit,
+            Math.ceil((farX * farX + farY * farY) / 4) + 1,
+        );
+        for (let attempt = 0; attempt < attempts; attempt += 1) {
+            if ((attempt & 255) === 0) {
+                await yieldIfNeeded();
+                if (signal?.aborted) return [];
+            }
+            const offsets = disc.get(attempt);
+            const offset = (attempt % 256) * 2;
+            const x = Math.round(originX + offsets[offset]);
+            const y = Math.round(originY + offsets[offset + 1]);
+            if (
+                x < 0 ||
+                y < 0 ||
+                x + bitmap.w > width ||
+                y + bitmap.h > height
+            ) {
+                continue;
+            }
+            if (
+                positioned.length &&
+                (x + bitmap.w <= bounds.left ||
+                    x >= bounds.right ||
+                    y + bitmap.h <= bounds.top ||
+                    y >= bounds.bottom)
+            ) {
+                continue;
+            }
+            if (collideSprite(board, sprite, x, y)) {
+                continue;
+            }
+            collideSprite(board, sprite, x, y, true);
+            bounds.left = Math.min(bounds.left, x);
+            bounds.top = Math.min(bounds.top, y);
+            bounds.right = Math.max(bounds.right, x + bitmap.w);
+            bounds.bottom = Math.max(bounds.bottom, y + bitmap.h);
+            const word = {
+                ...entry.word,
+                id: entry.word.id ?? `${entry.word.name}__${entry.index}`,
+                x: x - width / 2,
+                y: y - height / 2,
+                fontSize: entry.size,
+                // Exposed data aliases retained for existing getData consumers.
+                rasterFontSize: entry.size,
+                layoutScale: 1,
+                width: bitmap.w,
+                height: bitmap.h,
+                textX: bitmap.textX,
+                textY: bitmap.textY,
+                direction: bitmap.direction,
+                fontFamily: bitmap.fontFamily,
+                angle: entry.angle,
+                strokeWidth: bitmap.strokeWidth,
+                minX: bitmap.minX,
+                minY: bitmap.minY,
+                maxX: bitmap.maxX + 1,
+                maxY: bitmap.maxY + 1,
+            };
+            positioned.push(word);
+            onProgress?.({ word, all: positioned.slice() });
+            break;
+        }
+        await yieldIfNeeded();
+    }
+    if (signal?.aborted) {
+        return [];
+    }
+
+    if (debugTiming && typeof console !== 'undefined') {
+        console.log(
+            '[vue-data-ui][word-cloud] positionWordsAsync:',
+            `${(now() - started).toFixed(2)} ms for ${words.length} words`,
+        );
+    }
+    return positioned;
 }
 
 const wordcloud = {
     positionWordsAsync,
     getWordBitmap,
-    canPlaceAt,
-    markMask,
-    dilateWordMask,
-    // Helpers exported for testing
     buildSingleWordMask,
-    buildFirstWordMask,
-    buildLastWordMask,
 };
-
 export default wordcloud;

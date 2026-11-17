@@ -122,7 +122,7 @@ test('loading and skeleton settings update reactively, without resetting user ch
     });
     expect(s.loading).toBe(true);
     expect(s.formattedDataset[0].name).toBe('Skeleton');
-    expect(s.cfgChart.backgroundColor).toBe('#abcdef');
+    expect(s.cfgChart.backgroundColor).toBe('#abcdefff');
     await w.setProps({ config: {} });
     expect(s.loading).toBe(false);
     expect(s.drawableDataset[0].name).toBe('A');

@@ -25,7 +25,6 @@ import {
     toRefs,
     watch,
 } from 'vue';
-import { debounce } from '../canvas-lib';
 import {
     stringifyChartConfig as stringifyStructuralConfig,
     checkNaN,
@@ -117,6 +116,12 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const cloudFinalized = ref(false);
 const isRelayout = ref(false);
+let layoutController = null;
+let isDisposed = false;
+
+function cancelLayout() {
+    layoutController?.abort();
+}
 const zoomControls = ref(null);
 
 const activeTooltipIndex = ref(null); // a11y
@@ -233,12 +238,12 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     }),
 });
 
-const drawableDataset = ref(setupWordCloud());
+const drawableDataset = computed(setupWordCloud);
 
 function setupWordCloud() {
     return typeof FINAL_DATASET.value === 'string'
         ? createWordCloudDatasetFromPlainText(FINAL_DATASET.value)
-        : FINAL_DATASET.value.map((dp, i) => {
+        : FINAL_DATASET.value.map((dp) => {
               return {
                   ...dp,
                   value: checkNaN(dp.value),
@@ -273,22 +278,19 @@ function applyInitialViewBox() {
     resetZoom();
 }
 
-const debounceUpdateCloud = debounce(() => {
-    generateWordCloud();
-}, 100);
-
 const resizing = ref(false);
+let resizeTimer = null;
+let resizeFrame = null;
 
-watch(
-    () => resizing.value,
-    (v) => {
-        if (v === false) {
-            isRelayout.value = true;
-            debounceUpdateCloud();
-            applyInitialViewBox();
-        }
-    },
-);
+function cancelResize() {
+    clearTimeout(resizeTimer);
+    resizeTimer = null;
+    if (resizeFrame !== null) {
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = null;
+    }
+    resizing.value = false;
+}
 
 let previousStructuralConfig = stringifyStructuralConfig(props.config);
 
@@ -314,6 +316,7 @@ watch(
             return;
         }
 
+        cancelLayout();
         FINAL_CONFIG.value = preparedConfig;
         userOptionsVisible.value =
             !FINAL_CONFIG.value.userOptions.showOnChartHover;
@@ -337,26 +340,33 @@ const svg = ref({
     bold: cfgWords.value.bold,
 });
 
-const resizeJob = debounce(() => {
-    const { width, height } = useResponsive({
-        chart: wordCloudChart.value,
-        title: cfgChart.value.title.text ? chartTitle.value : null,
-        legend: cfgControls.value.show ? zoomControls.value?.$el : null,
-        source: source.value,
-    });
-
-    requestAnimationFrame(async () => {
-        svg.value.width = Math.max(10, width);
-        svg.value.height = Math.max(10, height - 12);
-        await nextTick();
-        resizing.value = false;
-    });
-}, 100);
-
-const handleResize = () => {
+function handleResize() {
+    if (isDisposed || !FINAL_CONFIG.value.responsive) return;
+    cancelResize();
+    cancelLayout();
     resizing.value = true;
-    resizeJob();
-};
+    resizeTimer = setTimeout(() => {
+        resizeTimer = null;
+        if (isDisposed || !FINAL_CONFIG.value.responsive) return;
+        const frame = requestAnimationFrame(() => {
+            if (resizeFrame !== frame) return;
+            resizeFrame = null;
+            if (isDisposed || !FINAL_CONFIG.value.responsive) return;
+            const { width, height } = useResponsive({
+                chart: wordCloudChart.value,
+                title: cfgChart.value.title.text ? chartTitle.value : null,
+                legend: cfgControls.value.show ? zoomControls.value?.$el : null,
+                source: source.value,
+            });
+            svg.value.width = Math.max(10, width);
+            svg.value.height = Math.max(10, height - 12);
+            resizing.value = false;
+            applyInitialViewBox();
+            generateWordCloud();
+        });
+        resizeFrame = frame;
+    }, 100);
+}
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
@@ -366,6 +376,7 @@ onMounted(prepareChart);
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
+    cancelResize();
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiWordCloud',
@@ -406,11 +417,19 @@ function prepareChart() {
         resizeObserver.value = new ResizeObserver(handleResize);
         observedEl.value = wordCloudChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
+    } else {
+        resizeObserver.value?.disconnect();
+        svg.value.width = cfgChart.value.width;
+        svg.value.height = cfgChart.value.height;
+        generateWordCloud();
     }
     applyInitialViewBox();
 }
 
 onBeforeUnmount(() => {
+    isDisposed = true;
+    cancelResize();
+    cancelLayout();
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -442,96 +461,90 @@ watch(
     { immediate: true },
 );
 
-function measureTextSize(text, fontSize, fontFamily = 'Arial') {
-    // This invisible canvas is necessary to calculate the exact dimensions of words before painting them on the svg. Cool trick
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    context.font = `${fontSize}px ${cfgWords.value.bold ? 'bold' : 'normal'} ${fontFamily}`;
-    const metrics = context.measureText(text);
-    return {
-        width: metrics.width + cfgWords.value.proximity,
-        height: fontSize,
-    };
-}
-
 const positionedWords = ref([]);
-const wordIndexById = new Map();
 
-function generateWordCloud() {
-    const values = [...drawableDataset.value].map((d) => d.value);
-    const maxValue = Math.max(...values);
-    const minValue = Math.min(...values);
+async function generateWordCloud() {
+    cancelLayout();
+    if (isDisposed) return;
+    const controller = new AbortController();
+    layoutController = controller;
+    cloudFinalized.value = false;
+    isRelayout.value = true;
+    positionedWords.value = [];
 
-    const scaledWords = [...drawableDataset.value].map((word, i) => {
-        let fontSize =
-            ((word.value - minValue) / (maxValue - minValue)) *
-                (svg.value.maxFontSize - svg.value.minFontSize) +
-            svg.value.minFontSize;
-        fontSize = isNaN(fontSize) ? svg.value.minFontSize : fontSize;
-        const size = measureTextSize(word.name, fontSize);
-        return {
-            ...word,
-            id: word.id ?? `${word.name}__${i}`,
-            fontSize,
-            width: size.width,
-            height: size.height,
-            color: word.color
-                ? convertColorToHex(word.color)
-                : cfgWords.value.usePalette
-                  ? FINAL_CONFIG.value.customPalette[i] ||
-                    FINAL_CONFIG.value.customPalette[
-                        i % FINAL_CONFIG.value.customPalette.length
-                    ] ||
-                    palette[i] ||
-                    palette[i % palette.length]
-                  : cfgWords.value.color,
-        };
-    });
-
-    positionedWords.value.length = 0;
-    wordIndexById.clear();
-
-    positionWordsAsync({
-        debugTiming: debug.value,
-        words: scaledWords,
-        svg: svg.value,
-        proximity: cfgWords.value.proximity,
-        strictPixelPadding: FINAL_CONFIG.value.strictPixelPadding,
-        quality: FINAL_CONFIG.value.quality,
-        onProgress: ({ all }) => {
-            for (const w of all) {
-                const id = w.id;
-                let idx = wordIndexById.get(id);
-
-                if (idx === undefined) {
-                    // First time we see this word: clone it once and store
-                    idx = positionedWords.value.length;
-                    wordIndexById.set(id, idx);
-                    positionedWords.value.push({ ...w });
-                } else {
-                    const target = positionedWords.value[idx];
-                    target.x = w.x;
-                    target.y = w.y;
-                    target.width = w.width;
-                    target.height = w.height;
-                    target.fontSize = w.fontSize;
-                    target.minX = w.minX;
-                    target.minY = w.minY;
-                    target.maxX = w.maxX;
-                    target.maxY = w.maxY;
-                }
-            }
-        },
-    });
-
-    positionedWords.value.sort((a, b) => b.fontSize - a.fontSize);
-
-    wordIndexById.clear();
-    positionedWords.value.forEach((w, i) => {
-        wordIndexById.set(w.id, i);
-    });
-    cloudFinalized.value = true;
-    isRelayout.value = false;
+    await nextTick();
+    if (controller.signal.aborted) return;
+    // Resolve inherited fonts after mounting; CSS-wide keywords are not valid
+    // Canvas/FontFaceSet font families.
+    const configuredFamily = FINAL_CONFIG.value.style.fontFamily;
+    const fontFamily = wordCloudChart.value
+        ? getComputedStyle(wordCloudChart.value).fontFamily
+        : configuredFamily &&
+            !['inherit', 'initial', 'unset', 'revert'].includes(
+                configuredFamily,
+            )
+          ? configuredFamily
+          : 'Arial, "Noto Sans Arabic", Tahoma, sans-serif';
+    const layoutSvg = {
+        ...svg.value,
+        maxFontSize: cfgWords.value.maxFontSize,
+        minFontSize: cfgWords.value.minFontSize,
+        style: { bold: cfgWords.value.bold, fontFamily },
+    };
+    const words = drawableDataset.value.map((word, i) => ({
+        ...word,
+        id: word.id ?? `${word.name}__${i}`,
+        color: word.color
+            ? convertColorToHex(word.color)
+            : cfgWords.value.usePalette
+              ? FINAL_CONFIG.value.customPalette[i] ||
+                FINAL_CONFIG.value.customPalette[
+                    i % FINAL_CONFIG.value.customPalette.length
+                ] ||
+                palette[i] ||
+                palette[i % palette.length]
+              : cfgWords.value.color,
+    }));
+    const proximity = cfgWords.value.proximity;
+    const strictPixelPadding = FINAL_CONFIG.value.strictPixelPadding;
+    const { angles, randomizeAngles, randomness, seed } = cfgWords.value;
+    try {
+        if (document.fonts?.load) {
+            // A failed web font uses the browser's fallback in both renderers.
+            await document.fonts
+                .load(
+                    `${layoutSvg.style.bold ? 'bold ' : ''}${layoutSvg.maxFontSize}px ${fontFamily}`,
+                    words.map((w) => w.name).join(' '),
+                )
+                .catch(() => {});
+        } else {
+            await Promise.resolve();
+        }
+        if (controller.signal.aborted) return;
+        clearWordSelection();
+        const result = await positionWordsAsync({
+            debugTiming: debug.value,
+            words,
+            svg: layoutSvg,
+            proximity,
+            strictPixelPadding,
+            angles,
+            randomizeAngles,
+            randomness,
+            seed,
+            signal: controller.signal,
+            onProgress: ({ all }) => {
+                if (!controller.signal.aborted) positionedWords.value = all;
+            },
+        });
+        if (controller.signal.aborted) return;
+        positionedWords.value = result || [];
+    } finally {
+        if (!controller.signal.aborted) {
+            cloudFinalized.value = true;
+            isRelayout.value = false;
+        }
+    }
 }
 const table = computed(() => {
     const head = positionedWords.value.map((w) => {
@@ -676,16 +689,12 @@ const { viewBox, resetZoom, isZoom, setInitialViewBox, zoomByFactor, scale } =
     );
 
 watch(
-    () => props.dataset,
+    drawableDataset,
     () => {
-        drawableDataset.value = setupWordCloud();
-
-        if (!FINAL_CONFIG.value.responsive) {
-            generateWordCloud();
-            applyInitialViewBox();
-        }
+        generateWordCloud();
+        if (!FINAL_CONFIG.value.responsive) applyInitialViewBox();
     },
-    { immediate: true },
+    { immediate: true, deep: true },
 );
 
 const getImage = createChartImageGetter(
@@ -1165,7 +1174,7 @@ const annotationViewport = computed(() =>
                             data-cy="datapoint-word"
                             :data-a11y-word-index="`${index}-${uid}`"
                             :x="word.minX"
-                            :y="word.minY * 1.25"
+                            :y="word.minY"
                             :width="word.maxX - word.minX"
                             :height="word.maxY - word.minY"
                             fill="transparent"
@@ -1178,19 +1187,23 @@ const annotationViewport = computed(() =>
                         <text
                             :fill="word.color"
                             :font-weight="cfgWords.bold ? 'bold' : 'normal'"
-                            :x="0"
-                            :y="0"
+                            :x="word.textX"
+                            :y="word.textY"
                             :font-size="word.fontSize"
-                            :transform="`translate(${word.width / 2}, ${word.height / 2})`"
-                            text-anchor="middle"
-                            dominant-baseline="central"
+                            :font-family="word.fontFamily"
+                            :transform="`rotate(${word.angle}, ${word.textX}, ${word.textY})`"
+                            :direction="word.direction"
+                            :text-anchor="
+                                word.direction === 'rtl' ? 'end' : 'start'
+                            "
+                            dominant-baseline="alphabetic"
                             paint-order="stroke fill"
                             :stroke="
                                 !selectedWord || selectedWord === word.id
                                     ? cfgWords.selectedStroke
                                     : undefined
                             "
-                            :stroke-width="word.height * 0.05"
+                            :stroke-width="word.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :style="`

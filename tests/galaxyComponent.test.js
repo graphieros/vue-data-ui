@@ -102,7 +102,7 @@ test('loading keeps skeleton settings reactive and recovers real data', async ()
         },
     });
     expect(s.FINAL_CONFIG.userOptions.show).toBe(false);
-    expect(s.cfgChart.backgroundColor).toBe('#abcdef');
+    expect(s.cfgChart.backgroundColor).toBe('#abcdefff');
     expect(s.immutableSet[0].name).toBe('custom');
     await w.setProps({ config: { loading: false } });
     expect(s.loading).toBe(false);

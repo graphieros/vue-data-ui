@@ -12458,6 +12458,7 @@ declare module 'vue-data-ui' {
         useCssAnimation?: boolean;
         animationDelayMs?: number; // deprectated
         strictPixelPadding?: boolean;
+        /** @deprecated Retained for compatibility; glyph packing uses one placement strategy. */
         quality?: 'fast' | 'balanced' | 'precise';
         style?: {
             fontFamily?: string;
@@ -12473,6 +12474,14 @@ declare module 'vue-data-ui' {
                     minFontSize?: number;
                     bold?: boolean;
                     proximity?: number;
+                    /** Allowed word rotations in degrees. Default: [0]. */
+                    angles?: number[];
+                    /** Pick seeded random angles rather than alternating. Default: false. */
+                    randomizeAngles?: boolean;
+                    /** Scatter from 0 (centered) to 1 (full canvas). Default: 0.2. */
+                    randomness?: number;
+                    /** Seed for reproducible layouts and angle choices. Default: 42. */
+                    seed?: number;
                     packingWeight?: number; // deprecated
                     color?: string;
                     usePalette?: boolean;
