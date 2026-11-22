@@ -2148,23 +2148,94 @@ function boundsOf(points) {
     };
 }
 
-function buildSmoothPath(coordinates) {
-    if (!coordinates.length) return '';
-    let path = `M${coordinates[0].x} ${coordinates[0].y}`;
+function getSmoothCurves(coordinates) {
+    const curves = [];
     for (let i = 1; i < coordinates.length - 2; i += 2) {
         const p0 = coordinates[i - 1];
         const p1 = coordinates[i];
         const p2 = coordinates[i + 1];
         const p3 = coordinates[i + 2];
-        const xc1 = (p0.x + p1.x) / 2;
-        const yc1 = (p0.y + p1.y) / 2;
-        const xc2 = (p1.x + p2.x) / 2;
-        const yc2 = (p1.y + p2.y) / 2;
-        const xc3 = (p2.x + p3.x) / 2;
-        const yc3 = (p2.y + p3.y) / 2;
-        path += ` C${xc1} ${yc1}, ${xc2} ${yc2}, ${xc3} ${yc3}`;
+        curves.push([
+            [(p0.x + p1.x) / 2, (p0.y + p1.y) / 2],
+            [(p1.x + p2.x) / 2, (p1.y + p2.y) / 2],
+            [(p2.x + p3.x) / 2, (p2.y + p3.y) / 2],
+        ]);
     }
-    return path;
+    return curves;
+}
+
+function cubicCommand(points) {
+    return ` C${points.map(([x, y]) => `${x} ${y}`).join(', ')}`;
+}
+
+function splitCubicAt(start, [control1, control2, end], t) {
+    const interpolate = ([ax, ay], [bx, by]) => [
+        ax + (bx - ax) * t,
+        ay + (by - ay) * t,
+    ];
+    const a = interpolate(start, control1);
+    const b = interpolate(control1, control2);
+    const c = interpolate(control2, end);
+    const d = interpolate(a, b);
+    const e = interpolate(b, c);
+    return [a, d, interpolate(d, e)];
+}
+
+function createLengthBasedPath(coordinates, maxPoints) {
+    let start = [coordinates[0].x, coordinates[0].y];
+    let path = `M${start.join(' ')}`;
+    let length = 0;
+    const sampleCount = 16;
+    const segments = getSmoothCurves(coordinates).map((curve) => {
+        const segment = { start, curve, path, distances: [length] };
+        let previous = start;
+        for (let i = 1; i <= sampleCount; i += 1) {
+            const point = splitCubicAt(start, curve, i / sampleCount)[2];
+            length += Math.hypot(
+                point[0] - previous[0],
+                point[1] - previous[1],
+            );
+            segment.distances.push(length);
+            previous = point;
+        }
+        start = curve[2];
+        path += cubicCommand(curve);
+        return segment;
+    });
+    function locate(points) {
+        const target =
+            (Math.min(Math.max(points, 0), maxPoints) / maxPoints) * length;
+        const segment = segments.find(
+            ({ distances }) => distances.at(-1) >= target,
+        );
+        if (!segment) return null;
+        const { distances } = segment;
+        const i = distances.findIndex((distance) => distance >= target);
+        if (i <= 0) return { segment, t: 0 };
+        const span = distances[i] - distances[i - 1];
+        const fraction = (target - distances[i - 1]) / span;
+        return { segment, t: (i - 1 + fraction) / sampleCount };
+    }
+
+    const toPath = (points) => {
+        if (points >= maxPoints || !length) return path;
+        const location = locate(points);
+        if (!location) return path;
+        const { segment, t } = location;
+        return t === 0
+            ? segment.path
+            : segment.path +
+                  cubicCommand(splitCubicAt(segment.start, segment.curve, t));
+    };
+    function pointAt(points) {
+        if (!length) return null;
+        const location = locate(points);
+        if (!location) return null;
+        const { segment, t } = location;
+        const [x, y] = splitCubicAt(segment.start, segment.curve, t)[2];
+        return { x, y };
+    }
+    return Object.assign(toPath, { totalLength: length, pointAt });
 }
 
 export function createSpiralPath({
@@ -2177,6 +2248,7 @@ export function createSpiralPath({
     boxWidth,
     boxHeight,
     padding = 12,
+    byLength = false,
 }) {
     const raw = generateSpiralCoordinates({
         points: maxPoints,
@@ -2186,6 +2258,7 @@ export function createSpiralPath({
         startX: 0,
         startY: 0,
     });
+
     const { minX, minY, maxX, maxY, width, height } = boundsOf(raw);
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
@@ -2194,12 +2267,20 @@ export function createSpiralPath({
     const s = Math.min(availW / width, availH / height);
     const tx = startX - cx * s;
     const ty = startY - cy * s;
+    const fitted = raw.map((p) => ({ x: p.x * s + tx, y: p.y * s + ty }));
+
+    if (byLength && fitted.length) {
+        return createLengthBasedPath(fitted, maxPoints);
+    }
+
     return function toPath(endPoints) {
         const n = Math.max(2, Math.min(Math.round(endPoints), raw.length));
-        const fitted = raw
-            .slice(0, n)
-            .map((p) => ({ x: p.x * s + tx, y: p.y * s + ty }));
-        return buildSmoothPath(fitted);
+        const coordinates = fitted.slice(0, n);
+        if (!coordinates.length) return '';
+        return (
+            `M${coordinates[0].x} ${coordinates[0].y}` +
+            getSmoothCurves(coordinates).map(cubicCommand).join('')
+        );
     };
 }
 

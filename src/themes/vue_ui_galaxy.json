@@ -32,6 +32,11 @@
                         "gradient": {
                             "show": false
                         }
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#CCCCCC"
+                        }
                     }
                 },
                 "legend": {
@@ -92,6 +97,13 @@
                     "backgroundOpacity": 70,
                     "color": "#CCCCCC",
                     "borderColor": "#5A5A5A"
+                },
+                "layout": {
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#CCCCCC"
+                        }
+                    }
                 }
             }
         },
@@ -115,6 +127,11 @@
                     "arcs": {
                         "gradient": {
                             "show": false
+                        }
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#424242"
                         }
                     }
                 },
@@ -161,6 +178,11 @@
                         "gradient": {
                             "show": false
                         }
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#BDBDBD"
+                        }
                     }
                 },
                 "legend": {
@@ -206,6 +228,11 @@
                         "gradient": {
                             "color": "#1A1A1A"
                         }
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#AACCAA"
+                        }
                     }
                 },
                 "legend": {
@@ -250,6 +277,11 @@
                         "gradient": {
                             "color": "#fbfafa"
                         }
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#A0AC94"
+                        }
                     }
                 },
                 "legend": {
@@ -292,6 +324,11 @@
                     "arcs": {
                         "gradient": {
                             "show": false
+                        }
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#61747E"
                         }
                     }
                 },

@@ -5116,6 +5116,8 @@ export function useConfig(options = {}) {
         },
         theme: '',
         customPalette: [],
+        useAnimation: true,
+        animationSpeed: 1,
         useCssAnimation: false, // v2 = true
         useBlurOnHover: true,
         style: {
@@ -5126,7 +5128,7 @@ export function useConfig(options = {}) {
                 layout: {
                     arcs: {
                         strokeWidth: 24,
-                        borderWidth: 12,
+                        borderWidth: 4,
                         offsetX: 0,
                         offsetY: 0,
                         hoverEffect: {
@@ -5141,6 +5143,18 @@ export function useConfig(options = {}) {
                     },
                     labels: {
                         dataLabels: {
+                            show: true,
+                            showName: true,
+                            showValue: true,
+                            showPercentage: true,
+                            hideUnderValue: 3,
+                            smallArcClusterThreshold: 8,
+                            smallArcClusterFontSize: 8,
+                            roundingValue: 0,
+                            roundingPercentage: 0,
+                            fontSize: 10,
+                            bold: true,
+                            color: COLOR_TEXT_PRIMARY,
                             ...LABEL_VP_ORDER,
                             prefix: '',
                             suffix: '',
@@ -5167,6 +5181,7 @@ export function useConfig(options = {}) {
             },
         },
         userOptions: USER_OPTIONS({
+            labels: false,
             tooltip: true,
             pdf: true,
             csv: true,
