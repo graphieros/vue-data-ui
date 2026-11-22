@@ -21,6 +21,11 @@ beforeEach(() => {
         return frameId;
     });
     vi.stubGlobal('cancelAnimationFrame', (id) => frames.delete(id));
+    vi.stubGlobal('matchMedia', () => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+    }));
     vi.stubGlobal(
         'ResizeObserver',
         class {
@@ -59,10 +64,10 @@ async function chart(config = {}, data = dataset, real = false) {
     await flushPromises();
     return [w, w.vm.$.setupState];
 }
-function finishFrames() {
+function finishFrames(timestamp) {
     const callbacks = [...frames.values()];
     frames.clear();
-    callbacks.forEach((cb) => cb());
+    callbacks.forEach((cb) => cb(timestamp));
 }
 test('hidden series and identities survive palette updates, sorting and duplicate names', async () => {
     const [w, s] = await chart();
@@ -261,4 +266,386 @@ test('streaming identities stay bounded while retained series survive loading', 
     void s.seriesIds;
     await w.setProps({ config: { loading: false } });
     expect(s.seriesIds[0]).toBe(id);
+});
+
+test('default tooltip treats a series name as text', async () => {
+    const name = '<em>Revenue & costs</em>';
+    const [w, s] = await chart({}, [{ name, values: [1] }], true);
+    await w.get('[data-cy="tooltip-trap"]').trigger('mouseenter');
+
+    const template = document.createElement('template');
+    template.innerHTML = s.tooltipContent;
+    const heading = template.content.querySelector(
+        '[data-cy="galaxy-tooltip-name"]',
+    );
+    expect(heading.textContent).toBe(name);
+    expect(heading.children).toHaveLength(0);
+});
+
+test.each([999, 1e20])(
+    'pointer targets follow spiral paint order for [%s, 1]',
+    async (large) => {
+        const [w] = await chart(
+            {},
+            [
+                { name: 'Large', values: [large] },
+                { name: 'Small', values: [1] },
+            ],
+            true,
+        );
+        const paths = w.findAll('[data-cy="datapoint-path"]');
+        const traps = w.findAll('[data-cy="tooltip-trap"]');
+        expect(traps[0].attributes('aria-label')).toMatch(/^Small:/);
+        expect(traps[1].attributes('aria-label')).toMatch(/^Large:/);
+        for (const [i, path] of paths.entries()) {
+            expect(path.attributes('d')).toBe(traps[i].attributes('d'));
+        }
+        const outer = paths[0].attributes('d');
+        const inner = paths[1].attributes('d');
+        expect(outer).not.toBe(inner);
+    },
+);
+
+test('re-enabling tooltips restores keyboard selection and skeleton leave is silent', async () => {
+    const leave = vi.fn();
+    const config = {
+        events: { datapointLeave: leave },
+        style: { chart: { tooltip: { show: false } } },
+    };
+    const [w, s] = await chart(config, dataset, true);
+    const svg = w.get('[data-cy="galaxy-svg"]');
+    svg.element.focus();
+    await svg.trigger('keydown', { key: 'ArrowRight' });
+    const selected = s.selectedSerie;
+    expect(s.isTooltip).toBe(false);
+    w.vm.toggleTooltip();
+    await nextTick();
+    expect(s.isTooltip).toBe(true);
+    expect(s.selectedSerie).toBe(selected);
+    w.vm.toggleTooltip();
+    await nextTick();
+    expect(s.isTooltip).toBe(false);
+
+    await w.setProps({ config: { ...config, loading: true } });
+    await w.get('[data-cy="tooltip-trap"]').trigger('mouseleave');
+    expect(leave).not.toHaveBeenCalled();
+});
+
+test('accessible name follows title and subtitle updates', async () => {
+    const [w] = await chart({}, dataset, true);
+    const svg = w.get('[data-cy="galaxy-svg"]');
+    expect(svg.attributes('aria-label')).toBe('Chart visualization');
+    await w.setProps({
+        config: {
+            style: {
+                chart: { title: { text: 'Revenue', subtitle: { text: 'Q2' } } },
+            },
+        },
+    });
+    expect(svg.attributes('aria-label')).toBe('Revenue. Q2');
+});
+
+test('table and CSV use undefined shares for zero totals', async () => {
+    const [w, s] = await chart({}, [{ name: 'Zero', values: [0] }]);
+    expect(s.dataTable.head[2]).toBe('-');
+    expect(s.a11yTable.rows).toEqual([['Zero', '0', '-']]);
+    const csv = vi.fn();
+    w.vm.generateCsv(csv);
+    await nextTick();
+    expect(csv.mock.calls[0][0]).toMatch(/Zero[^\n]*0[^\n]*-/);
+    w.vm.hideSeries('Zero');
+    expect(s.dataTable.head[2]).toBe('-');
+    expect(s.a11yTable.rows).toEqual([]);
+});
+
+test('legend selection animates remaining paths and keeps hit targets aligned', async () => {
+    const [w, s] = await chart(
+        { transitions: { pauseOnLoad: false } },
+        dataset,
+        true,
+    );
+    const readPath = () =>
+        w.findAll('[data-cy="datapoint-path"]').at(-1).attributes('d');
+    const start = readPath();
+    const legend = w.getComponent({ name: 'Legend' });
+    legend.vm.$emit('clickMarker', {
+        legend: s.legendSet.find(({ name }) => name === 'B'),
+    });
+    await nextTick();
+    expect(readPath()).toBe(start);
+    expect(w.emitted('selectLegend')[0][0].map(({ name }) => name)).toEqual([
+        'C',
+        'A',
+    ]);
+
+    finishFrames(1000);
+    finishFrames(1100);
+    await nextTick();
+    const middle = readPath();
+    expect(middle).not.toBe(start);
+    const trap = w.findAll('[data-cy="tooltip-trap"]').at(-1);
+    expect(trap.attributes('d')).toBe(middle);
+    expect(
+        w.findAll('[data-cy="datapoint-border"]').at(-1).attributes('d'),
+    ).toBe(middle);
+
+    finishFrames(1200);
+    await nextTick();
+    expect(readPath()).not.toBe(middle);
+    expect(readPath()).toBe(s.galaxySet.at(-1).path);
+    expect(frames.size).toBe(0);
+});
+
+test('disabling transitions settles an interrupted legend animation', async () => {
+    const [w, s] = await chart(
+        { transitions: { pauseOnLoad: false } },
+        dataset,
+        true,
+    );
+    w.vm.hideSeries('B');
+    finishFrames(1000);
+    finishFrames(1100);
+    const staleFrame = [...frames.values()][0];
+    await w.setProps({ config: { transitions: { enable: false } } });
+    expect(s.animatedEndpoints).toBe(null);
+    expect(frames.size).toBe(0);
+    staleFrame(1150);
+    expect(frames.size).toBe(0);
+    w.vm.showSeries('B');
+    expect(frames.size).toBe(0);
+});
+
+test('useAnimation and animationSpeed control the legend animation', async () => {
+    const [w, s] = await chart({
+        useAnimation: false,
+        animationSpeed: 2,
+        transitions: { pauseOnLoad: false },
+    });
+    finishFrames(900);
+    w.vm.hideSeries('B');
+    expect(s.animatedEndpoints).toBe(null);
+    expect(frames.size).toBe(0);
+
+    await w.setProps({
+        config: {
+            useAnimation: true,
+            animationSpeed: 2,
+            transitions: { pauseOnLoad: false },
+        },
+    });
+    w.vm.showSeries('B');
+    finishFrames(1000);
+    finishFrames(1050);
+    expect(s.animatedEndpoints).not.toBe(null);
+    finishFrames(1100);
+    expect(s.animatedEndpoints).toBe(null);
+    expect(frames.size).toBe(0);
+});
+
+test('useAnimation still respects reduced-motion preference changes', async () => {
+    const media = Object.assign(new EventTarget(), { matches: false });
+    vi.stubGlobal('matchMedia', () => media);
+    const [w, s] = await chart({
+        useAnimation: true,
+        animationSpeed: 0.5,
+        transitions: { pauseOnLoad: false },
+    });
+    finishFrames(900);
+    w.vm.hideSeries('B');
+    expect(frames.size).toBe(1);
+
+    media.matches = true;
+    media.dispatchEvent(new Event('change'));
+    await nextTick();
+    expect(s.animatedEndpoints).toBe(null);
+    expect(frames.size).toBe(0);
+    w.vm.showSeries('B');
+    expect(frames.size).toBe(0);
+});
+
+test('renders formatted chart labels and updates them after legend changes', async () => {
+    const labelConfig = {
+        show: true,
+        showName: true,
+        hideUnderValue: 15,
+        formatter: ({ value }) => `$${value}`,
+    };
+    const config = {
+        useAnimation: false,
+        style: {
+            chart: {
+                backgroundColor: '#223344',
+                layout: { labels: { dataLabels: labelConfig } },
+            },
+        },
+    };
+    const [w] = await chart(config, dataset, true);
+    const labels = () => w.findAll('[data-cy="galaxy-datalabel"]');
+    expect(
+        labels()
+            .map((label) => label.text())
+            .sort(),
+    ).toEqual(['$30 (30%)B', '$60 (60%)A']);
+    expect(
+        labels().every((label) =>
+            ['x', 'y'].every((key) =>
+                Number.isFinite(Number(label.attributes(key))),
+            ),
+        ),
+    ).toBe(true);
+    for (const label of labels()) {
+        const [border, connector] =
+            label.element.parentElement.querySelectorAll('path');
+        expect(border.getAttribute('d')).toBe(connector.getAttribute('d'));
+        expect(border.getAttribute('stroke')).toMatch(/^#223344(?:ff)?$/i);
+        expect(Number(border.getAttribute('stroke-width'))).toBeGreaterThan(
+            Number(connector.getAttribute('stroke-width')),
+        );
+    }
+    for (const label of labels()) {
+        const callout = label.element.parentElement;
+        const marker = callout.querySelector(
+            '[data-cy="galaxy-datalabel-marker"]',
+        );
+        const connector = callout.querySelector('path');
+        expect(connector.getAttribute('d')).toMatch(
+            new RegExp(
+                `^M${marker.getAttribute('cx')} ${marker.getAttribute('cy')} H`,
+            ),
+        );
+        expect(connector.parentElement.getAttribute('mask')).toMatch(
+            /^url\(#galaxy-connectors-/,
+        );
+        expect(marker.hasAttribute('opacity')).toBe(false);
+    }
+    w.vm.hideSeries('A');
+    await nextTick();
+    expect(
+        labels()
+            .map((label) => label.text())
+            .sort(),
+    ).toEqual(['$10 (25%)C', '$30 (75%)B']);
+
+    w.vm.toggleLabels();
+    await nextTick();
+    expect(labels()).toHaveLength(0);
+    w.vm.toggleLabels();
+    await nextTick();
+    expect(labels()).toHaveLength(2);
+
+    await w.setProps({ config: { ...config, loading: true } });
+    expect(labels()).toHaveLength(0);
+});
+
+test('chart labels are visible by default and support visibility and content overrides', async () => {
+    const [w] = await chart({}, dataset, true);
+    const labels = () => w.findAll('[data-cy="galaxy-datalabel"]');
+    expect(labels()).toHaveLength(3);
+    await w.setProps({
+        config: {
+            style: {
+                chart: { layout: { labels: { dataLabels: { show: false } } } },
+            },
+        },
+    });
+    expect(labels()).toHaveLength(0);
+    await w.setProps({
+        config: {
+            style: {
+                chart: {
+                    layout: {
+                        labels: {
+                            dataLabels: {
+                                show: true,
+                                showName: false,
+                                showValue: false,
+                                usePercentageParens: false,
+                                roundingPercentage: 1,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    });
+    expect(
+        labels()
+            .map((label) => label.text())
+            .sort(),
+    ).toEqual(['10%', '30%', '60%']);
+});
+
+test('hovering a data label highlights its arc like hovering the arc', async () => {
+    const [w, s] = await chart(
+        {
+            style: {
+                chart: { layout: { labels: { dataLabels: { show: true } } } },
+            },
+        },
+        dataset,
+        true,
+    );
+    const label = w
+        .findAll('[data-cy="galaxy-datalabel"]')
+        .find(
+            (text) =>
+                text.get('[data-cy="galaxy-datalabel-name"]').text() === 'B',
+        );
+    const target = s.galaxySet.find(({ name }) => name === 'B');
+    const trap = w.get(`[data-a11y-serie-id="${target.id}"]`);
+    const paths = () => w.findAll('[data-cy="datapoint-path"]');
+    const readState = () =>
+        paths().map((path) => [
+            path.attributes('stroke-width'),
+            path.classes().includes('vue-ui-galaxy-blur'),
+        ]);
+    const rest = readState();
+    await label.trigger('mouseenter');
+    expect(s.selectedSerie).toBe(target.id);
+    expect(s.isTooltip).toBe(false);
+    const opacities = () =>
+        w
+            .findAll('[data-cy="galaxy-datalabel"]')
+            .map((text) => text.element.parentElement.getAttribute('opacity'));
+    expect(label.element.parentElement.getAttribute('opacity')).toBe('1');
+    expect(opacities().sort()).toEqual(['0.5', '0.5', '1']);
+    const labelHover = readState();
+    expect(labelHover).not.toEqual(rest);
+    await label.trigger('mouseleave');
+    expect(readState()).toEqual(rest);
+    expect(opacities()).toEqual(['1', '1', '1']);
+    await trap.trigger('mouseenter');
+    expect(readState()).toEqual(labelHover);
+    expect(label.element.parentElement.getAttribute('opacity')).toBe('1');
+    expect(opacities().sort()).toEqual(['0.5', '0.5', '1']);
+    await trap.trigger('mouseleave');
+    expect(opacities()).toEqual(['1', '1', '1']);
+    await label.trigger('mouseenter');
+    w.vm.toggleLabels();
+    await nextTick();
+    expect(readState()).toEqual(rest);
+});
+
+test('Galaxy label colors follow the default, theme, and explicit config', async () => {
+    const [w] = await chart(
+        { style: { chart: { color: '#000000' } } },
+        dataset,
+        true,
+    );
+    const labelColor = () =>
+        w.get('[data-cy="galaxy-datalabel"]').attributes('fill');
+    expect(labelColor()).toMatch(/^#2d353c(?:ff)?$/i);
+    await w.setProps({ config: { theme: 'hack' } });
+    expect(labelColor()).toMatch(/^#aaccaa(?:ff)?$/i);
+    await w.setProps({
+        config: {
+            theme: 'hack',
+            style: {
+                chart: {
+                    layout: { labels: { dataLabels: { color: '#123456' } } },
+                },
+            },
+        },
+    });
+    expect(labelColor()).toMatch(/^#123456(?:ff)?$/i);
 });

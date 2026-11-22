@@ -1500,6 +1500,10 @@ declare module 'vue-data-ui' {
         };
         theme?: Theme;
         customPalette?: string[];
+        /** Animate legend changes when transitions and motion preferences allow it. Default: true. */
+        useAnimation?: boolean;
+        /** Positive speed multiplier for legend animation. Default: 1 (200 ms). */
+        animationSpeed?: number;
         useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
         style?: {
@@ -1525,6 +1529,20 @@ declare module 'vue-data-ui' {
                     };
                     labels?: {
                         dataLabels?: {
+                            show?: boolean;
+                            showName?: boolean;
+                            showValue?: boolean;
+                            showPercentage?: boolean;
+                            /** Hide chart labels below this percentage of the visible total. */
+                            hideUnderValue?: number;
+                            /** Use compact callouts at or below this percentage. */
+                            smallArcClusterThreshold?: number;
+                            smallArcClusterFontSize?: number;
+                            roundingValue?: number;
+                            roundingPercentage?: number;
+                            fontSize?: number;
+                            bold?: boolean;
+                            color?: string | null;
                             showValueFirst?: boolean;
                             usePercentageParens?: boolean;
                             useValueParens?: boolean;
@@ -1613,6 +1631,7 @@ declare module 'vue-data-ui' {
         generatePdf(): void;
         generateSvg(): void;
         toggleTable(): void;
+        toggleLabels(): void;
         toggleTooltip(): void;
         toggleAnnotator(): void;
         toggleFullscreen(): void;
@@ -1719,6 +1738,7 @@ declare module 'vue-data-ui' {
                 optionCsv?: () => VNodeChild;
                 optionImg?: () => VNodeChild;
                 optionSvg?: () => VNodeChild;
+                optionLabels?: () => VNodeChild;
                 optionTable?: () => VNodeChild;
                 optionFullscreen?: (
                     props: VueUiOptionFullscreenSlotProps,

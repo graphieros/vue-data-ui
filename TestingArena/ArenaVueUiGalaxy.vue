@@ -36,6 +36,18 @@ onMounted(() => {
                 name: 'Series 3',
                 values: [300, 1],
             },
+            {
+                name: 'Series 4',
+                values: [3],
+            },
+            { name: 'Series 5', values: [155] },
+            { name: 'Series 6', values: [120] },
+            { name: 'Series 7', values: [85] },
+            { name: 'Series 8', values: [68] },
+            { name: 'Series 9', values: [54] },
+            { name: 'Series 10', values: [42] },
+            { name: 'Series 11', values: [24] },
+            { name: 'Series 12', values: [9] },
         ];
     }, 2000);
 });
@@ -62,13 +74,15 @@ const model = createModel([
     CHECKBOX('userOptions.print.useCORS', { def: true }),
     COLOR('userOptions.print.backgroundColor', { def: '#FFFFFF' }),
 
+    CHECKBOX('useAnimation', { def: true }),
+    NUMBER('animationSpeed', { def: 1, min: 0.1, max: 10, step: 0.1 }),
     CHECKBOX('useCssAnimation', { def: true }),
     CHECKBOX('useBlurOnHover', { def: true }),
     TEXT('style.fontFamily', { def: 'inherit' }),
     COLOR('style.chart.backgroundColor', { def: '#FFFFFF' }),
     COLOR('style.chart.color', { def: '#1A1A1A' }),
     NUMBER('style.chart.layout.arcs.strokeWidth', { def: 24, min: 2, max: 48 }),
-    NUMBER('style.chart.layout.arcs.borderWidth', { def: 12, min: 1, max: 24 }),
+    NUMBER('style.chart.layout.arcs.borderWidth', { def: 4, min: 0, max: 24 }),
     NUMBER('style.chart.layout.arcs.offsetX', { def: 0, min: -100, max: 100 }),
     NUMBER('style.chart.layout.arcs.offsetY', { def: 0, min: -100, max: 100 }),
     CHECKBOX('style.chart.layout.arcs.hoverEffect.show', { def: true }),
@@ -86,6 +100,47 @@ const model = createModel([
     }),
     COLOR('style.chart.layout.arcs.gradient.color', { def: '#FFFFFF20' }),
 
+    CHECKBOX('userOptions.buttons.labels', { def: true }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.show', { def: true }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.showName', { def: true }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.showValue', { def: true }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.showPercentage', {
+        def: true,
+    }),
+    NUMBER('style.chart.layout.labels.dataLabels.hideUnderValue', {
+        def: 0,
+        min: 0,
+        max: 100,
+    }),
+    NUMBER('style.chart.layout.labels.dataLabels.smallArcClusterThreshold', {
+        def: 8,
+        min: 0,
+        max: 100,
+    }),
+    NUMBER('style.chart.layout.labels.dataLabels.smallArcClusterFontSize', {
+        def: 8,
+        min: 6,
+        max: 24,
+    }),
+    NUMBER('style.chart.layout.labels.dataLabels.roundingValue', {
+        def: 0,
+        min: 0,
+        max: 12,
+    }),
+    NUMBER('style.chart.layout.labels.dataLabels.roundingPercentage', {
+        def: 0,
+        min: 0,
+        max: 12,
+    }),
+    NUMBER('style.chart.layout.labels.dataLabels.fontSize', {
+        def: 10,
+        min: 6,
+        max: 24,
+    }),
+    COLOR('style.chart.layout.labels.dataLabels.color', {
+        def: DEFAULT_CONFIG.style.chart.layout.labels.dataLabels.color,
+    }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.bold', { def: true }),
     CHECKBOX('style.chart.layout.labels.dataLabels.showValueFirst', {
         def: false,
     }),

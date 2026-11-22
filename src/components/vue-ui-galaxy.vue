@@ -33,6 +33,7 @@ import {
     dataLabel,
     downloadCsv,
     error,
+    escapeHtml,
     isFunction,
     palette,
     sanitizeArray,
@@ -46,7 +47,7 @@ import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
 import { useChartExport } from '../useChartExport';
 import { useTransitions } from '../useTransitions.js';
-import { useChartAccessibility } from '../useChartAccessibility';
+import { usePrefersReducedMotion } from '../usePrefersMotion';
 import { buildValuePercentageLabel } from '../labelUtils';
 import Title from '../atoms/Title.vue';
 import Legend from '../atoms/Legend.vue';
@@ -91,7 +92,7 @@ const props = defineProps({
 
 const uid = ref(createUid());
 const galaxyChart = ref(null);
-const isTooltip = ref(false);
+const tooltipRequested = ref(false);
 const tooltipContent = ref('');
 const selectedSerie = ref(null);
 const step = ref(0);
@@ -156,6 +157,7 @@ const FINAL_DATASET = computed(() =>
 );
 const cfgArcs = computed(() => FINAL_CONFIG.value.style.chart.layout.arcs);
 const cfgLayout = computed(() => FINAL_CONFIG.value.style.chart.layout);
+const cfgDataLabels = computed(() => cfgLayout.value.labels.dataLabels);
 const cfgChart = computed(() => FINAL_CONFIG.value.style.chart);
 
 useHints({
@@ -299,7 +301,13 @@ watch(
         userOptionsVisible.value = !value;
     },
 );
-const { svgRef } = useChartAccessibility({ config: cfgChart.value.title });
+const svgRef = ref(null);
+const accessibleName = computed(() => {
+    const { text, subtitle } = cfgChart.value.title;
+    return [text || 'Chart visualization', subtitle.text]
+        .filter(Boolean)
+        .join('. ');
+});
 function prepareConfig() {
     return resolveChartConfigWithPalette(props.config, DEFAULT_CONFIG, themes);
 }
@@ -325,6 +333,14 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
     showTooltip: cfgChart.value.tooltip.show,
 });
+
+const isTooltip = computed(
+    () =>
+        !loading.value &&
+        tooltipRequested.value &&
+        selectedSerie.value !== null &&
+        mutableConfig.value.showTooltip,
+);
 
 watch(
     () => FINAL_CONFIG.value.table.show,
@@ -369,24 +385,26 @@ function emitSelectLegend() {
     );
 }
 
-function toggleLegend() {
-    if (segregated.value.length) {
-        segregated.value = [];
-    } else {
-        legendSet.value.forEach((l) => {
-            segregated.value.push(l.id);
-        });
-    }
+function setHiddenSeries(ids) {
+    reservedLabelSpace.value ??= labelSpace.value;
+    const previous = animatedEndpoints.value ?? arcEndpoints.value;
+    segregated.value = ids;
+    animateArcs(previous);
     emitSelectLegend();
 }
 
-function segregate(datapoint) {
-    if (segregated.value.includes(datapoint.id)) {
-        segregated.value = segregated.value.filter((s) => s !== datapoint.id);
-    } else {
-        segregated.value.push(datapoint.id);
-    }
-    emitSelectLegend();
+function toggleLegend() {
+    setHiddenSeries(
+        segregated.value.length ? [] : legendSet.value.map(({ id }) => id),
+    );
+}
+
+function segregate({ id }) {
+    setHiddenSeries(
+        segregated.value.includes(id)
+            ? segregated.value.filter((hiddenId) => hiddenId !== id)
+            : [...segregated.value, id],
+    );
 }
 
 function validSeriesToToggle(name) {
@@ -527,9 +545,29 @@ const effectivePadding = computed(
         (cfgLayout.value.padding ?? 12),
 );
 
+const seriesWithShares = computed(() => {
+    let points = 0;
+    return segregatedSet.value.map((serie, seriesIndex) => {
+        const share = proportion(serie.value, total.value);
+        points += share * MAX_PATH_POINTS;
+        return { ...serie, seriesIndex, proportion: share, points };
+    });
+});
+const visibleSeries = computed(() =>
+    seriesWithShares.value.toSorted((a, b) => b.points - a.points),
+);
+
+const useLengthBasedSlices = computed(
+    () =>
+        total.value > 0 &&
+        Number.isFinite(total.value) &&
+        segregatedSet.value.every(({ value }) => value >= 0),
+);
+
 const toSpiralPath = computed(() => {
     return createSpiralPath({
         maxPoints: MAX_PATH_POINTS,
+        byLength: useLengthBasedSlices.value,
         a: cfgArcs.value.a ?? 6,
         b: cfgArcs.value.b ?? 6,
         angleStep: cfgArcs.value.angleStep ?? 0.07,
@@ -542,49 +580,445 @@ const toSpiralPath = computed(() => {
 });
 
 const galaxySet = computed(() => {
-    const res = [];
-    for (let i = 0; i < segregatedSet.value.length; i += 1) {
-        const serie = segregatedSet.value[i];
-        const endPoints =
-            proportion(serie.value, total.value) * MAX_PATH_POINTS +
-            (i > 0 && res.length ? res[i - 1].points : 0);
-
-        res.push({
-            points: endPoints,
-            ...serie,
-            seriesIndex: i,
-            proportion: proportion(serie.value, total.value),
-            path: toSpiralPath.value(endPoints),
-        });
-    }
-    return res.toSorted((a, b) => b.points - a.points);
+    const series = useLengthBasedSlices.value
+        ? visibleSeries.value.toSorted(
+              (a, b) =>
+                  b.points - a.points ||
+                  Number(!b.value) - Number(!a.value) ||
+                  (a.value && b.value ? b.seriesIndex - a.seriesIndex : 0),
+          )
+        : visibleSeries.value;
+    return series.map((serie) => ({
+        ...serie,
+        path: toSpiralPath.value(arcEndpoints.value.get(serie.id)),
+    }));
 });
 
-function getStrokeWidth(datapoint) {
-    const size = Math.min(svg.value.width, svg.value.height);
+const strokeScale = computed(
+    () => Math.min(svg.value.width, svg.value.height) / 180,
+);
 
+const outlineLayout = computed(() => {
+    const fullLength = toSpiralPath.value.totalLength;
+    // A round cap extends by half the extra stroke width.
+    const gap = (cfgArcs.value.borderWidth * strokeScale.value) / 2;
+    if (!Number.isFinite(fullLength) || fullLength <= 0 || gap <= 0)
+        return null;
+
+    const slices = seriesWithShares.value.filter(({ value }) => value > 0);
+    const following = slices.slice(1);
+    if (!following.some(({ proportion }) => proportion * fullLength <= gap))
+        return null;
+
+    const colorLength = fullLength - following.length * gap;
+    if (colorLength <= 0) {
+        return {
+            limits: new Map(
+                following.map(({ proportion }, index) => [
+                    slices[index].id,
+                    proportion * fullLength,
+                ]),
+            ),
+        };
+    }
+
+    // Reserve the dividers, then divide the remaining length by the data shares.
+    return {
+        points: new Map(
+            slices.map(({ id, points }, index) => [
+                id,
+                (points * colorLength + index * gap * MAX_PATH_POINTS) /
+                    fullLength,
+            ]),
+        ),
+    };
+});
+
+const arcEndpoints = computed(
+    () =>
+        new Map(
+            seriesWithShares.value.map(({ id, points }) => [
+                id,
+                outlineLayout.value?.points?.get(id) ?? points,
+            ]),
+        ),
+);
+const prefersReducedMotion = usePrefersReducedMotion();
+const ARC_ANIMATION_DURATION = 200;
+const canAnimateArcs = computed(
+    () =>
+        FINAL_CONFIG.value.useAnimation &&
+        transitionEnabled.value &&
+        !loading.value &&
+        !prefersReducedMotion.value,
+);
+const animatedEndpoints = shallowRef(null);
+let arcFrame = null;
+let activeArcTarget = null;
+
+const animatedPaths = computed(() => {
+    if (!animatedEndpoints.value) return null;
+    return new Map(
+        Array.from(animatedEndpoints.value, ([id, points]) => [
+            id,
+            toSpiralPath.value(points),
+        ]),
+    );
+});
+
+function stopArcAnimation() {
+    if (arcFrame !== null) cancelAnimationFrame(arcFrame);
+    arcFrame = null;
+    activeArcTarget = null;
+    animatedEndpoints.value = null;
+}
+
+function animateArcs(previous) {
+    stopArcAnimation();
+    const target = arcEndpoints.value;
+    if (!canAnimateArcs.value || !useLengthBasedSlices.value) return;
+
+    let preceding = 0;
+    const from = new Map();
+    for (const [id] of target) {
+        // A returning slice starts at the previous visible boundary.
+        preceding = previous.get(id) ?? preceding;
+        from.set(id, preceding);
+    }
+    if ([...target].every(([id, points]) => from.get(id) === points)) return;
+
+    const duration = ARC_ANIMATION_DURATION / FINAL_CONFIG.value.animationSpeed;
+    const animationDuration =
+        Number.isFinite(duration) && duration > 0
+            ? duration
+            : ARC_ANIMATION_DURATION;
+    const animation = { target, spiral: toSpiralPath.value };
+    activeArcTarget = animation;
+    animatedEndpoints.value = from;
+    let start;
+    function advance(timestamp) {
+        if (activeArcTarget !== animation) return;
+        start ??= timestamp;
+        const progress = Math.min((timestamp - start) / animationDuration, 1);
+        if (progress === 1) {
+            stopArcAnimation();
+            if (tooltipTriggerMode.value === 'keyboard') {
+                nextTick(() =>
+                    updateTooltipA11yPosition(activeTooltipSerieId.value),
+                );
+            }
+            return;
+        }
+
+        const eased = progress * progress * (3 - 2 * progress);
+        animatedEndpoints.value = new Map(
+            Array.from(target, ([id, points]) => {
+                const initial = from.get(id);
+                return [id, initial + (points - initial) * eased];
+            }),
+        );
+        arcFrame = requestAnimationFrame(advance);
+    }
+    arcFrame = requestAnimationFrame(advance);
+}
+
+watch(
+    [arcEndpoints, canAnimateArcs, toSpiralPath],
+    ([target, enabled, spiral]) => {
+        if (
+            activeArcTarget &&
+            (!enabled ||
+                target !== activeArcTarget.target ||
+                spiral !== activeArcTarget.spiral)
+        )
+            stopArcAnimation();
+    },
+);
+onBeforeUnmount(stopArcAnimation);
+
+const formattedArcLabels = computed(() => {
+    const cfg = cfgDataLabels.value;
+    if (
+        loading.value ||
+        !mutableConfig.value.dataLabels.show ||
+        !useLengthBasedSlices.value
+    )
+        return new Map();
+
+    return new Map(
+        galaxySet.value
+            .filter(
+                ({ value, proportion }) =>
+                    value > 0 && proportion * 100 > cfg.hideUnderValue,
+            )
+            .map((datapoint) => {
+                const { id, name, value, seriesIndex, proportion } = datapoint;
+                const label = buildLabel({
+                    showVal: cfg.showValue,
+                    showPercentage: cfg.showPercentage,
+                    val: cfg.showValue
+                        ? applyDataLabel(
+                              cfg.formatter,
+                              value,
+                              dataLabel({
+                                  p: cfg.prefix,
+                                  v: value,
+                                  s: cfg.suffix,
+                                  r: cfg.roundingValue,
+                              }),
+                              { datapoint, seriesIndex },
+                          )
+                        : '',
+                    percentage: cfg.showPercentage
+                        ? dataLabel({
+                              v: proportion * 100,
+                              s: '%',
+                              r: cfg.roundingPercentage,
+                          })
+                        : '',
+                });
+                return [
+                    id,
+                    {
+                        text: String(label),
+                        name: cfg.showName ? String(name ?? '') : '',
+                        small: proportion * 100 <= cfg.smallArcClusterThreshold,
+                    },
+                ];
+            }),
+    );
+});
+
+function getLabelAnchors(endpoints, highlighted = false) {
+    const spiral = toSpiralPath.value;
+    const anchors = new Map();
+    const pointsPerUnit = MAX_PATH_POINTS / spiral.totalLength;
+    let previousEnd = 0;
+    let previousRadius = 0;
+
+    for (const { id, value, color } of seriesWithShares.value) {
+        if (value <= 0) continue;
+        const end = Math.min(MAX_PATH_POINTS, endpoints.get(id));
+        const { border, path } = highlighted
+            ? strokeWidths.value[id]
+            : getStrokeWidth(id);
+        const label = formattedArcLabels.value.get(id);
+        if (label?.text || label?.name) {
+            // Nested round caps can leave a short slice visible only past its centerline endpoint.
+            const radius = path / 2;
+            const visibleLength =
+                (end - previousEnd) / pointsPerUnit + radius - previousRadius;
+            if (visibleLength > 0) {
+                const offset = radius - visibleLength / 2;
+                const position = spiral.pointAt(
+                    end + Math.min(0, offset) * pointsPerUnit,
+                );
+                if (position && offset > 0) {
+                    const before = spiral.pointAt(end - 0.25 * pointsPerUnit);
+                    const dx = position.x - before.x;
+                    const dy = position.y - before.y;
+                    const length = Math.hypot(dx, dy);
+                    if (length) {
+                        position.x += (dx / length) * offset;
+                        position.y += (dy / length) * offset;
+                    }
+                }
+                if (position)
+                    anchors.set(id, { id, color, ...label, ...position });
+            }
+        }
+        previousEnd = end;
+        previousRadius = border / 2;
+    }
+    return anchors;
+}
+
+const LABEL_GUTTER = 12;
+const reservedLabelSpace = ref(null);
+
+function estimatedLabelWidth(text, fontSize) {
+    return text.length * fontSize * 0.8;
+}
+
+const labelSpace = computed(() => {
+    if (loading.value || !mutableConfig.value.dataLabels.show) return 0;
+
+    const cfg = cfgDataLabels.value;
+    const fontSize = Math.max(cfg.fontSize, cfg.smallArcClusterFontSize);
+    // Reserve room for names that can become eligible after hiding larger slices.
+    let width = 8 * fontSize;
+    if (cfg.showName) {
+        for (const { name } of immutableSet.value) {
+            width = Math.max(
+                width,
+                estimatedLabelWidth(String(name ?? ''), fontSize * 0.8),
+            );
+        }
+    }
+    for (const { text } of formattedArcLabels.value.values()) {
+        width = Math.max(width, estimatedLabelWidth(text, fontSize));
+    }
+    return LABEL_GUTTER + width;
+});
+
+watch(
+    [
+        immutableSet,
+        cfgDataLabels,
+        loading,
+        () => mutableConfig.value.dataLabels.show,
+    ],
+    () => {
+        reservedLabelSpace.value = null;
+    },
+);
+
+const labelLayout = computed(() => {
+    const { width, height, viewBox } = svg.value;
+    const space = reservedLabelSpace.value ?? labelSpace.value;
+    const labelViewBox = space
+        ? `${-space} 0 ${width + 2 * space} ${height}`
+        : viewBox;
+    if (!formattedArcLabels.value.size)
+        return { viewBox: labelViewBox, labels: [] };
+
+    const columns = [[], []];
+    const cfg = cfgDataLabels.value;
+    const maxTextWidth = Math.max(0, space - LABEL_GUTTER);
+    const anchors = getLabelAnchors(arcEndpoints.value);
+    for (const label of anchors.values()) {
+        const side = label.x < width / 2 ? 0 : 1;
+        const fontSize = label.small
+            ? cfg.smallArcClusterFontSize
+            : cfg.fontSize;
+        const nameSize = fontSize * 0.8;
+        const hasTwoLines = label.text && label.name;
+        const rowHeight = fontSize + (hasTwoLines ? nameSize : 0) + 4;
+        const textLength =
+            estimatedLabelWidth(label.text, fontSize) > maxTextWidth
+                ? maxTextWidth
+                : undefined;
+        columns[side].push({
+            ...label,
+            fontSize,
+            nameSize,
+            rowHeight,
+            textLength,
+        });
+    }
+
+    const bands = columns.map((column, side) => {
+        const left = side === 0;
+        const edgeX = left ? 0 : width;
+        const railX = edgeX + ((left ? -1 : 1) * LABEL_GUTTER) / 2;
+        const textX = edgeX + (left ? -1 : 1) * LABEL_GUTTER;
+        let occupied = 0;
+        const placed = column
+            .filter(({ rowHeight }) => {
+                if (occupied + rowHeight > height) return false;
+                occupied += rowHeight;
+                return true;
+            })
+            .toSorted((a, b) => a.y - b.y);
+
+        let top = 0;
+        return placed.map((label) => {
+            occupied -= label.rowHeight;
+            const y = Math.max(
+                top,
+                Math.min(
+                    label.y - label.fontSize / 2,
+                    height - occupied - label.rowHeight,
+                ),
+            );
+            top = y + label.rowHeight;
+            return {
+                ...label,
+                edgeX,
+                railX,
+                textX,
+                textY: y + label.fontSize / 2,
+                left,
+            };
+        });
+    });
+    const labels = bands.flat();
+
+    return { labels, viewBox: labelViewBox };
+});
+
+const markerRadius = 1.8;
+const markerBorderWidth = 0.8;
+const connectorBorderWidth = 2;
+
+const arcLabels = computed(() => {
+    const labels = labelLayout.value.labels;
+    const endpoints = animatedEndpoints.value;
+    const anchors =
+        labels.length && (endpoints || selectedSerie.value !== null)
+            ? getLabelAnchors(endpoints ?? arcEndpoints.value, true)
+            : null;
+    return labels.map((label) => {
+        const anchor = anchors ? anchors.get(label.id) : label;
+        if (!anchor) return { ...label, connector: null };
+        const { x, y } = anchor;
+        const direction = label.left ? -1 : 1;
+        const endX = label.textX - 3 * direction;
+        const connector = `M${x} ${y} H${label.edgeX} L${label.railX} ${label.textY} H${endX}`;
+        return { ...label, x, y, connector };
+    });
+});
+
+function getStrokeWidth(id, highlighted = false) {
     const mult =
-        selectedSerie.value === datapoint.id && cfgArcs.value.hoverEffect.show
+        highlighted && cfgArcs.value.hoverEffect.show
             ? cfgArcs.value.hoverEffect.multiplicator
             : 1;
 
-    const border =
-        (cfgArcs.value.strokeWidth + cfgArcs.value.borderWidth) * mult;
-    const path = cfgArcs.value.strokeWidth * mult;
-    const blur = (cfgArcs.value.strokeWidth / 2) * mult;
+    const scale = mult * strokeScale.value;
+    const path = cfgArcs.value.strokeWidth * scale;
+    const borderWidth = cfgArcs.value.borderWidth * scale;
+    const limit = outlineLayout.value?.limits?.get(id);
+    const outline = Math.min(borderWidth, limit ?? Infinity);
 
     return {
-        border: (border / 180) * size,
-        path: (path / 180) * size,
-        blur: (blur / 180) * size,
+        border: path + outline,
+        path,
+        blur: path / 2,
     };
 }
 
+const labelMarkers = computed(() =>
+    arcLabels.value.filter(({ connector }) => connector),
+);
+
 const strokeWidths = computed(() =>
     Object.fromEntries(
-        galaxySet.value.map((dp) => [dp.id, getStrokeWidth(dp)]),
+        galaxySet.value.map(({ id }) => [
+            id,
+            getStrokeWidth(id, selectedSerie.value === id),
+        ]),
     ),
 );
+
+const pointerSeriesId = computed(() =>
+    tooltipTriggerMode.value === 'pointer' ? selectedSerie.value : null,
+);
+
+function labelOpacity(id) {
+    const hoveredId = pointerSeriesId.value;
+    return hoveredId !== null && hoveredId !== id ? 0.5 : 1;
+}
+
+watch(labelLayout, ({ labels }) => {
+    const id = pointerSeriesId.value;
+    if (
+        id !== null &&
+        !tooltipRequested.value &&
+        !labels.some((label) => label.id === id)
+    )
+        clearSerieSelection();
+});
 
 const isFullscreen = ref(false);
 function toggleFullscreen(state) {
@@ -595,7 +1029,7 @@ function toggleFullscreen(state) {
 const dataTooltipSlot = ref(null);
 
 function clearSerieSelection() {
-    isTooltip.value = false;
+    tooltipRequested.value = false;
     selectedSerie.value = null;
     activeTooltipIndex.value = null;
     activeTooltipSerieId.value = null;
@@ -619,7 +1053,26 @@ function updateTooltipA11yPosition(serieId) {
     };
 }
 
+function onDatapointPointerEnter(datapoint, show = true) {
+    useTooltip({
+        datapoint,
+        seriesIndex: datapoint.seriesIndex,
+        show,
+        flatIndex: a11ySeries.value.findIndex(
+            (entry) => entry.datapoint.id === datapoint.id,
+        ),
+    });
+}
+
+function onLabelHover(id, entering) {
+    const datapoint = galaxySet.value.find((series) => series.id === id);
+    if (!datapoint) return;
+    if (entering) onDatapointPointerEnter(datapoint, false);
+    else onTrapLeave(datapoint);
+}
+
 function onTrapLeave(datapoint) {
+    if (loading.value) return;
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({
             datapoint,
@@ -675,7 +1128,7 @@ function useTooltip({
     activeTooltipIndex.value = flatIndex;
     activeTooltipSerieId.value = datapoint.id;
     selectedSerie.value = datapoint.id;
-    isTooltip.value = show && mutableConfig.value.showTooltip;
+    tooltipRequested.value = show;
     refreshTooltip(datapoint, seriesIndex);
     if (triggerMode === 'keyboard')
         nextTick(() => updateTooltipA11yPosition(datapoint.id));
@@ -707,7 +1160,7 @@ function refreshTooltip(datapoint, seriesIndex) {
     if (typeof formatted === 'string') {
         tooltipContent.value = formatted;
     } else {
-        html += `<div data-cy="galaxy-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${cfgChart.value.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
+        html += `<div data-cy="galaxy-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${cfgChart.value.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${escapeHtml(datapoint.name)}</div>`;
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="galaxy-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
         html += `<b>${buildLabel({
@@ -755,7 +1208,6 @@ watch(
         const datapoint = a11ySeries.value[index].datapoint;
         activeTooltipIndex.value = index;
         refreshTooltip(datapoint, datapoint.seriesIndex);
-        if (!mutableConfig.value.showTooltip) isTooltip.value = false;
         if (tooltipTriggerMode.value === 'keyboard')
             nextTick(() => updateTooltipA11yPosition(datapoint.id));
     },
@@ -816,30 +1268,25 @@ const legendConfig = computed(() => {
     };
 });
 
-const table = computed(() => {
-    const head = galaxySet.value.map((ds) => {
-        return {
-            name: ds.name,
-            color: ds.color,
-        };
-    });
-    const body = galaxySet.value.map((ds) => ds.value);
-    return { head, body };
-});
+const hasPercentage = computed(
+    () => total.value !== 0 && Number.isFinite(total.value),
+);
+const tableRows = computed(() =>
+    visibleSeries.value.map(({ name, color, value, proportion }) => ({
+        name,
+        color,
+        value,
+        percentage: hasPercentage.value ? proportion * 100 : null,
+    })),
+);
 
 function generateCsv(callback = null) {
     nextTick(() => {
-        const labels = table.value.head.map((h, i) => {
-            return [
-                [h.name],
-                [table.value.body[i]],
-                [
-                    !total.value || !Number.isFinite(total.value)
-                        ? '-'
-                        : (table.value.body[i] / total.value) * 100,
-                ],
-            ];
-        });
+        const labels = tableRows.value.map(({ name, value, percentage }) => [
+            [name],
+            [value],
+            [percentage ?? '-'],
+        ]);
         const tableXls = [
             [cfgChart.value.title.text],
             [cfgChart.value.title.subtitle.text],
@@ -872,26 +1319,26 @@ const dataTable = computed(() => {
             s: cfgLayout.value.labels.dataLabels.suffix,
             r: FINAL_CONFIG.value.table.td.roundingValue,
         }),
-        '100%',
+        hasPercentage.value ? '100%' : '-',
     ];
 
-    const body = table.value.head.map((h, i) => {
+    const body = tableRows.value.map(({ name, color, value, percentage }) => {
         const label = dataLabel({
             p: cfgLayout.value.labels.dataLabels.prefix,
-            v: table.value.body[i],
+            v: value,
             s: cfgLayout.value.labels.dataLabels.suffix,
             r: FINAL_CONFIG.value.table.td.roundingValue,
         });
         return [
             {
-                color: h.color,
-                name: h.name,
+                color,
+                name,
             },
             label,
-            !total.value || !Number.isFinite(total.value)
+            percentage === null
                 ? '-'
                 : dataLabel({
-                      v: (table.value.body[i] / total.value) * 100,
+                      v: percentage,
                       s: '%',
                       r: FINAL_CONFIG.value.table.td.roundingPercentage,
                   }),
@@ -928,6 +1375,10 @@ const dataTable = computed(() => {
 
 function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
+function toggleLabels() {
+    mutableConfig.value.dataLabels.show = !mutableConfig.value.dataLabels.show;
 }
 
 function toggleTooltip() {
@@ -1119,6 +1570,7 @@ defineExpose({
     showSeries,
     toggleTable,
     toggleTooltip,
+    toggleLabels,
     toggleAnnotator,
     toggleFullscreen,
     copyAlt,
@@ -1223,12 +1675,13 @@ defineExpose({
                 cfgChart.tooltip.show
             "
             :isTooltip="mutableConfig.showTooltip"
+            :isLabelActive="mutableConfig.dataLabels.show"
             :isFullscreen="isFullscreen"
             :chartElement="galaxyChart"
             v-bind="
                 getUserOptionsProps(
                     FINAL_CONFIG.userOptions,
-                    'pdf csv img svg table fullscreen altCopy annotator',
+                    'pdf csv img svg labels table fullscreen altCopy annotator',
                 )
             "
             :isAnnotation="isAnnotator"
@@ -1241,6 +1694,7 @@ defineExpose({
             @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
+            @toggleLabels="toggleLabels"
             @toggleAnnotator="toggleAnnotator"
             @copyAlt="copyAlt"
             :style="{
@@ -1254,7 +1708,7 @@ defineExpose({
             <template
                 v-for="slotName in getUserOptionSlots(
                     $slots,
-                    'menuIcon optionTooltip optionPdf optionCsv optionImg optionSvg optionTable optionFullscreen optionAnnotator optionAltCopy custom-menu-before custom-menu-after',
+                    'menuIcon optionTooltip optionPdf optionCsv optionImg optionSvg optionLabels optionTable optionFullscreen optionAnnotator optionAltCopy custom-menu-before custom-menu-after',
                 )"
                 #[slotName]="slotProps"
             >
@@ -1269,13 +1723,16 @@ defineExpose({
             <svg
                 ref="svgRef"
                 :xmlns="XMLNS"
+                role="img"
+                :aria-label="accessibleName"
+                aria-live="polite"
                 :aria-describedby="`chart-instructions-${uid}`"
                 :class="{
                     'vue-data-ui-fullscreen--on': isFullscreen,
                     'vue-data-ui-fulscreen--off': !isFullscreen,
                 }"
                 data-cy="galaxy-svg"
-                :viewBox="svg.viewBox"
+                :viewBox="labelLayout.viewBox"
                 :style="`max-width:100%; overflow: visible; background:transparent;color:${cfgChart.color}`"
                 tabindex="0"
                 @focus="onSvgFocus"
@@ -1309,6 +1766,31 @@ defineExpose({
 
                 <!-- GRADIENT -->
                 <defs>
+                    <mask
+                        v-if="labelMarkers.length"
+                        :id="`galaxy-connectors-${uid}`"
+                        maskUnits="userSpaceOnUse"
+                        x="-100%"
+                        y="-100%"
+                        width="300%"
+                        height="300%"
+                    >
+                        <rect
+                            x="-100%"
+                            y="-100%"
+                            width="300%"
+                            height="300%"
+                            fill="white"
+                        />
+                        <circle
+                            v-for="marker in labelMarkers"
+                            :key="marker.id"
+                            :cx="marker.x"
+                            :cy="marker.y"
+                            :r="markerRadius - markerBorderWidth / 2"
+                            fill="black"
+                        />
+                    </mask>
                     <filter
                         :id="`blur_${uid}`"
                         x="-50%"
@@ -1328,7 +1810,7 @@ defineExpose({
                     <path
                         data-cy="datapoint-border"
                         v-if="datapoint.value"
-                        :d="datapoint.path"
+                        :d="animatedPaths?.get(datapoint.id) ?? datapoint.path"
                         fill="none"
                         :stroke="cfgChart.backgroundColor"
                         :stroke-width="strokeWidths[datapoint.id].border"
@@ -1338,7 +1820,7 @@ defineExpose({
                     <path
                         data-cy="datapoint-path"
                         v-if="datapoint.value"
-                        :d="datapoint.path"
+                        :d="animatedPaths?.get(datapoint.id) ?? datapoint.path"
                         fill="none"
                         :stroke="datapoint.color"
                         :stroke-width="strokeWidths[datapoint.id].path"
@@ -1356,7 +1838,10 @@ defineExpose({
                         v-if="datapoint.value && cfgArcs.gradient.show"
                     >
                         <path
-                            :d="datapoint.path"
+                            :d="
+                                animatedPaths?.get(datapoint.id) ??
+                                datapoint.path
+                            "
                             fill="none"
                             :stroke="cfgArcs.gradient.color"
                             :stroke-width="strokeWidths[datapoint.id].blur"
@@ -1373,13 +1858,85 @@ defineExpose({
                     </g>
                 </g>
 
+                <g aria-hidden="true" pointer-events="none">
+                    <g
+                        v-for="label in arcLabels"
+                        :key="label.id"
+                        :opacity="labelOpacity(label.id)"
+                    >
+                        <g
+                            v-if="label.connector"
+                            :mask="`url(#galaxy-connectors-${uid})`"
+                            fill="none"
+                            stroke-linejoin="round"
+                            stroke-linecap="round"
+                        >
+                            <path
+                                :d="label.connector"
+                                :stroke="cfgChart.backgroundColor"
+                                :stroke-width="connectorBorderWidth"
+                            />
+                            <path
+                                :d="label.connector"
+                                :stroke="label.color"
+                                stroke-width="1"
+                                stroke-opacity="0.7"
+                            />
+                        </g>
+                        <circle
+                            v-if="label.connector"
+                            data-cy="galaxy-datalabel-marker"
+                            :data-series-id="label.id"
+                            :cx="label.x"
+                            :cy="label.y"
+                            :r="markerRadius"
+                            :fill="label.color"
+                            :stroke="cfgChart.backgroundColor"
+                            :stroke-width="markerBorderWidth"
+                        />
+                        <text
+                            data-cy="galaxy-datalabel"
+                            pointer-events="all"
+                            @mouseenter="onLabelHover(label.id, true)"
+                            @mouseleave="onLabelHover(label.id, false)"
+                            :x="label.textX"
+                            :y="label.textY"
+                            :fill="cfgDataLabels.color ?? cfgChart.color"
+                            :font-size="label.fontSize"
+                            :font-weight="
+                                cfgDataLabels.bold ? 'bold' : 'normal'
+                            "
+                            :text-anchor="label.left ? 'end' : 'start'"
+                            dominant-baseline="central"
+                        >
+                            <tspan
+                                v-if="label.text"
+                                :textLength="label.textLength"
+                                lengthAdjust="spacingAndGlyphs"
+                            >
+                                {{ label.text }}
+                            </tspan>
+                            <tspan
+                                v-if="label.name"
+                                :x="label.textX"
+                                :dy="label.text ? label.fontSize : 0"
+                                :font-size="label.nameSize"
+                                font-weight="normal"
+                                data-cy="galaxy-datalabel-name"
+                            >
+                                {{ label.name }}
+                            </tspan>
+                        </text>
+                    </g>
+                </g>
+
                 <!-- TRAPS -->
-                <g v-for="(datapoint, i) in galaxySet">
+                <g v-for="datapoint in galaxySet" :key="`trap_${datapoint.id}`">
                     <path
                         data-cy="tooltip-trap"
                         :data-a11y-serie-id="datapoint.id"
                         v-if="datapoint.value"
-                        :d="datapoint.path"
+                        :d="animatedPaths?.get(datapoint.id) ?? datapoint.path"
                         fill="none"
                         stroke="transparent"
                         :stroke-width="strokeWidths[datapoint.id].border"
@@ -1390,18 +1947,7 @@ defineExpose({
                             s: cfgLayout.labels.dataLabels.suffix,
                             r: cfgChart.tooltip.roundingValue,
                         })}`"
-                        @mouseenter="
-                            useTooltip({
-                                datapoint,
-                                seriesIndex: datapoint.seriesIndex,
-                                show: true,
-                                triggerMode: 'pointer',
-                                flatIndex: a11ySeries.findIndex(
-                                    (entry) =>
-                                        entry.datapoint.id === datapoint.id,
-                                ),
-                            })
-                        "
+                        @mouseenter="onDatapointPointerEnter(datapoint)"
                         @mouseleave="onTrapLeave(datapoint)"
                         @click="onTrapClick(datapoint)"
                     />
@@ -1504,7 +2050,7 @@ defineExpose({
         <!-- TOOLTIP -->
         <Tooltip
             :teleportTo="cfgChart.tooltip.teleportTo"
-            :show="mutableConfig.showTooltip && isTooltip"
+            :show="isTooltip"
             :backgroundColor="cfgChart.tooltip.backgroundColor"
             :color="cfgChart.tooltip.color"
             :borderRadius="cfgChart.tooltip.borderRadius"
@@ -1672,7 +2218,9 @@ svg:focus-visible {
 }
 
 .vue-data-ui-transition {
-    transition: all 0.2s ease-in-out;
+    transition:
+        stroke 0.2s ease-in-out,
+        stroke-width 0.2s ease-in-out;
 }
 
 @media (prefers-reduced-motion: reduce) {

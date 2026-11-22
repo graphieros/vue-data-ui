@@ -274,6 +274,12 @@ defineExpose({
 });
 
 const isLabel = ref(props.isLabelActive);
+watch(
+    () => props.isLabelActive,
+    (active) => {
+        isLabel.value = active;
+    },
+);
 function toggleLabels() {
     if (props.callbacks.labels) {
         props.callbacks.labels();
