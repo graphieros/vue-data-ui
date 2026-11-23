@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 
 export function useStackChartSlicer({
     slicer,
@@ -8,10 +8,13 @@ export function useStackChartSlicer({
     chartSlicer,
     props,
     emit,
-    applyZoomState,
+    isDisposed,
+    waitForLayoutFrames,
+    captureZoomTransition,
 }) {
     let queuedSlicerFrame = null;
     let queuedSlicerUpdate = {};
+    let refreshSequence = 0;
     const isSettingUp = ref(false);
     const slicerReady = ref(false);
     const suppressChild = ref(false);
@@ -94,6 +97,39 @@ export function useStackChartSlicer({
         return v;
     }
 
+    function getCommittedRange() {
+        return {
+            start: Number(slicer.value.start),
+            end: Number(slicer.value.end),
+        };
+    }
+
+    function applyZoomState(state, { transition = false } = {}) {
+        const normalized = normalizeZoomState(state);
+        if (!normalized) return null;
+
+        const { start, end } = normalized;
+        const current = getCommittedRange();
+        if (start !== current.start || end !== current.end) {
+            const playTransition = captureZoomTransition?.();
+            clearQueuedSlicerFrame();
+            slicer.value = { start, end };
+            slicerPrecog.value = { start, end };
+            normalizeSlicerWindow();
+            if (transition) playTransition?.();
+        }
+
+        return getCommittedRange();
+    }
+
+    function publishZoomState(state, options) {
+        const committed = applyZoomState(state, options);
+        if (!committed) return null;
+
+        emit('update:zoomState', committed);
+        return committed;
+    }
+
     function setupSlicer(applyControlledZoom = true) {
         if (isSettingUp.value) return;
 
@@ -166,11 +202,39 @@ export function useStackChartSlicer({
 
             // Publish only the complete, normalized range. SlicerPreview emits
             // start and end separately while dragging the whole selection.
-            emitZoomState({
-                start: Number(slicer.value.start),
-                end: Number(slicer.value.end),
-            });
+            emitZoomState(getCommittedRange());
         });
+    }
+
+    async function refreshSlicer({
+        force = false,
+        publish = false,
+        transition = force && publish,
+    } = {}) {
+        if (isDisposed()) return;
+        const sequence = ++refreshSequence;
+        if (
+            cfgChart.value.zoom.keepState &&
+            !force &&
+            slicerReady.value &&
+            !(slicer.value.start === 0 && slicer.value.end === 0)
+        ) {
+            normalizeSlicerWindow();
+            return;
+        }
+        const applyControlledZoom = !force;
+        const playTransition = transition ? captureZoomTransition?.() : null;
+        setupSlicer(applyControlledZoom);
+        playTransition?.();
+        await nextTick();
+        const isCurrent = () => sequence === refreshSequence;
+        if (!isCurrent() || isDisposed()) return;
+        if (!(await waitForLayoutFrames(3, isCurrent))) return;
+        setupSlicer(applyControlledZoom);
+        if (publish) {
+            emitZoomState(getCommittedRange());
+            emit('zoomReset');
+        }
     }
 
     function onSlicerStart(v) {
@@ -217,8 +281,9 @@ export function useStackChartSlicer({
     return {
         isPrecog,
         setPrecog,
-        normalizeZoomState,
-        emitZoomState,
+        applyZoomState,
+        publishZoomState,
+        refreshSlicer,
         clearQueuedSlicerFrame,
         normalizeSlicerWindow,
         setupSlicer,
