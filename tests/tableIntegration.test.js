@@ -1,8 +1,9 @@
 import { describe, expect, test, vi } from 'vitest';
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, effectScope, nextTick, ref, watch } from 'vue';
 import {
     getTableComponent,
     syncTableVisibility,
+    useChartTable,
 } from '../src/tableIntegration';
 
 function setup(overrides = {}) {
@@ -154,5 +155,74 @@ describe('table visibility synchronization', () => {
         expect(() =>
             syncTableVisibility(false, options.config, ref({})),
         ).not.toThrow();
+    });
+
+    test('opens a lazy dialog after its ref mounts and clears the icon on close', async () => {
+        const scope = effectScope();
+        const tableUnit = ref(null);
+        const open = vi.fn();
+        const close = vi.fn();
+        const setTableIconState = vi.fn();
+        const table = scope.run(() =>
+            useChartTable({
+                ...setup(),
+                tableUnit,
+                userOptions: ref({ setTableIconState }),
+                waitForTableMount: true,
+            }),
+        );
+        try {
+            table.toggleTable();
+            await nextTick();
+            tableUnit.value = { open, close };
+            await nextTick();
+            expect(open).toHaveBeenCalledOnce();
+
+            table.closeTable();
+            expect(setTableIconState).toHaveBeenCalledExactlyOnceWith(false);
+            await nextTick();
+            expect(close).toHaveBeenCalledOnce();
+
+            tableUnit.value = null;
+            await nextTick();
+            expect(close).toHaveBeenCalledOnce();
+        } finally {
+            scope.stop();
+        }
+    });
+
+    test('uses XY’s root showTable setting for presentation and dialog visibility', async () => {
+        const scope = effectScope();
+        const options = setup();
+        const open = vi.fn();
+        options.config.value.table.show = true;
+        options.config.value.showTable = false;
+        const table = scope.run(() =>
+            useChartTable({
+                ...options,
+                tableUnit: ref({ open }),
+                userOptions: ref(null),
+                showTable: () => options.config.value.showTable,
+            }),
+        );
+        try {
+            expect(table.tableComponent.value.component).toBe(options.dialog);
+            table.toggleTable();
+            await nextTick();
+            expect(open).toHaveBeenCalledOnce();
+
+            table.closeTable();
+            await nextTick();
+            options.config.value.showTable = true;
+            table.toggleTable();
+            await nextTick();
+            expect(table.tableComponent.value.component).toBe(
+                options.accordion,
+            );
+            expect(table.tableComponent.value.props.config.open).toBe(true);
+            expect(open).toHaveBeenCalledOnce();
+        } finally {
+            scope.stop();
+        }
     });
 });

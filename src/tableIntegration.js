@@ -1,3 +1,35 @@
+import { computed, watch } from 'vue';
+
+export function useChartTable({
+    tableUnit,
+    userOptions,
+    waitForTableMount = false,
+    ...options
+}) {
+    const { config, mutableConfig, showTable } = options;
+    const tableComponent = computed(() => getTableComponent(options));
+    const isVisible = () => mutableConfig.value.showTable;
+
+    // Lazy tables mount their dialog in response to the visibility change.
+    watch(
+        waitForTableMount ? [isVisible, tableUnit] : [isVisible],
+        ([visible]) =>
+            syncTableVisibility(visible, config, tableUnit, showTable),
+        { flush: waitForTableMount ? 'post' : 'pre' },
+    );
+
+    function toggleTable() {
+        mutableConfig.value.showTable = !isVisible();
+    }
+
+    function closeTable() {
+        mutableConfig.value.showTable = false;
+        userOptions.value?.setTableIconState(false);
+    }
+
+    return { tableComponent, toggleTable, closeTable };
+}
+
 export function getTableComponent({
     config,
     style,
@@ -49,12 +81,12 @@ export function getTableComponent({
     };
 }
 
-// Preserve the existing synchronous watcher behavior, including its close guard.
-export function syncTableVisibility(visible, config, tableUnit) {
-    if (config.value.table.show) return;
-    if (visible && config.value.table.useDialog && tableUnit.value) {
-        tableUnit.value.open();
-    } else if ('close' in tableUnit.value) {
-        tableUnit.value.close();
+export function syncTableVisibility(visible, config, tableUnit, showTable) {
+    if (showTable ? showTable() : config.value.table.show) return;
+    const table = tableUnit.value;
+    if (visible && config.value.table.useDialog) {
+        table?.open?.();
+    } else {
+        table?.close?.();
     }
 }
