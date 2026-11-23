@@ -1,8 +1,8 @@
 import { beforeEach, afterEach, expect, it, vi } from 'vitest';
-import { normalizeGraph } from '../src/graph/engine';
+import { normalizeGraph, tickGraph } from '../src/graph/engine';
 import { graphDefaults } from '../src/graph/config';
 
-let frames, layout;
+let frames, layout, runGraphLayout;
 beforeEach(async () => {
     vi.resetModules();
     frames = new Map();
@@ -12,9 +12,13 @@ beforeEach(async () => {
         return id;
     });
     vi.stubGlobal('cancelAnimationFrame', (key) => frames.delete(key));
-    layout = (await import('../src/graph/layout')).prepareGraphLayout;
+    ({ prepareGraphLayout: layout, runGraphLayout } =
+        await import('../src/graph/layout'));
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+});
 function graph() {
     return normalizeGraph(
         {
@@ -30,11 +34,15 @@ function graph() {
 }
 const cfg = { ...graphDefaults.layout, iterations: 2 };
 function drain() {
-    while (frames.size) {
-        const [key, cb] = frames.entries().next().value;
-        frames.delete(key);
-        cb();
-    }
+    while (frames.size) stepFrame();
+}
+function stepFrame() {
+    const [key, cb] = frames.entries().next().value;
+    frames.delete(key);
+    cb();
+}
+function positions(g) {
+    return g.nodes.map(({ x, y, vx, vy }) => [x, y, vx, vy]);
 }
 it('shares initial work and reuses settled positions without sharing mutable nodes', () => {
     const a = graph(),
@@ -81,4 +89,75 @@ it('cancels unused work and distinguishes physics and node dimensions', () => {
     cancelC();
     expect(frames.size).toBe(0);
     expect(done).not.toHaveBeenCalled();
+});
+
+it('completes eager initial work synchronously and reuses its cached result', () => {
+    vi.spyOn(performance, 'now').mockReturnValue(0);
+    const eager = graph();
+    const cached = graph();
+    const complete = vi.fn();
+    layout(eager, cfg, complete, { eager: true });
+    expect(complete).toHaveBeenCalledOnce();
+    expect(frames.size).toBe(0);
+
+    layout(cached, cfg, complete);
+    expect(complete).toHaveBeenCalledTimes(2);
+    expect(positions(cached)).toEqual(positions(eager));
+});
+
+it('publishes live batches with continuous cooling and the current graph', () => {
+    vi.spyOn(performance, 'now').mockReturnValue(0);
+    const config = { ...cfg, iterations: 5 };
+    const initial = graph();
+    let current = initial;
+    const complete = vi.fn();
+    const progress = vi.fn();
+    runGraphLayout({
+        getGraph: () => current,
+        getConfig: () => config,
+        getStepsPerFrame: () => 2,
+        onProgress: progress,
+        onComplete: complete,
+    });
+
+    stepFrame();
+    const expected = graph();
+    tickGraph(expected, config, 1);
+    tickGraph(expected, config, 1 - 1 / 5);
+    expect(positions(initial)).toEqual(positions(expected));
+    expect(progress).toHaveBeenCalledOnce();
+
+    current = graph();
+    const replacement = graph();
+    for (let i = 2; i < config.iterations; i++) {
+        tickGraph(replacement, config, 1 - i / 5);
+    }
+    drain();
+    expect(positions(initial)).toEqual(positions(expected));
+    expect(positions(current)).toEqual(positions(replacement));
+    expect(progress).toHaveBeenCalledTimes(2);
+    expect(complete).toHaveBeenCalledOnce();
+});
+
+it('yields when the live frame budget is used and cancels the next batch', () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => (now += 8));
+    const config = { ...cfg, iterations: 5 };
+    const current = graph();
+    const complete = vi.fn();
+    const cancel = runGraphLayout({
+        getGraph: () => current,
+        getConfig: () => config,
+        getStepsPerFrame: () => 5,
+        onComplete: complete,
+    });
+    stepFrame();
+    const expected = graph();
+    tickGraph(expected, config, 1);
+    expect(positions(current)).toEqual(positions(expected));
+    expect(frames.size).toBe(1);
+
+    cancel();
+    expect(frames.size).toBe(0);
+    expect(complete).not.toHaveBeenCalled();
 });

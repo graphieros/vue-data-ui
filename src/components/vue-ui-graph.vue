@@ -20,8 +20,8 @@ import { COMMON_RULES, useHints } from '../useHints';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import { graphSkeletonDataset, graphSkeletonConfig } from '../graph/loading';
 import { resolveChartConfigWithPalette } from '../resolveChartConfig';
-import { normalizeGraph, tickGraph } from '../graph/engine';
-import { prepareGraphLayout } from '../graph/layout';
+import { normalizeGraph } from '../graph/engine';
+import { prepareGraphLayout, runGraphLayout } from '../graph/layout';
 import { advancePulse, batchPulses } from '../graph/pulses';
 import { isHighlightedLink } from '../graph/highlight';
 import {
@@ -200,11 +200,9 @@ const tooltipTriggerMode = ref('pointer');
 
 let tooltipClientPosition = null;
 
-let frame = null;
 let observer;
 let media;
 let running = false;
-let iteration = 0;
 let disposed = false;
 let suppressClick = false;
 let gesture = null;
@@ -766,12 +764,10 @@ function labelTSpans(node, absolute = false) {
     });
 }
 
-let cancelInitialLayout = null;
+let cancelLayout = null;
 function stop() {
-    cancelInitialLayout?.();
-    cancelInitialLayout = null;
-    if (frame !== null) cancelAnimationFrame(frame);
-    frame = null;
+    cancelLayout?.();
+    cancelLayout = null;
     if (running) {
         running = false;
         emit('layoutEnd', getData());
@@ -797,41 +793,6 @@ function completeLayout() {
     finishInitialLayout();
     stop();
 }
-function step() {
-    frame = null;
-    if (disposed || isAnnotator.value) return;
-    let energy = 0;
-    const started = performance.now();
-    for (
-        let i = 0;
-        i < Math.max(1, config.value.performance.stepsPerFrame);
-        i++
-    ) {
-        energy = tickGraph(
-            graph.value,
-            config.value.layout,
-            Math.max(
-                0.015,
-                1 - iteration / Math.max(1, config.value.layout.iterations),
-            ),
-        );
-        iteration++;
-        if (
-            iteration >= config.value.layout.iterations ||
-            performance.now() - started >= 8
-        )
-            break;
-    }
-    if (
-        iteration >= config.value.layout.iterations ||
-        (iteration > 30 && energy < 0.002)
-    )
-        completeLayout();
-    else {
-        publish();
-        frame = requestAnimationFrame(step);
-    }
-}
 let userViewport = false;
 function restart() {
     if (!mounted.value || disposed) return;
@@ -840,7 +801,6 @@ function restart() {
         return;
     }
     stop();
-    iteration = 0;
     if (!graph.value.nodes.length) {
         fitAfterLayout = false;
         return;
@@ -852,16 +812,29 @@ function restart() {
         reduced.value ||
         !config.value.animation.enabled
     ) {
-        cancelInitialLayout = prepareGraphLayout(
+        let completed = false;
+        const cancel = prepareGraphLayout(
             graph.value,
             config.value.layout,
             () => {
-                cancelInitialLayout = null;
+                completed = true;
+                cancelLayout = null;
                 completeLayout();
             },
             { eager: reduced.value || !config.value.animation.enabled },
         );
-    } else frame = requestAnimationFrame(step);
+        // Cached and eager runs can finish before returning a cancel function.
+        if (!completed) cancelLayout = cancel;
+    } else {
+        cancelLayout = runGraphLayout({
+            getGraph: () => graph.value,
+            getConfig: () => config.value.layout,
+            getStepsPerFrame: () => config.value.performance.stepsPerFrame,
+            canStep: () => !disposed && !isAnnotator.value,
+            onProgress: publish,
+            onComplete: completeLayout,
+        });
+    }
 }
 
 function topology(ds) {
