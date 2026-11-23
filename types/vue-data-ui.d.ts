@@ -897,6 +897,7 @@ declare module 'vue-data-ui' {
         print?: {
             scale?: number;
             orientation?: 'auto' | 'l' | 'p';
+            /** @deprecated PDF exports always fit on one page. */
             overflowTolerance?: number;
         };
     };
@@ -11345,6 +11346,7 @@ declare module 'vue-data-ui' {
         };
         userOptionsPrint?: {
             scale?: number;
+            /** @deprecated PDF exports always fit on one page. */
             overflowTolerance?: number;
             orientation?: 'auto' | 'l' | 'p';
         };

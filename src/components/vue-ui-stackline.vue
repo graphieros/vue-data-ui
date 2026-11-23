@@ -13,7 +13,7 @@ import {
 } from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
 import { createAnnotationViewport } from '../utils/annotationViewport';
-import { getTableComponent, syncTableVisibility } from '../tableIntegration';
+import { useChartTable } from '../tableIntegration';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
@@ -195,7 +195,6 @@ function setParentElementReference() {
 
 let chartDisposed = false;
 const pendingLayoutFrames = new Map();
-let slicerRefreshSequence = 0;
 let resizeFrame = null;
 let clickSuppressionTimer = null;
 
@@ -654,7 +653,6 @@ function prepareChart({ resetSlicer = true } = {}) {
 
 onBeforeUnmount(() => {
     chartDisposed = true;
-    slicerRefreshSequence += 1;
     pendingParentLayoutSequence.value += 1;
     cancelAnimationFrame(resizeFrame);
     cancelAnimationFrame(RAF_MOUSE_MOVE);
@@ -885,8 +883,9 @@ const slicerPrecog = ref({
 const {
     isPrecog,
     setPrecog,
-    normalizeZoomState,
-    emitZoomState,
+    applyZoomState,
+    publishZoomState,
+    refreshSlicer,
     clearQueuedSlicerFrame,
     normalizeSlicerWindow,
     setupSlicer,
@@ -901,7 +900,14 @@ const {
     chartSlicer,
     props,
     emit,
-    applyZoomState: (state) => applyZoomState(state),
+    isDisposed: () => chartDisposed,
+    waitForLayoutFrames,
+    captureZoomTransition: () => {
+        const previousRange = getCommittedChartZoomRange();
+        const previousYScale = captureChartZoomYScale();
+        return () =>
+            startChartZoomVisualTransition(previousRange, previousYScale);
+    },
 });
 
 const isChartZoomSelecting = ref(false);
@@ -1192,40 +1198,6 @@ const chartZoomClipPath = computed(() =>
         : undefined,
 );
 
-function applyZoomState(state, { transition = false } = {}) {
-    const normalized = normalizeZoomState(state);
-    if (!normalized) return null;
-
-    const { start, end } = normalized;
-
-    if (
-        start !== Number(slicer.value.start) ||
-        end !== Number(slicer.value.end)
-    ) {
-        const previousRange = getCommittedChartZoomRange();
-        const previousYScale = captureChartZoomYScale();
-
-        clearQueuedSlicerFrame();
-
-        slicer.value = { start, end };
-        slicerPrecog.value = { start, end };
-
-        normalizeSlicerWindow();
-
-        if (transition) {
-            startChartZoomVisualTransition(previousRange, previousYScale);
-        }
-    }
-
-    // Always return the final committed range. The silent model-driven path
-    // can ignore this value, while the public imperative API can publish it
-    // so other instances sharing v-model:zoom-state are synchronized.
-    return {
-        start: Number(slicer.value.start),
-        end: Number(slicer.value.end),
-    };
-}
-
 /**
  * Apply an imperative zoom update and publish the committed range through update:zoomState.
  * Invalid input leaves the current range unchanged.
@@ -1236,12 +1208,7 @@ function applyZoomState(state, { transition = false } = {}) {
  * @returns {{ start: number, end: number } | null} Committed bounds, or null for invalid input.
  */
 function setZoomState(state, { transition = true } = {}) {
-    const applied = applyZoomState(state, { transition });
-    if (!applied) return null;
-
-    emit('update:zoomState', applied);
-
-    return applied;
+    return publishZoomState(state, { transition });
 }
 
 onBeforeUnmount(() => {
@@ -1249,42 +1216,6 @@ onBeforeUnmount(() => {
     cancelChartZoomSelection();
     stopChartZoomVisualTransition();
 });
-
-async function refreshSlicer({
-    force = false,
-    publish = false,
-    transition = force && publish,
-} = {}) {
-    if (chartDisposed) return;
-    const sequence = ++slicerRefreshSequence;
-    if (
-        cfgChart.value.zoom.keepState &&
-        !force &&
-        slicerReady.value &&
-        !(slicer.value.start === 0 && slicer.value.end === 0)
-    ) {
-        normalizeSlicerWindow();
-        return;
-    }
-    const applyControlledZoom = !force;
-    const previousRange = transition ? getCommittedChartZoomRange() : null;
-    const previousYScale = transition ? captureChartZoomYScale() : null;
-    setupSlicer(applyControlledZoom);
-    if (transition)
-        startChartZoomVisualTransition(previousRange, previousYScale);
-    await nextTick();
-    const isCurrent = () => sequence === slicerRefreshSequence;
-    if (!isCurrent() || chartDisposed) return;
-    if (!(await waitForLayoutFrames(3, isCurrent))) return;
-    setupSlicer(applyControlledZoom);
-    if (publish) {
-        emitZoomState({
-            start: Number(slicer.value.start),
-            end: Number(slicer.value.end),
-        });
-        emit('zoomReset');
-    }
-}
 
 const fullDatasetTotals = computed(() =>
     sumSeries(
@@ -3003,43 +2934,24 @@ async function getImage({ scale = 2 } = {}) {
     };
 }
 
-const tableComponent = computed(() =>
-    getTableComponent({
-        config: FINAL_CONFIG,
-        style: cfgChart,
-        mutableConfig,
-        dialog: BaseDraggableDialog,
-        accordion: Accordion,
-        isFullscreen,
-        parent: stacklineChart,
-        maxWidth: 800,
-        isCursorPointer,
-    }),
-);
-
-watch(
-    [() => mutableConfig.value.showTable, tableUnit],
-    ([visible]) => {
-        if (tableUnit.value)
-            syncTableVisibility(visible, FINAL_CONFIG, tableUnit);
-    },
-    { flush: 'post' },
-);
-
-function closeTable() {
-    mutableConfig.value.showTable = false;
-    if (userOptionsRef.value) {
-        userOptionsRef.value.setTableIconState(false);
-    }
-}
+const { tableComponent, toggleTable, closeTable } = useChartTable({
+    config: FINAL_CONFIG,
+    style: cfgChart,
+    mutableConfig,
+    dialog: BaseDraggableDialog,
+    accordion: Accordion,
+    isFullscreen,
+    parent: stacklineChart,
+    maxWidth: 800,
+    isCursorPointer,
+    tableUnit,
+    userOptions: userOptionsRef,
+    waitForTableMount: true,
+});
 
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
-}
-
-function toggleTable() {
-    mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
 
 function toggleLabels() {

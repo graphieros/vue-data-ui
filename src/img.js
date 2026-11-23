@@ -1,4 +1,5 @@
 import { domToPng } from './dom-to-png';
+import { queueRasterCapture } from './chartExportOperations';
 
 const IGNORE_LAYOUT_SELECTOR = '[data-dom-to-png-ignore-layout]';
 
@@ -83,29 +84,30 @@ async function withIgnoredLayoutCollapsed(container, callback) {
         inlineStyle: element.getAttribute('style'),
     }));
 
-    originalElementStyles.forEach(({ element }) => {
-        setStyle(element, 'display', 'none', 'important');
-    });
-
-    await waitForLayoutFrame();
-
-    const collapsedContainerHeight = container.getBoundingClientRect().height;
-    const needsContainerCrop =
-        ignoredLayoutHeight > 0 &&
-        collapsedContainerHeight >= originalContainerHeight - 0.5;
-
-    if (needsContainerCrop) {
-        const targetHeight = Math.max(
-            0,
-            originalContainerHeight - ignoredLayoutHeight,
-        );
-        setStyle(container, 'height', `${targetHeight}px`, 'important');
-        setStyle(container, 'max-height', `${targetHeight}px`, 'important');
-        setStyle(container, 'overflow', 'hidden', 'important');
-        await waitForLayoutFrame();
-    }
-
     try {
+        originalElementStyles.forEach(({ element }) => {
+            setStyle(element, 'display', 'none', 'important');
+        });
+
+        await waitForLayoutFrame();
+
+        const collapsedContainerHeight =
+            container.getBoundingClientRect().height;
+        const needsContainerCrop =
+            ignoredLayoutHeight > 0 &&
+            collapsedContainerHeight >= originalContainerHeight - 0.5;
+
+        if (needsContainerCrop) {
+            const targetHeight = Math.max(
+                0,
+                originalContainerHeight - ignoredLayoutHeight,
+            );
+            setStyle(container, 'height', `${targetHeight}px`, 'important');
+            setStyle(container, 'max-height', `${targetHeight}px`, 'important');
+            setStyle(container, 'overflow', 'hidden', 'important');
+            await waitForLayoutFrame();
+        }
+
         return await callback();
     } finally {
         restoreInlineStyle(container, originalContainerStyle);
@@ -131,75 +133,96 @@ export default async function img({
 
     await new Promise((resolve) => setTimeout(resolve, 200));
 
-    return withIgnoredLayoutCollapsed(domElement, async () => {
-        if (isSafari) {
-            // Warming up in Safari, because it never works on the first try
-            try {
-                await domToPng({ container: domElement, scale });
-                await domToPng({ container: domElement, scale });
-                await domToPng({ container: domElement, scale });
-                await domToPng({ container: domElement, scale });
-                if (base64) {
-                    await domToPng({ container: domElement, scale, base64 });
-                    await domToPng({ container: domElement, scale, base64 });
-                    await domToPng({ container: domElement, scale, base64 });
-                    await domToPng({ container: domElement, scale, base64 });
+    return queueRasterCapture(domElement, () =>
+        withIgnoredLayoutCollapsed(domElement, async () => {
+            if (isSafari) {
+                // Warming up in Safari, because it never works on the first try
+                try {
+                    await domToPng({ container: domElement, scale });
+                    await domToPng({ container: domElement, scale });
+                    await domToPng({ container: domElement, scale });
+                    await domToPng({ container: domElement, scale });
+                    if (base64) {
+                        await domToPng({
+                            container: domElement,
+                            scale,
+                            base64,
+                        });
+                        await domToPng({
+                            container: domElement,
+                            scale,
+                            base64,
+                        });
+                        await domToPng({
+                            container: domElement,
+                            scale,
+                            base64,
+                        });
+                        await domToPng({
+                            container: domElement,
+                            scale,
+                            base64,
+                        });
+                    }
+                } catch (_) {
+                    // ignore any errors during warm-up
                 }
-            } catch (_) {
-                // ignore any errors during warm-up
             }
-        }
 
-        if (base64 && img) {
-            try {
-                const p = await domToPng({ container: domElement, scale }).then(
-                    (uri) => {
+            if (base64 && img) {
+                try {
+                    const p = await domToPng({
+                        container: domElement,
+                        scale,
+                    }).then((uri) => {
                         return uri;
-                    },
-                );
-                const b64 = await domToPng({
-                    container: domElement,
-                    scale,
-                    base64,
-                }).then((b64) => {
-                    return b64;
-                });
-                return { imageUri: p, base64: b64 };
-            } catch (err) {
-                console.error(
-                    'Error generating image information for the chart',
-                    err,
-                );
-            }
-        } else if (base64) {
-            try {
-                return domToPng({ container: domElement, scale, base64 }).then(
-                    (b64) => {
+                    });
+                    const b64 = await domToPng({
+                        container: domElement,
+                        scale,
+                        base64,
+                    }).then((b64) => {
                         return b64;
-                    },
-                );
-            } catch (err) {
-                console.error(
-                    'Error generating the base64 string of the chart',
-                    err,
-                );
+                    });
+                    return { imageUri: p, base64: b64 };
+                } catch (err) {
+                    console.error(
+                        'Error generating image information for the chart',
+                        err,
+                    );
+                }
+            } else if (base64) {
+                try {
+                    return domToPng({
+                        container: domElement,
+                        scale,
+                        base64,
+                    }).then((b64) => {
+                        return b64;
+                    });
+                } catch (err) {
+                    console.error(
+                        'Error generating the base64 string of the chart',
+                        err,
+                    );
+                }
+            } else {
+                try {
+                    const imageDataUri = await domToPng({
+                        container: domElement,
+                        scale,
+                    });
+                    const link_1 = document.createElement('a');
+                    link_1.href = imageDataUri;
+                    link_1.download = `${fileName}.${format}`;
+                    document.body.appendChild(link_1);
+                    link_1.click();
+                    document.body.removeChild(link_1);
+                } catch (err) {
+                    console.error('Error generating image:', err);
+                    throw err;
+                }
             }
-        } else {
-            try {
-                const imageDataUri = await domToPng({
-                    container: domElement,
-                    scale,
-                });
-                const link_1 = document.createElement('a');
-                link_1.href = imageDataUri;
-                link_1.download = `${fileName}.${format}`;
-                document.body.appendChild(link_1);
-                link_1.click();
-                document.body.removeChild(link_1);
-            } catch (err) {
-                console.error('Error generating image:', err);
-                throw err;
-            }
-        }
-    });
+        }),
+    );
 }

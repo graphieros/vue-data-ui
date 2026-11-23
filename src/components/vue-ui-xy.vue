@@ -25,7 +25,7 @@ import {
     resolveXyAnalysisOptions,
     xyAnalysisOptionKeys,
 } from '../utils/xyAnalysisInsights';
-import { getTableComponent } from '../tableIntegration';
+import { useChartTable } from '../tableIntegration';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
@@ -6685,10 +6685,6 @@ function toggleTooltipVisibility(show, selectedIndex = null) {
     }
 }
 
-function toggleTable() {
-    mutableConfig.value.showTable = !mutableConfig.value.showTable;
-}
-
 function toggleLabels() {
     mutableConfig.value.dataLabels.show = !mutableConfig.value.dataLabels.show;
 }
@@ -7947,40 +7943,19 @@ watch(
     { immediate: true },
 );
 
-const tableComponent = computed(() =>
-    getTableComponent({
-        config: FINAL_CONFIG,
-        style: cfgChart,
-        mutableConfig,
-        dialog: BaseDraggableDialog,
-        accordion: Accordion,
-        isFullscreen,
-        parent: chart,
-        maxWidth: 800,
-        showTable: () => FINAL_CONFIG.value.showTable,
-    }),
-);
-
-watch(
-    () => mutableConfig.value.showTable,
-    (v) => {
-        if (FINAL_CONFIG.value.showTable) return;
-        if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
-            tableUnit.value.open();
-        } else {
-            if (tableUnit.value && tableUnit.value.close) {
-                tableUnit.value.close();
-            }
-        }
-    },
-);
-
-function closeTable() {
-    mutableConfig.value.showTable = false;
-    if (userOptionsRef.value) {
-        userOptionsRef.value.setTableIconState(false);
-    }
-}
+const { tableComponent, toggleTable, closeTable } = useChartTable({
+    config: FINAL_CONFIG,
+    style: cfgChart,
+    mutableConfig,
+    dialog: BaseDraggableDialog,
+    accordion: Accordion,
+    isFullscreen,
+    parent: chart,
+    maxWidth: 800,
+    showTable: () => FINAL_CONFIG.value.showTable,
+    tableUnit,
+    userOptions: userOptionsRef,
+});
 
 const legendSet = computed(() => {
     return absoluteDataset.value.map((ds) => {

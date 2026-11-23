@@ -1,5 +1,77 @@
 import { tickGraph } from './engine';
 
+const FRAME_BUDGET_MS = 8;
+
+function hasConverged(iteration, energy) {
+    return iteration > 30 && energy < 0.002;
+}
+
+export function runGraphLayout({
+    getGraph,
+    getConfig,
+    getStepsPerFrame,
+    canStep = () => true,
+    onProgress,
+    onComplete,
+    eager = false,
+}) {
+    let frame = null;
+    let iteration = 0;
+    let stopped = false;
+    const live = getStepsPerFrame !== undefined;
+
+    function step() {
+        frame = null;
+        if (stopped || !canStep()) return;
+
+        const started = performance.now();
+        let energy = live ? 0 : Infinity;
+        // Initial work checks convergence every iteration. Live work checks
+        // it after the frame batch, and can step once even at zero iterations.
+        for (
+            let steps = 0;
+            live
+                ? steps < Math.max(1, getStepsPerFrame())
+                : iteration < getConfig().iterations;
+            steps++
+        ) {
+            const config = getConfig();
+            const alpha = Math.max(
+                0.015,
+                1 - iteration / Math.max(1, config.iterations),
+            );
+            energy = tickGraph(getGraph(), config, alpha);
+            iteration++;
+            const batchDone = live
+                ? iteration >= config.iterations
+                : hasConverged(iteration, energy);
+            if (batchDone || performance.now() - started >= FRAME_BUDGET_MS)
+                break;
+        }
+
+        if (
+            iteration >= getConfig().iterations ||
+            hasConverged(iteration, energy)
+        ) {
+            stopped = true;
+            onComplete();
+            return;
+        }
+
+        onProgress?.();
+        if (!stopped) frame = requestAnimationFrame(step);
+    }
+
+    if (eager) step();
+    else frame = requestAnimationFrame(step);
+
+    return () => {
+        stopped = true;
+        if (frame !== null) cancelAnimationFrame(frame);
+        frame = null;
+    };
+}
+
 // Identical previews share initial force work, never mutable interaction state.
 const jobs = new Map();
 const settled = new Map();
@@ -52,67 +124,41 @@ export function prepareGraphLayout(
                 target: nodes[link.target.index],
             })),
         };
-        job = {
-            graph: simulation,
-            config: { ...config },
-            listeners: new Set(),
-            frame: null,
-            iteration: 0,
-        };
+        const simulationConfig = { ...config };
+        job = { listeners: new Set(), cancel: null };
         jobs.set(key, job);
-        const step = () => {
-            job.frame = null;
-            const started = performance.now();
-            let energy = Infinity;
-            while (job.iteration < job.config.iterations) {
-                energy = tickGraph(
-                    job.graph,
-                    job.config,
-                    Math.max(
-                        0.015,
-                        1 - job.iteration / Math.max(1, job.config.iterations),
-                    ),
-                );
-                job.iteration++;
-                if (
-                    (job.iteration > 30 && energy < 0.002) ||
-                    performance.now() - started >= 8
-                )
-                    break;
-            }
-            if (
-                job.iteration >= job.config.iterations ||
-                (job.iteration > 30 && energy < 0.002)
-            ) {
-                const positions = job.graph.nodes.map((n) => [
-                    n.x,
-                    n.y,
-                    n.vx,
-                    n.vy,
-                ]);
-                jobs.delete(key);
-                settled.set(key, positions);
-                if (settled.size > CACHE_LIMIT)
-                    settled.delete(settled.keys().next().value);
-                const listeners = [...job.listeners];
-                job.listeners.clear();
-                for (const entry of listeners) {
-                    apply(entry.graph, positions);
-                    entry.complete();
-                }
-            } else job.frame = requestAnimationFrame(step);
-        };
-        start = step;
+
+        start = () =>
+            runGraphLayout({
+                getGraph: () => simulation,
+                getConfig: () => simulationConfig,
+                eager,
+                onComplete: () => {
+                    const positions = simulation.nodes.map((n) => [
+                        n.x,
+                        n.y,
+                        n.vx,
+                        n.vy,
+                    ]);
+                    jobs.delete(key);
+                    settled.set(key, positions);
+                    if (settled.size > CACHE_LIMIT)
+                        settled.delete(settled.keys().next().value);
+                    const listeners = [...job.listeners];
+                    job.listeners.clear();
+                    for (const entry of listeners) {
+                        apply(entry.graph, positions);
+                        entry.complete();
+                    }
+                },
+            });
     }
     job.listeners.add(listener);
-    if (start) {
-        if (eager) start();
-        else job.frame = requestAnimationFrame(start);
-    }
+    if (start) job.cancel = start();
     return () => {
         job.listeners.delete(listener);
         if (!job.listeners.size && jobs.get(key) === job) {
-            if (job.frame !== null) cancelAnimationFrame(job.frame);
+            job.cancel();
             jobs.delete(key);
         }
     };

@@ -51,6 +51,7 @@ import { useLocale } from '../useLocale';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
+import { useImageExportAction } from '../useChartExport';
 import { useDateTime } from '../useDateTime';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
@@ -139,7 +140,6 @@ const isSettingUp = ref(false);
 const slicerReady = ref(false);
 const suppressChild = ref(false);
 const selectedMinimapIndex = ref(null);
-const isCallbackImaging = ref(false);
 
 const isKeyboardTooltipMode = ref(false); // a11y
 const isFocus = ref(false); // a11y
@@ -3800,19 +3800,8 @@ function closeTable() {
     }
 }
 
-function onGenerateImage(payload) {
-    if (payload?.stage === 'start') {
-        isCallbackImaging.value = true;
-        return;
-    }
-
-    if (payload?.stage === 'end') {
-        isCallbackImaging.value = false;
-        return;
-    }
-
-    generateImage();
-}
+const { isCallbackImaging, onGenerateImage } =
+    useImageExportAction(generateImage);
 
 async function copyAlt() {
     emit('copyAlt', {

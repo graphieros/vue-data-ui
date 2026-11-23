@@ -5,7 +5,7 @@ import {
     getUserOptionSlotProps,
 } from '../userOptionsSlots';
 import { getAnnotatorProps } from '../annotatorConfig';
-import { getTableComponent, syncTableVisibility } from '../tableIntegration';
+import { useChartTable } from '../tableIntegration';
 import {
     annotationSlotNames,
     getAnnotationSlotProps,
@@ -1604,10 +1604,6 @@ function selectDatapoint(datapoint, index) {
     emit('selectDatapoint', { datapoint, index });
 }
 
-function toggleTable() {
-    mutableConfig.value.showTable = !mutableConfig.value.showTable;
-}
-
 function toggleLabels() {
     mutableConfig.value.dataLabels.show = !mutableConfig.value.dataLabels.show;
 }
@@ -1636,31 +1632,19 @@ function autoSize() {
     );
 }
 
-const tableComponent = computed(() =>
-    getTableComponent({
-        config: FINAL_CONFIG,
-        style: cfgChart,
-        mutableConfig,
-        dialog: BaseDraggableDialog,
-        accordion: Accordion,
-        isFullscreen,
-        parent: donutChart,
-        maxWidth: 500,
-        isCursorPointer,
-    }),
-);
-
-watch(
-    () => mutableConfig.value.showTable,
-    (v) => syncTableVisibility(v, FINAL_CONFIG, tableUnit),
-);
-
-function closeTable() {
-    mutableConfig.value.showTable = false;
-    if (userOptionsRef.value) {
-        userOptionsRef.value.setTableIconState(false);
-    }
-}
+const { tableComponent, toggleTable, closeTable } = useChartTable({
+    config: FINAL_CONFIG,
+    style: cfgChart,
+    mutableConfig,
+    dialog: BaseDraggableDialog,
+    accordion: Accordion,
+    isFullscreen,
+    parent: donutChart,
+    maxWidth: 500,
+    isCursorPointer,
+    tableUnit,
+    userOptions: userOptionsRef,
+});
 
 const svgLegendItems = computed(() => {
     return legendSet.value.map((l) => ({

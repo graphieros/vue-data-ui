@@ -9,7 +9,7 @@ import {
 } from 'vue';
 import vClickOutside from '../directives/vClickOutside';
 import BaseIcon from './BaseIcon.vue';
-import img from '../img';
+import { captureChartImage } from '../chartImage';
 import { createFullscreenLayout } from '../fullscreenLayout';
 import vPopoverClickOutside from '../directives/vPopoverClickOutside';
 
@@ -200,19 +200,21 @@ const supportsPopover = computed(() => {
     );
 });
 
+async function captureExportCallback(format) {
+    const { imageUri, base64 } = await captureChartImage(
+        props.chartElement,
+        props.printScale,
+    );
+    return props.callbacks[format]({
+        domElement: props.chartElement,
+        imageUri,
+        base64,
+    });
+}
+
 async function generatePdf() {
     if (props.callbacks.pdf) {
-        const { imageUri, base64 } = await img({
-            domElement: props.chartElement,
-            base64: true,
-            img: true,
-            scale: props.printScale,
-        });
-        props.callbacks.pdf({
-            domElement: props.chartElement,
-            base64,
-            imageUri,
-        });
+        await captureExportCallback('pdf');
     } else {
         emit('generatePdf');
     }
@@ -225,22 +227,8 @@ function generateCsv() {
 async function generateImage() {
     if (props.callbacks.img) {
         emit('generateImage', { stage: 'start' });
-
         try {
-            const { imageUri, base64 } = await img({
-                domElement: props.chartElement,
-                base64: true,
-                img: true,
-                scale: props.printScale,
-            });
-
-            await Promise.resolve(
-                props.callbacks.img({
-                    domElement: props.chartElement,
-                    imageUri,
-                    base64,
-                }),
-            );
+            await captureExportCallback('img');
         } finally {
             emit('generateImage', { stage: 'end' });
         }

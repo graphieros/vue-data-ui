@@ -1,5 +1,9 @@
 import img from './img';
 
+export function captureChartImage(domElement, scale) {
+    return img({ domElement, base64: true, img: true, scale });
+}
+
 /**
  * Creates a chart instance image getter that captures the current mounted DOM.
  *
@@ -12,12 +16,10 @@ export function createChartImageGetter(chart, getTitle) {
         if (!chart.value) return;
         const { width, height } = chart.value.getBoundingClientRect();
         const aspectRatio = width / height;
-        const { imageUri, base64 } = await img({
-            domElement: chart.value,
-            base64: true,
-            img: true,
+        const { imageUri, base64 } = await captureChartImage(
+            chart.value,
             scale,
-        });
+        );
         return {
             imageUri,
             base64,
