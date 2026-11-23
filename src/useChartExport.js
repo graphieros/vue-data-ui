@@ -1,4 +1,5 @@
-import { nextTick, ref } from 'vue';
+import { nextTick } from 'vue';
+import { createExportActivity } from './chartExportOperations';
 import { useSvgExport } from './useSvgExport';
 
 /**
@@ -28,8 +29,9 @@ export function useChartExport({
     titleEmbedded = false,
     stretchTitle = false,
 }) {
-    const isCallbackImaging = ref(false);
-    const isCallbackSvg = ref(false);
+    const { isCallbackImaging, onGenerateImage } =
+        useImageExportAction(generateImage);
+    const svgExport = createExportActivity();
 
     const { exportSvg, getSvg } = useSvgExport({
         svg,
@@ -42,11 +44,8 @@ export function useChartExport({
     });
 
     async function generateSvg({ isCb }) {
-        isCallbackSvg.value = true;
-
-        await nextTick();
-
-        try {
+        return svgExport.run(async () => {
+            await nextTick();
             if (isCb) {
                 const { blob, url, text, dataUrl } = await getSvg();
 
@@ -61,19 +60,29 @@ export function useChartExport({
             } else {
                 await Promise.resolve(exportSvg());
             }
-        } finally {
-            isCallbackSvg.value = false;
-        }
+        });
     }
+
+    return {
+        isCallbackImaging,
+        isCallbackSvg: svgExport.busy,
+        generateSvg,
+        onGenerateImage,
+    };
+}
+
+// UserOptions also serves charts with their own SVG or download implementation.
+export function useImageExportAction(generateImage) {
+    const imageCallback = createExportActivity();
 
     function onGenerateImage(payload) {
         if (payload?.stage === 'start') {
-            isCallbackImaging.value = true;
+            imageCallback.start();
             return;
         }
 
         if (payload?.stage === 'end') {
-            isCallbackImaging.value = false;
+            imageCallback.finish();
             return;
         }
 
@@ -81,9 +90,7 @@ export function useChartExport({
     }
 
     return {
-        isCallbackImaging,
-        isCallbackSvg,
-        generateSvg,
+        isCallbackImaging: imageCallback.busy,
         onGenerateImage,
     };
 }

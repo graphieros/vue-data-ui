@@ -34,6 +34,7 @@ import {
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter';
+import { useImageExportAction } from '../useChartExport';
 import { useUserOptionState } from '../useUserOptionState';
 import vClickOutside from '../directives/vClickOutside';
 import themes from '../themes/vue_ui_table_sparkline.json';
@@ -68,7 +69,6 @@ const step = ref(0);
 const sparkStep = ref(0);
 const TD = ref(null);
 const slots = useSlots();
-const isCallbackImaging = ref(false);
 
 const FINAL_CONFIG = computed({
     get: () => {
@@ -633,19 +633,7 @@ const sortStates = computed({
     },
 });
 
-function onGenerateImage(payload) {
-    if (payload?.stage === 'start') {
-        isCallbackImaging.value = true;
-        return;
-    }
-
-    if (payload?.stage === 'end') {
-        isCallbackImaging.value = false;
-        return;
-    }
-
-    generateImage();
-}
+const { onGenerateImage } = useImageExportAction(generateImage);
 
 async function copyAlt() {
     emit('copyAlt', {

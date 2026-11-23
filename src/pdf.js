@@ -1,12 +1,34 @@
 import { domToPng } from './dom-to-png';
+import { queueRasterCapture } from './chartExportOperations';
+
+const A4 = [595.28, 841.89];
+const CUSTOM_PAGE_WIDTH = 1000;
+const MAX_PDF_SIDE = 14400;
+const PAGE_MARGIN = 18;
+
+function getCustomPageSize(aspectRatio) {
+    const parts =
+        typeof aspectRatio === 'string'
+            ? aspectRatio.split('/').map(Number)
+            : [aspectRatio];
+    const [width, height] = parts.length === 1 ? [1, parts[0]] : parts;
+    if (parts.length > 2 || !(width > 0 && height > 0)) return null;
+
+    const ratio = height / width;
+    if (!Number.isFinite(ratio) || ratio <= 0) return null;
+
+    // jsPDF caps page sides at 14,400 points. Scale both sides together.
+    const pageWidth = Math.min(CUSTOM_PAGE_WIDTH, MAX_PDF_SIDE / ratio);
+    const pageHeight = Math.min(pageWidth * ratio, MAX_PDF_SIDE);
+    return [Math.min(pageWidth, pageHeight), Math.max(pageWidth, pageHeight)];
+}
 
 export default async function pdf({
     domElement,
     fileName,
     scale = 2,
-    orientation = 'auto', // 'auto' | 'portrait' | 'landscape'
-    overflowTolerance = 0.2, // up to +n% height overflow gets squeezed onto 1 page
-    aspectRatio = null, // example: '1/14141'
+    orientation = 'auto',
+    aspectRatio = null,
 }) {
     if (!domElement) return Promise.reject('No domElement provided');
 
@@ -21,142 +43,69 @@ export default async function pdf({
         return Promise.reject('jspdf is not installed. Run pnpm add jspdf');
     }
 
-    const A4_PORTRAIT = { width: 595.28, height: 841.89 };
-    const A4_LANDSCAPE = { width: 841.89, height: 595.28 };
-
-    const BASE_DIM = 1000;
-    function parseAspectRatio(ar) {
-        if (ar == null) return null;
-        if (typeof ar === 'number' && ar > 0) return { w: 1, h: ar };
-        if (typeof ar === 'string') {
-            const parts = ar.split('/').map((s) => s.trim());
-            if (parts.length === 2) {
-                const w = Number(parts[0]);
-                const h = Number(parts[1]);
-                if (w > 0 && h > 0) return { w, h };
-            } else if (parts.length === 1) {
-                const n = Number(parts[0]);
-                if (n > 0) return { w: 1, h: n };
+    const imgData = await queueRasterCapture(domElement, async () => {
+        if (isSafari) {
+            // Warming up in Safari, because it never works on the first try
+            try {
+                await domToPng({ container: domElement, scale });
+                await domToPng({ container: domElement, scale });
+                await domToPng({ container: domElement, scale });
+                await domToPng({ container: domElement, scale });
+            } catch (_) {
+                // ignore any errors during warm‑up
             }
         }
-        return null;
-    }
 
-    const parsedAR = parseAspectRatio(aspectRatio);
-    const CUSTOM_PORTRAIT = parsedAR
-        ? { width: BASE_DIM, height: BASE_DIM * (parsedAR.h / parsedAR.w) }
-        : null;
-    const CUSTOM_LANDSCAPE = parsedAR
-        ? { width: CUSTOM_PORTRAIT.height, height: CUSTOM_PORTRAIT.width }
-        : null;
-
-    if (isSafari) {
-        // Warming up in Safari, because it never works on the first try
-        try {
-            await domToPng({ container: domElement, scale });
-            await domToPng({ container: domElement, scale });
-            await domToPng({ container: domElement, scale });
-            await domToPng({ container: domElement, scale });
-        } catch (_) {
-            // ignore any errors during warm‑up
-        }
-    }
-
-    const imgData = await domToPng({ container: domElement, scale });
-
-    return await new Promise((resolve, reject) => {
-        const img = new window.Image();
-        img.onload = function () {
-            const EPS = 0.5; // small epsilon to avoid off-by-one paging due to rounding
-
-            const contentWidth = img.naturalWidth;
-            const contentHeight = img.naturalHeight;
-
-            const chosenOrientation =
-                orientation === 'auto'
-                    ? contentHeight >= contentWidth
-                        ? 'p'
-                        : 'l'
-                    : orientation;
-
-            const page =
-                chosenOrientation === 'l'
-                    ? parsedAR
-                        ? CUSTOM_LANDSCAPE
-                        : A4_LANDSCAPE
-                    : parsedAR
-                      ? CUSTOM_PORTRAIT
-                      : A4_PORTRAIT;
-
-            const ratioToWidth = page.width / contentWidth;
-            const ratioToHeight = page.height / contentHeight;
-            const scaledHeightAtWidth = contentHeight * ratioToWidth;
-
-            let mode = 'single'; // 'single' | 'multi'
-            let ratio;
-
-            if (scaledHeightAtWidth <= page.height + EPS) {
-                ratio = ratioToWidth;
-            } else if (
-                scaledHeightAtWidth <=
-                page.height * (1 + overflowTolerance)
-            ) {
-                ratio = Math.min(ratioToWidth, ratioToHeight);
-            } else {
-                mode = 'multi';
-                ratio = ratioToWidth;
-            }
-
-            const imgWidth = contentWidth * ratio;
-            const imgHeight = contentHeight * ratio;
-
-            const x = (page.width - imgWidth) / 2;
-
-            const pdf = new JsPDF({
-                orientation: chosenOrientation,
-                unit: 'pt',
-                format: parsedAR ? [page.width, page.height] : 'a4',
-            });
-
-            if (mode === 'single') {
-                const y = (page.height - imgHeight) / 2;
-                pdf.addImage(
-                    imgData,
-                    'PNG',
-                    x,
-                    y,
-                    imgWidth,
-                    imgHeight,
-                    '',
-                    'FAST',
-                );
-            } else {
-                const pageHeightInImagePx = page.height / ratio;
-
-                let leftHeight = contentHeight;
-                let positionY = 0;
-
-                while (leftHeight > EPS) {
-                    pdf.addImage(
-                        imgData,
-                        'PNG',
-                        x,
-                        positionY,
-                        imgWidth,
-                        imgHeight,
-                        '',
-                        'FAST',
-                    );
-                    leftHeight -= pageHeightInImagePx;
-                    positionY -= page.height;
-                    if (leftHeight > EPS) pdf.addPage();
-                }
-            }
-
-            pdf.save(`${fileName}.pdf`);
-            resolve();
-        };
-        img.onerror = (err) => reject('Failed to load image for PDF: ' + err);
-        img.src = imgData;
+        return domToPng({ container: domElement, scale });
     });
+
+    const image = await new Promise((resolve, reject) => {
+        const image = new window.Image();
+        image.onload = () => resolve(image);
+        image.onerror = (error) =>
+            reject('Failed to load image for PDF: ' + error);
+        image.src = imgData;
+    });
+
+    const { naturalWidth: width, naturalHeight: height } = image;
+    if (!(width > 0 && height > 0)) {
+        throw new Error('PDF export image has no dimensions.');
+    }
+
+    const customPage = getCustomPageSize(aspectRatio);
+    const [shortSide, longSide] = customPage ?? A4;
+    // Reduce the margin on narrow custom pages so it leaves room for the chart.
+    const margin = Math.min(PAGE_MARGIN, shortSide * 0.05);
+    const shortContent = shortSide - 2 * margin;
+    const longContent = longSide - 2 * margin;
+    const portrait = Math.min(shortContent / width, longContent / height);
+    const landscape = Math.min(longContent / width, shortContent / height);
+    const useLandscape =
+        orientation === 'l' ||
+        orientation === 'landscape' ||
+        (orientation === 'auto' && landscape > portrait);
+
+    const [pageWidth, pageHeight] = useLandscape
+        ? [longSide, shortSide]
+        : [shortSide, longSide];
+    const fit = useLandscape ? landscape : portrait;
+    const imageWidth = width * fit;
+    const imageHeight = height * fit;
+
+    const pdf = new JsPDF({
+        orientation: useLandscape ? 'l' : 'p',
+        unit: 'pt',
+        format: customPage ? [pageWidth, pageHeight] : 'a4',
+    });
+    pdf.addImage(
+        imgData,
+        'PNG',
+        (pageWidth - imageWidth) / 2,
+        (pageHeight - imageHeight) / 2,
+        imageWidth,
+        imageHeight,
+        '',
+        'FAST',
+    );
+    pdf.save(`${fileName}.pdf`);
 }
