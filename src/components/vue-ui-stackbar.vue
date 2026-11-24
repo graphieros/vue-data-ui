@@ -34,7 +34,6 @@ import {
 import { useConfig } from '../useConfig';
 import { useSvgLabelLayout } from '../useSvgLabelLayout';
 import {
-    stringifyChartConfig as stringifyStructuralConfig,
     XMLNS,
     adaptColorToBackground,
     applyDataLabel,
@@ -45,6 +44,8 @@ import {
     createTSpansFromLineBreaksOnX,
     createTSpansFromLineBreaksOnY,
     createUid,
+    darkenHexColor,
+    deepClone,
     dataLabel,
     error,
     escapeHtml,
@@ -409,6 +410,20 @@ const effectiveBorderRadius = computed(() =>
         : cfgBars.value.borderRadius,
 );
 
+const perspectiveDepth = computed(() => {
+    const { show, depth } = cfgBars.value.perspective || {};
+    if (loading.value || !show || !Number.isFinite(depth)) return 0;
+
+    const { width, height } = plotBounds.value;
+    return Math.max(0, Math.min(depth, width / 2, height / 2));
+});
+const perspectiveDirection = computed(() =>
+    cfgBars.value.perspective?.direction === 'left' ? -1 : 1,
+);
+const perspectiveX = computed(
+    () => perspectiveDirection.value * perspectiveDepth.value,
+);
+
 function waterfallSegmentKey(segment, index) {
     return String(
         segment?.key ?? segment?.id ?? segment?.name ?? `Segment ${index + 1}`,
@@ -640,13 +655,9 @@ const waterfallFormattedDataset = computed(() => {
         const series = visibleSegments.map((seg) => seg?.value ?? 0);
         const positions = visibleSegments.map((seg, index) => {
             const x =
-                drawingArea.value.left +
-                barSlot.value * index +
-                (barSlot.value * gap) / 4;
+                drawingArea.value.left + barSlot.value * index + barInset.value;
             const y =
-                drawingArea.value.top +
-                barSlot.value * index +
-                (barSlot.value * gap) / 4;
+                drawingArea.value.top + barSlot.value * index + barInset.value;
             if (!seg)
                 return {
                     x,
@@ -729,7 +740,7 @@ const waterfallVisibleSteps = computed(() =>
 );
 const waterfallBounds = computed(() => {
     const vertical = FINAL_CONFIG.value.orientation === 'vertical';
-    const thickness = barSlot.value * (1 - effectiveGapRatio.value / 2);
+    const thickness = barThickness.value;
     return waterfallVisibleSteps.value.map((step, index) => {
         const positions = step.segments
             .map((seg) => [seg.start, seg.end])
@@ -746,12 +757,8 @@ const waterfallBounds = computed(() => {
             vertical ? 'vertical' : 'horizontal',
         );
         const position = vertical
-            ? drawingArea.value.left +
-              barSlot.value * index +
-              (barSlot.value * effectiveGapRatio.value) / 4
-            : drawingArea.value.top +
-              barSlot.value * index +
-              (barSlot.value * effectiveGapRatio.value) / 4;
+            ? drawingArea.value.left + barSlot.value * index + barInset.value
+            : drawingArea.value.top + barSlot.value * index + barInset.value;
         const width = vertical ? thickness : Math.abs(b - a);
         const height = vertical ? Math.abs(b - a) : thickness;
         return {
@@ -760,7 +767,9 @@ const waterfallBounds = computed(() => {
             width,
             height,
             radius: Math.min(
-                Math.max(0, effectiveBorderRadius.value),
+                perspectiveDepth.value
+                    ? 0
+                    : Math.max(0, effectiveBorderRadius.value),
                 width / 2,
                 height / 2,
             ),
@@ -921,7 +930,7 @@ const waterfallStepAnnotations = computed(() => {
                       y:
                           sign < 0
                               ? bounds.y + bounds.height + pad + cfg.fontSize
-                              : bounds.y - pad,
+                              : bounds.y - pad - perspectiveDepth.value,
                       anchor: 'middle',
                   }
                 : {
@@ -929,8 +938,11 @@ const waterfallStepAnnotations = computed(() => {
                       text: label,
                       x:
                           sign < 0
-                              ? bounds.x - pad
-                              : bounds.x + bounds.width + pad,
+                              ? bounds.x - pad + Math.min(0, perspectiveX.value)
+                              : bounds.x +
+                                bounds.width +
+                                pad +
+                                Math.max(0, perspectiveX.value),
                       y: bounds.y + bounds.height / 2 + cfg.fontSize / 3,
                       anchor: sign < 0 ? 'end' : 'start',
                   };
@@ -946,10 +958,10 @@ function canShowWaterfallSegmentLabel(dp, index) {
     const height =
         FINAL_CONFIG.value.orientation === 'vertical'
             ? dp.height[index]
-            : barSlot.value * (1 - effectiveGapRatio.value / 2);
+            : barThickness.value;
     const width =
         FINAL_CONFIG.value.orientation === 'vertical'
-            ? barSlot.value * (1 - effectiveGapRatio.value / 2)
+            ? barThickness.value
             : dp.horizontal_width[index];
     return height >= cfg.minHeight && width >= cfg.minWidth;
 }
@@ -1048,7 +1060,12 @@ function prepareConfig() {
         finalConfig = mergedConfig;
     }
 
-    return finalConfig;
+    const { style } = finalConfig;
+    const { chart } = style;
+    return {
+        ...finalConfig,
+        style: { ...style, chart: { ...chart, bars: { ...chart.bars } } },
+    };
 }
 
 const canHideSmallValues = computed(() => {
@@ -1059,11 +1076,26 @@ const canHideSmallPercentages = computed(() => {
     return cfgBars.value.dataLabels.hideUnderPercentage != null;
 });
 
+function stringifyStructuralConfig(config) {
+    const structural = deepClone(config ?? {});
+    const chart = structural.style?.chart;
+    if (chart) {
+        delete chart.tooltip;
+        if (chart.bars) {
+            delete chart.bars.perspective;
+            if (!Object.keys(chart.bars).length) delete chart.bars;
+        }
+        if (!Object.keys(chart).length) delete structural.style.chart;
+        if (!Object.keys(structural.style).length) delete structural.style;
+    }
+    return JSON.stringify(structural);
+}
+
 let previousStructuralConfig = stringifyStructuralConfig(props.config);
 
 watch(
     () => props.config,
-    (newConfig, oldConfig) => {
+    (newConfig) => {
         const nextStructuralConfig = stringifyStructuralConfig(newConfig);
 
         const requiresChartPreparation =
@@ -1074,12 +1106,14 @@ watch(
         const preparedConfig = prepareConfig();
 
         if (!requiresChartPreparation) {
-            FINAL_CONFIG.value.style.chart.tooltip =
-                preparedConfig.style.chart.tooltip;
-
-            mutableConfig.value.showTooltip =
-                FINAL_CONFIG.value.style.chart.tooltip.show;
-
+            const { tooltip, bars } = preparedConfig.style.chart;
+            if (cfgTooltip.value.show !== tooltip.show) {
+                mutableConfig.value.showTooltip = tooltip.show;
+            }
+            FINAL_CONFIG.value.style.chart.tooltip = tooltip;
+            if (!loading.value) {
+                cfgBars.value.perspective = bars.perspective;
+            }
             return;
         }
 
@@ -1350,11 +1384,11 @@ const offsetY = computed(
         labelLayout.value.xAxisLabelHeight + labelLayout.value.timeLabelsHeight,
 );
 
-const drawingArea = computed(() => {
+const plotBounds = computed(() => {
     const { height: H, width: W } = defaultSizes.value;
     const { right: PR } = defaultSizes.value.paddingRatio;
 
-    let topOffset =
+    const topOffset =
         isWaterfall.value && cfgWaterfall.value.stepLabels.show
             ? cfgWaterfall.value.stepLabels.fontSize * 1.5 +
               cfgWaterfall.value.stepLabels.offset
@@ -1371,16 +1405,9 @@ const drawingArea = computed(() => {
 
     const top = cfgChart.value.padding.top + topOffset;
     const right = W - W * PR - labelLayout.value.right - offsetRightAxis;
-
     const bottom =
         H - cfgChart.value.padding.bottom - offsetY.value - topOffset;
-
     const left = cfgChart.value.padding.left + offsetLeft;
-
-    const width = W - left - W * PR - labelLayout.value.right - offsetRightAxis;
-
-    const height =
-        H - top - cfgChart.value.padding.bottom - offsetY.value - topOffset;
 
     return {
         chartHeight: H,
@@ -1389,12 +1416,27 @@ const drawingArea = computed(() => {
         right,
         bottom,
         left,
-        width: Math.max(0, width),
-        height: Math.max(0, height),
+        width: Math.max(0, right - left),
+        height: Math.max(0, bottom - top),
         offsetLeft,
         offsetRightAxis,
         scaleLabelsWidth,
         yAxisLabelWidth,
+    };
+});
+
+const drawingArea = computed(() => {
+    const area = plotBounds.value;
+    const left = area.left - Math.min(0, perspectiveX.value);
+    const right = area.right - Math.max(0, perspectiveX.value);
+    const top = area.top + perspectiveDepth.value;
+    return {
+        ...area,
+        left,
+        right,
+        top,
+        width: Math.max(0, right - left),
+        height: Math.max(0, area.bottom - top),
     };
 });
 
@@ -1615,8 +1657,63 @@ const barSlot = computed(() => {
     } else {
         bs = drawingArea.value.height / (slicer.value.end - slicer.value.start);
     }
-    return bs <= 0 ? 0 : bs;
+    return Number.isFinite(bs) ? Math.max(0, bs) : 0;
 });
+
+const yAxisX = computed(() =>
+    yAxisLabelsAreRight.value ? plotBounds.value.right : plotBounds.value.left,
+);
+const categoryLabelX = computed(
+    () => drawingArea.value.left - 8 + Math.min(0, perspectiveX.value),
+);
+
+function projectedTop(left, right, y) {
+    const dx = perspectiveX.value;
+    const backY = y - perspectiveDepth.value;
+    return `${left},${y} ${right},${y} ${right + dx},${backY} ${left + dx},${backY}`;
+}
+
+function projectedSide(x, top, bottom) {
+    const backX = x + perspectiveX.value;
+    const depth = perspectiveDepth.value;
+    return `${x},${top} ${x},${bottom} ${backX},${bottom - depth} ${backX},${top - depth}`;
+}
+
+const perspectiveFloor = computed(() => {
+    const floor = cfgBars.value.perspective?.floor;
+    const { left, right, top, bottom, width, height } = drawingArea.value;
+    if (!perspectiveDepth.value || !floor?.show || width <= 0 || height <= 0) {
+        return null;
+    }
+
+    const orientation = FINAL_CONFIG.value.orientation;
+    const vertical = orientation === 'vertical';
+    const { x0, y0 } = getZeroPositions();
+    const zero = isWaterfall.value
+        ? getWaterfallProjectedValue(0, orientation)
+        : vertical
+          ? y0
+          : x0;
+    const [min, max] = vertical ? [top, bottom] : [left, right];
+    if (!Number.isFinite(zero) || zero < min || zero > max) return null;
+
+    const points = vertical
+        ? projectedTop(left, right, zero)
+        : projectedSide(zero, top, bottom);
+    return {
+        zero,
+        attrs: {
+            d: `M ${points} Z`,
+            fill: floor.color,
+            opacity: floor.opacity,
+        },
+    };
+});
+
+const barThickness = computed(
+    () => barSlot.value * (1 - effectiveGapRatio.value / 2),
+);
+const barInset = computed(() => (barSlot.value * effectiveGapRatio.value) / 4);
 
 const datasetTotals = computed(() => {
     return sumSeries(visibleDataset.value).slice(
@@ -1770,9 +1867,7 @@ const yLabels = computed(() => {
                 drawingArea.value.bottom -
                 drawingArea.value.height *
                     ((t + Math.abs(scale.min)) / scaleRange),
-            x: yAxisLabelsAreRight.value
-                ? drawingArea.value.right + 8
-                : drawingArea.value.left - 8,
+            x: yAxisX.value + (yAxisLabelsAreRight.value ? 8 : -8),
             horizontal_zero:
                 drawingArea.value.left +
                 drawingArea.value.width * (Math.abs(scale.min) / scaleRange),
@@ -2053,11 +2148,7 @@ const formattedDataset = computed(() => {
         );
 
         const x = slicedSeries.map((_dp, i) => {
-            return (
-                drawingArea.value.left +
-                barSlot.value * i +
-                (barSlot.value * effectiveGapRatio.value) / 4
-            );
+            return drawingArea.value.left + barSlot.value * i + barInset.value;
         });
 
         const xMinimap = ({ left, unitW }) => {
@@ -2066,11 +2157,7 @@ const formattedDataset = computed(() => {
         };
 
         const horizontal_y = slicedSeries.map((_dp, i) => {
-            return (
-                drawingArea.value.top +
-                barSlot.value * i +
-                (barSlot.value * effectiveGapRatio.value) / 4
-            );
+            return drawingArea.value.top + barSlot.value * i + barInset.value;
         });
 
         const scaleProportions = slicedSeries.map((dp, i) =>
@@ -2202,15 +2289,9 @@ const formattedDataset = computed(() => {
     });
 });
 
-/**
- * A stack must only have its outer corners rounded. Compute one enclosing
- * rectangle per visible category, based on the actual geometry of its
- * currently visible sections. Clipping the square sections to
- * this rounded boundary keeps all segment joins flat.
- */
 const segmentRects = computed(() => {
     const vertical = FINAL_CONFIG.value.orientation === 'vertical';
-    const thickness = barSlot.value * (1 - effectiveGapRatio.value / 2);
+    const thickness = barThickness.value;
     return formattedDataset.value.map((dp) =>
         dp.series.map((_, j) =>
             vertical
@@ -2263,17 +2344,157 @@ function getSegmentLabelStyle(dp, index) {
     };
 }
 
+function shadePerspectiveColor(color, light) {
+    return light ? lightenHexColor(color, 0.24) : darkenHexColor(color, 0.3);
+}
+
+function getPerspectiveFaces(segments, vertical, paint) {
+    const visible = segments.filter(
+        ({ dp, rect, index }) =>
+            rect.width > 0 && rect.height > 0 && dp.series[index],
+    );
+    if (!visible.length) return [];
+
+    const dx = perspectiveX.value;
+    const zero = perspectiveFloor.value?.zero;
+    const depth = perspectiveDepth.value;
+    const edge = ({ rect }) =>
+        vertical ? rect.y : dx < 0 ? rect.x : -(rect.x + rect.width);
+    // The outermost segment supplies the cap at the end of the stack.
+    const outer = visible.reduce((best, segment) =>
+        edge(segment) < edge(best) ? segment : best,
+    );
+
+    return visible.flatMap((segment) => {
+        const {
+            dp,
+            rect: { x, y, width, height },
+            index,
+        } = segment;
+        const categoryIndex = slicer.value.start + index;
+        const id = `stackbar-face-${uid.value}-${dp.absoluteIndex}-${categoryIndex}`;
+        const color = dp.waterfallColors?.[index] || dp.color;
+        const right = x + width;
+        const bottom = y + height;
+        const sideX = dx > 0 ? right : x;
+        // Only geometry behind the zero plane can receive the floor tint.
+        const crossesFloor =
+            zero != null &&
+            (vertical
+                ? bottom > zero && y < zero + depth
+                : x < zero && right > zero - depth);
+        // Keep each segment's cap geometry live even when another segment
+        // covers it. When it becomes exposed its path already tracks its bar.
+        return [
+            {
+                id: `${id}-side`,
+                type: 'side',
+                visible: vertical || segment === outer,
+                d: `M ${projectedSide(sideX, y, bottom)} Z`,
+                floorClip:
+                    crossesFloor && (vertical || sideX < zero)
+                        ? `M ${projectedSide(sideX, vertical ? Math.max(y, zero) : y, bottom)} Z`
+                        : null,
+                fill: shadePerspectiveColor(color, !vertical),
+                stroke: paint.side,
+                strokeWidth: paint.width,
+            },
+            {
+                id: `${id}-top`,
+                type: 'top',
+                visible: !vertical || segment === outer,
+                d: `M ${projectedTop(x, right, y)} Z`,
+                floorClip:
+                    crossesFloor && (!vertical || y > zero)
+                        ? `M ${projectedTop(x, vertical ? right : Math.min(right, zero), y)} Z`
+                        : null,
+                fill: shadePerspectiveColor(color, vertical),
+                stroke: paint.top,
+                strokeWidth: paint.width,
+            },
+        ];
+    });
+}
+
+const barRenderGroups = computed(() => {
+    const rects = segmentRects.value;
+    const vertical = FINAL_CONFIG.value.orientation === 'vertical';
+    const segment = (i, j) => {
+        const dp = formattedDataset.value[i];
+        return {
+            dp,
+            rect: rects[i][j],
+            index: j,
+            visible:
+                !isWaterfall.value ||
+                (dp.waterfallSegments?.[j] &&
+                    (vertical ? dp.height[j] : dp.horizontal_width[j]) > 0),
+        };
+    };
+
+    if (!perspectiveDepth.value) {
+        return rects.map((series, i) => ({
+            key: formattedDataset.value[i].datasetKey,
+            segments: series.map((_, j) => segment(i, j)),
+        }));
+    }
+
+    // A stack farther along the projection direction covers extruded faces
+    // that reach into its category, so paint it last.
+    const groups = Array.from(
+        { length: slicer.value.end - slicer.value.start },
+        (_, j) => ({ key: `category-${slicer.value.start + j}`, segments: [] }),
+    );
+    rects.forEach((series, i) => {
+        series.forEach((_, j) => groups[j].segments.push(segment(i, j)));
+    });
+
+    const { stroke, 'stroke-width': width } = barFrontStyle.value;
+    const color = convertColorToHex(stroke);
+    const paint = {
+        side: color ? shadePerspectiveColor(color, !vertical) : stroke,
+        top: color ? shadePerspectiveColor(color, vertical) : stroke,
+        width,
+    };
+    for (const group of groups) {
+        group.faces = getPerspectiveFaces(group.segments, vertical, paint);
+    }
+    if (!vertical || perspectiveX.value < 0) groups.reverse();
+    return groups;
+});
+
+const barTransitionClass = computed(() =>
+    isLoaded.value && !labelLayoutSettling.value
+        ? 'vue-data-ui-bar-transition'
+        : undefined,
+);
+
+const barFrontStyle = computed(() => ({
+    stroke: isWaterfall.value
+        ? cfgWaterfall.value.bars.stroke
+        : cfgChart.value.backgroundColor,
+    'stroke-width': isWaterfall.value
+        ? cfgWaterfall.value.bars.strokeWidth
+        : cfgBars.value.strokeWidth,
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'miter',
+}));
+
+/**
+ * A stack must only have its outer corners rounded. Compute one enclosing
+ * rectangle per visible category, based on the actual geometry of its
+ * currently visible sections. Clipping the square sections to
+ * this rounded boundary keeps all segment joins flat.
+ */
 const stackClipRects = computed(() => {
-    if (!(Number(effectiveBorderRadius.value) > 0)) return [];
+    if (perspectiveDepth.value || !(Number(effectiveBorderRadius.value) > 0))
+        return [];
 
     const bars = formattedDataset.value;
     if (!bars.length) return [];
 
     const isVertical = FINAL_CONFIG.value.orientation === 'vertical';
-    const thickness = Math.max(
-        0,
-        barSlot.value * (1 - effectiveGapRatio.value / 2),
-    );
+    const thickness = Math.max(0, barThickness.value);
     if (!Number.isFinite(thickness) || thickness <= 0) return [];
 
     const visibleCount = Math.max(0, slicer.value.end - slicer.value.start);
@@ -2328,6 +2549,9 @@ const stackClipRects = computed(() => {
 });
 
 function getStackClipPath(index) {
+    if (perspectiveDepth.value) {
+        return `url(#stackbar-front-clip-${uid.value})`;
+    }
     if (!stackClipRects.value[index]) return undefined;
     return `url(#stackbar-outer-clip-${uid.value}-${slicer.value.start + index})`;
 }
@@ -3143,7 +3367,7 @@ function placeLabelTotalY(index) {
     }
 
     const topY = hasPos && Number.isFinite(minY) ? minY : y0;
-    const rawY = topY - pad;
+    const rawY = topY - pad - (hasPos ? perspectiveDepth.value : 0);
 
     const clampedY = Math.min(Math.max(rawY, 0), drawingArea.value.bottom);
 
@@ -3175,7 +3399,7 @@ function placeLabelTotalX(index) {
     }
 
     const baseX = hasPos && Number.isFinite(rightMost) ? rightMost : x0;
-    return baseX + pad;
+    return baseX + pad + (hasPos ? Math.max(0, perspectiveX.value) : 0);
 }
 
 async function copyAlt() {
@@ -3963,7 +4187,7 @@ const annotationViewport = computed(() => {
                 <slot
                     name="svg-underlayer"
                     :svg="{
-                        drawingArea,
+                        drawingArea: plotBounds,
                         slicer,
                         data: formattedDataset,
                         isPrintingImg:
@@ -3976,10 +4200,10 @@ const annotationViewport = computed(() => {
                 <!-- BACKGROUND SLOT -->
                 <foreignObject
                     v-if="$slots['chart-background']"
-                    :x="drawingArea.left"
-                    :y="drawingArea.top"
-                    :width="drawingArea.width <= 0 ? 10 : drawingArea.width"
-                    :height="drawingArea.height <= 0 ? 10 : drawingArea.height"
+                    :x="plotBounds.left"
+                    :y="plotBounds.top"
+                    :width="plotBounds.width <= 0 ? 10 : plotBounds.width"
+                    :height="plotBounds.height <= 0 ? 10 : plotBounds.height"
                     :style="{
                         pointerEvents: 'none',
                     }"
@@ -4046,6 +4270,24 @@ const annotationViewport = computed(() => {
                     </template>
                 </defs>
 
+                <defs v-if="perspectiveDepth">
+                    <clipPath :id="`stackbar-plot-clip-${uid}`">
+                        <rect
+                            :x="plotBounds.left"
+                            :y="plotBounds.top"
+                            :width="plotBounds.width"
+                            :height="plotBounds.height"
+                        />
+                    </clipPath>
+                    <!-- Keep each front stroke inside the face as the bars resize. -->
+                    <clipPath
+                        :id="`stackbar-front-clip-${uid}`"
+                        clipPathUnits="objectBoundingBox"
+                    >
+                        <rect x="0" y="0" width="1" height="1" />
+                    </clipPath>
+                </defs>
+
                 <!-- Round only the stack exterior corners -->
                 <defs v-if="stackClipRects.length">
                     <template
@@ -4068,6 +4310,15 @@ const annotationViewport = computed(() => {
                     </template>
                 </defs>
 
+                <path
+                    v-if="perspectiveFloor"
+                    data-cy="stackbar-perspective-floor"
+                    v-bind="perspectiveFloor.attrs"
+                    :class="barTransitionClass"
+                    aria-hidden="true"
+                    pointer-events="none"
+                />
+
                 <!-- FRAME -->
                 <rect
                     data-cy="frame"
@@ -4077,10 +4328,10 @@ const annotationViewport = computed(() => {
                         transition: 'none',
                         animation: 'none !important',
                     }"
-                    :x="Math.max(0, drawingArea.left)"
-                    :y="Math.max(0, drawingArea.top)"
-                    :width="Math.max(0, drawingArea.width)"
-                    :height="Math.max(0, drawingArea.height)"
+                    :x="Math.max(0, plotBounds.left)"
+                    :y="Math.max(0, plotBounds.top)"
+                    :width="Math.max(0, plotBounds.width)"
+                    :height="Math.max(0, plotBounds.height)"
                     fill="transparent"
                     :stroke="cfgGrid.frame.stroke"
                     :stroke-width="cfgGrid.frame.strokeWidth"
@@ -4098,8 +4349,8 @@ const annotationViewport = computed(() => {
                 >
                     <line
                         v-for="(yLabel, i) in yLabels"
-                        :x1="drawingArea.left"
-                        :x2="drawingArea.right"
+                        :x1="plotBounds.left"
+                        :x2="plotBounds.right"
                         :y1="yLabel.y"
                         :y2="yLabel.y"
                         :stroke="cfgGrid.x.linesColor"
@@ -4118,8 +4369,8 @@ const annotationViewport = computed(() => {
                 >
                     <line
                         v-for="(_, i) in slicer.end - slicer.start + 1"
-                        :x1="drawingArea.left"
-                        :x2="drawingArea.right"
+                        :x1="plotBounds.left"
+                        :x2="plotBounds.right"
                         :y1="drawingArea.top + barSlot * i"
                         :y2="drawingArea.top + barSlot * i"
                         :stroke="cfgGrid.x.linesColor"
@@ -4140,8 +4391,8 @@ const annotationViewport = computed(() => {
                         v-for="(_, i) in slicer.end - slicer.start + 1"
                         :x1="drawingArea.left + barSlot * i"
                         :x2="drawingArea.left + barSlot * i"
-                        :y1="drawingArea.top"
-                        :y2="drawingArea.bottom"
+                        :y1="plotBounds.top"
+                        :y2="plotBounds.bottom"
                         :stroke="cfgGrid.y.linesColor"
                         :stroke-width="cfgGrid.y.linesThickness"
                         :stroke-dasharray="cfgGrid.y.linesStrokeDasharray"
@@ -4160,8 +4411,8 @@ const annotationViewport = computed(() => {
                         v-for="(yLabel, i) in yLabels"
                         :x1="yLabel.horizontal_x"
                         :x2="yLabel.horizontal_x"
-                        :y1="drawingArea.top"
-                        :y2="drawingArea.bottom"
+                        :y1="plotBounds.top"
+                        :y2="plotBounds.bottom"
                         :stroke="cfgGrid.y.linesColor"
                         :stroke-width="cfgGrid.y.linesThickness"
                         :stroke-dasharray="cfgGrid.y.linesStrokeDasharray"
@@ -4169,156 +4420,104 @@ const annotationViewport = computed(() => {
                     />
                 </template>
 
+                <defs v-if="$slots.pattern">
+                    <slot
+                        v-for="dp in formattedDataset"
+                        :key="dp.datasetKey"
+                        name="pattern"
+                        :seriesIndex="dp.absoluteIndex"
+                        :patternId="`pattern_${uid}_${dp.absoluteIndex}`"
+                    />
+                </defs>
+
                 <g
-                    v-for="(dp, i) in formattedDataset"
-                    :key="`stackbar-group-${dp.datasetKey}-${i}-${uid}`"
+                    v-for="group in barRenderGroups"
+                    :key="group.key"
+                    :clip-path="
+                        perspectiveDepth
+                            ? `url(#stackbar-plot-clip-${uid})`
+                            : undefined
+                    "
                 >
-                    <defs v-if="$slots.pattern">
-                        <slot
-                            name="pattern"
-                            v-bind="{
-                                seriesIndex: dp.absoluteIndex,
-                                patternId: `pattern_${uid}_${dp.absoluteIndex}`,
-                            }"
-                        />
-                    </defs>
-
-                    <!-- STACKED BARS (vertical mode) -->
-                    <template v-if="FINAL_CONFIG.orientation === 'vertical'">
-                        <rect
-                            v-for="(rect, j) in dp.x"
-                            :key="`stackbar-rect-${dp.rectKeys[j]}`"
-                            :data-cy="
-                                isWaterfall
-                                    ? 'waterfall-segment'
-                                    : 'stackbar-rect'
-                            "
-                            v-show="
-                                !isWaterfall ||
-                                (dp.waterfallSegments?.[j] && dp.height[j] > 0)
-                            "
-                            v-bind="segmentRects[i][j]"
-                            :rx="0"
-                            :clip-path="getStackClipPath(j)"
-                            :fill="getWaterfallFill(dp, j)"
-                            :stroke="
-                                isWaterfall
-                                    ? cfgWaterfall.bars.stroke
-                                    : cfgChart.backgroundColor
-                            "
-                            :stroke-width="
-                                isWaterfall
-                                    ? cfgWaterfall.bars.strokeWidth
-                                    : cfgBars.strokeWidth
-                            "
-                            stroke-linecap="round"
-                            stroke-linejoin="miter"
-                            :class="{
-                                'vue-data-ui-bar-transition':
-                                    isLoaded && !labelLayoutSettling,
-                            }"
-                        />
-                        <g v-if="$slots.pattern">
-                            <rect
-                                v-for="(rect, j) in dp.x"
-                                :key="`stackbar-pattern-rect-${dp.rectKeys[j]}`"
-                                v-show="
-                                    !isWaterfall ||
-                                    (dp.waterfallSegments?.[j] &&
-                                        dp.height[j] > 0)
+                    <g
+                        v-if="group.faces?.length"
+                        aria-hidden="true"
+                        pointer-events="none"
+                    >
+                        <g
+                            v-for="face in group.faces"
+                            :key="face.id"
+                            class="stackbar-perspective-face"
+                            :visibility="face.visible ? undefined : 'hidden'"
+                        >
+                            <clipPath v-if="face.strokeWidth > 0" :id="face.id">
+                                <path :d="face.d" :class="barTransitionClass" />
+                            </clipPath>
+                            <path
+                                :data-cy="
+                                    face.visible
+                                        ? `stackbar-perspective-${face.type}`
+                                        : undefined
                                 "
-                                v-bind="segmentRects[i][j]"
-                                :rx="0"
-                                :clip-path="getStackClipPath(j)"
-                                :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
-                                :stroke="
-                                    isWaterfall
-                                        ? cfgWaterfall.bars.stroke
-                                        : cfgChart.backgroundColor
+                                :d="face.d"
+                                :class="barTransitionClass"
+                                :fill="face.fill"
+                                :stroke="face.stroke"
+                                :stroke-width="face.strokeWidth"
+                                :clip-path="
+                                    face.strokeWidth > 0
+                                        ? `url(#${face.id})`
+                                        : undefined
                                 "
-                                :stroke-width="
-                                    isWaterfall
-                                        ? cfgWaterfall.bars.strokeWidth
-                                        : cfgBars.strokeWidth
-                                "
-                                stroke-linecap="round"
-                                stroke-linejoin="miter"
-                                :class="{
-                                    'vue-data-ui-bar-transition':
-                                        isLoaded && !labelLayoutSettling,
-                                }"
                             />
+                            <template v-if="face.floorClip">
+                                <clipPath :id="`${face.id}-floor`">
+                                    <path
+                                        :d="face.floorClip"
+                                        :class="barTransitionClass"
+                                    />
+                                </clipPath>
+                                <path
+                                    :data-cy="
+                                        face.visible
+                                            ? 'stackbar-perspective-floor-tint'
+                                            : undefined
+                                    "
+                                    v-bind="perspectiveFloor.attrs"
+                                    :class="barTransitionClass"
+                                    :clip-path="`url(#${face.id}-floor)`"
+                                />
+                            </template>
                         </g>
-                    </template>
-
-                    <!-- STACKED BARS (horizontal mode) -->
-                    <template v-else>
+                    </g>
+                    <rect
+                        v-for="{ dp, rect, index, visible } in group.segments"
+                        :key="`stackbar-rect-${dp.rectKeys[index]}`"
+                        :data-cy="
+                            isWaterfall ? 'waterfall-segment' : 'stackbar-rect'
+                        "
+                        v-show="visible"
+                        v-bind="{ ...rect, ...barFrontStyle }"
+                        :clip-path="getStackClipPath(index)"
+                        :fill="getWaterfallFill(dp, index)"
+                        :class="barTransitionClass"
+                    />
+                    <g v-if="$slots.pattern">
                         <rect
-                            v-for="(rect, j) in dp.horizontal_x"
-                            :key="`stackbar-rect-${dp.rectKeys[j]}`"
-                            :data-cy="
-                                isWaterfall
-                                    ? 'waterfall-segment'
-                                    : 'stackbar-rect'
-                            "
-                            v-show="
-                                !isWaterfall ||
-                                (dp.waterfallSegments?.[j] &&
-                                    dp.horizontal_width[j] > 0)
-                            "
-                            v-bind="segmentRects[i][j]"
-                            :rx="0"
-                            :clip-path="getStackClipPath(j)"
-                            :fill="getWaterfallFill(dp, j)"
-                            :stroke="
-                                isWaterfall
-                                    ? cfgWaterfall.bars.stroke
-                                    : cfgChart.backgroundColor
-                            "
-                            :stroke-width="
-                                isWaterfall
-                                    ? cfgWaterfall.bars.strokeWidth
-                                    : cfgBars.strokeWidth
-                            "
-                            stroke-linecap="round"
-                            stroke-linejoin="miter"
-                            :class="{
-                                'vue-data-ui-bar-transition':
-                                    isLoaded && !labelLayoutSettling,
-                            }"
+                            v-for="{
+                                dp,
+                                rect,
+                                index,
+                                visible,
+                            } in group.segments"
+                            :key="`stackbar-pattern-rect-${dp.rectKeys[index]}`"
+                            v-show="visible"
+                            v-bind="{ ...rect, ...barFrontStyle }"
+                            :clip-path="getStackClipPath(index)"
+                            :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
+                            :class="barTransitionClass"
                         />
-                        <g v-if="$slots.pattern">
-                            <rect
-                                v-for="(rect, j) in dp.horizontal_x"
-                                :key="`stackbar-pattern-rect-${dp.rectKeys[j]}`"
-                                v-show="
-                                    !isWaterfall ||
-                                    (dp.waterfallSegments?.[j] &&
-                                        dp.horizontal_width[j] > 0)
-                                "
-                                v-bind="segmentRects[i][j]"
-                                :rx="0"
-                                :clip-path="getStackClipPath(j)"
-                                :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
-                                :stroke="
-                                    isWaterfall
-                                        ? cfgWaterfall.bars.stroke
-                                        : cfgChart.backgroundColor
-                                "
-                                :stroke-width="
-                                    isWaterfall
-                                        ? cfgWaterfall.bars.strokeWidth
-                                        : cfgBars.strokeWidth
-                                "
-                                stroke-linecap="round"
-                                stroke-linejoin="miter"
-                                :class="{
-                                    'vue-data-ui-bar-transition':
-                                        isLoaded && !labelLayoutSettling,
-                                }"
-                            />
-                        </g>
-                    </template>
+                    </g>
                 </g>
 
                 <!-- Connectors are drawn on top of the bars. Their endpoints
@@ -4365,16 +4564,8 @@ const annotationViewport = computed(() => {
                         cfgGrid.y.showAxis &&
                         (!cfgBars.distributed || isWaterfall)
                     "
-                    :x1="
-                        yAxisLabelsAreRight
-                            ? drawingArea.right
-                            : drawingArea.left
-                    "
-                    :x2="
-                        yAxisLabelsAreRight
-                            ? drawingArea.right
-                            : drawingArea.left
-                    "
+                    :x1="yAxisX"
+                    :x2="yAxisX"
                     :y1="drawingArea.top"
                     :y2="drawingArea.bottom"
                     :stroke="cfgGrid.y.axisColor"
@@ -4447,7 +4638,7 @@ const annotationViewport = computed(() => {
                                               dp.proportions[j],
                                           )
                                 "
-                                :transform="`translate(${rect + (barSlot * (1 - effectiveGapRatio / 2)) / 2}, ${dp.y[j] + dp.height[j] / 2 + segmentLabelConfig.fontSize / 3})`"
+                                :transform="`translate(${rect + barThickness / 2}, ${dp.y[j] + dp.height[j] / 2 + segmentLabelConfig.fontSize / 3})`"
                                 v-bind="getSegmentLabelStyle(dp, j)"
                                 text-anchor="middle"
                             >
@@ -4544,7 +4735,7 @@ const annotationViewport = computed(() => {
                                               dp.proportions[j],
                                           )
                                 "
-                                :transform="`translate(${rect + (dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2}, ${dp.horizontal_y[j] + (barSlot * (1 - effectiveGapRatio / 2)) / 2 + segmentLabelConfig.fontSize / 3})`"
+                                :transform="`translate(${rect + (dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2}, ${dp.horizontal_y[j] + barThickness / 2 + segmentLabelConfig.fontSize / 3})`"
                                 v-bind="getSegmentLabelStyle(dp, j)"
                                 text-anchor="middle"
                             >
@@ -4658,7 +4849,7 @@ const annotationViewport = computed(() => {
                                 'vue-data-ui-transition':
                                     transitionEnabled && !labelLayoutSettling,
                             }"
-                            :d="`M${yAxisLabelsAreRight ? drawingArea.right : drawingArea.left},${yLabel.y} ${yAxisLabelsAreRight ? drawingArea.right + 6 : drawingArea.left - 6},${yLabel.y}`"
+                            :d="`M${yAxisX},${yLabel.y} ${yLabel.x + (yAxisLabelsAreRight ? -2 : 2)},${yLabel.y}`"
                             :stroke-width="1"
                             stroke-linecap="round"
                         />
@@ -4884,7 +5075,7 @@ const annotationViewport = computed(() => {
                                 <slot
                                     name="time-label"
                                     v-bind="{
-                                        x: drawingArea.left - 8,
+                                        x: categoryLabelX,
                                         y:
                                             drawingArea.top +
                                             barSlot * i +
@@ -4921,7 +5112,7 @@ const annotationViewport = computed(() => {
                                     stroke-linejoin="round"
                                     stroke-width="3"
                                     paint-order="stroke fill"
-                                    :transform="`translate(${drawingArea.left - 8}, ${drawingArea.top + barSlot * i + barSlot / 2 + cfgGrid.y.axisLabels.fontSize / 3})`"
+                                    :transform="`translate(${categoryLabelX}, ${drawingArea.top + barSlot * i + barSlot / 2 + cfgGrid.y.axisLabels.fontSize / 3})`"
                                     :style="{
                                         cursor: isCursorPointer
                                             ? 'pointer'
@@ -4942,7 +5133,7 @@ const annotationViewport = computed(() => {
                                             : 'normal'
                                     "
                                     :fill="cfgGrid.y.axisLabels.color"
-                                    :transform="`translate(${drawingArea.left - 8}, ${drawingArea.top + barSlot * i + barSlot / 2 + cfgGrid.y.axisLabels.fontSize / 3})`"
+                                    :transform="`translate(${categoryLabelX}, ${drawingArea.top + barSlot * i + barSlot / 2 + cfgGrid.y.axisLabels.fontSize / 3})`"
                                     :style="{
                                         cursor: isCursorPointer
                                             ? 'pointer'
@@ -4956,7 +5147,7 @@ const annotationViewport = computed(() => {
                                                 cfgGrid.y.axisLabels.fontSize,
                                             fill: cfgGrid.y.axisLabels.color,
                                             stroke: cfgChart.backgroundColor,
-                                            x: drawingArea.left - 8,
+                                            x: categoryLabelX,
                                             y: 0,
                                         })
                                     "
@@ -4996,7 +5187,7 @@ const annotationViewport = computed(() => {
                     />
                 </template>
 
-                <!-- TOOLTIP TRAPS (vertical mode) -->
+                <!-- TOOLTIP TRAPS (horizontal mode) -->
                 <template
                     v-if="
                         mutableConfig.showTooltip &&
@@ -5056,7 +5247,7 @@ const annotationViewport = computed(() => {
                 <slot
                     name="svg"
                     :svg="{
-                        drawingArea,
+                        drawingArea: plotBounds,
                         slicer,
                         data: formattedDataset,
                         isPrintingImg:
@@ -5173,14 +5364,14 @@ const annotationViewport = computed(() => {
             :verticalHandles="cfgChart.zoom.minimap.verticalHandles"
             :maxWidth="cfgChart.zoom.maxWidth"
             :minimapLeftInsetRatio="
-                drawingArea.chartWidth > 0 && cfgChart.zoom.autoFit
-                    ? drawingArea.left / drawingArea.chartWidth
+                plotBounds.chartWidth > 0 && cfgChart.zoom.autoFit
+                    ? plotBounds.left / plotBounds.chartWidth
                     : null
             "
             :minimapRightInsetRatio="
-                drawingArea.chartWidth > 0 && cfgChart.zoom.autoFit
-                    ? (drawingArea.chartWidth - drawingArea.right) /
-                      drawingArea.chartWidth
+                plotBounds.chartWidth > 0 && cfgChart.zoom.autoFit
+                    ? (plotBounds.chartWidth - plotBounds.right) /
+                      plotBounds.chartWidth
                     : null
             "
             :isCursorPointer="isCursorPointer"
@@ -5386,6 +5577,11 @@ const annotationViewport = computed(() => {
 .vue-data-ui-bar-transition,
 .vue-data-ui-transition {
     transition: all 0.2s ease-in-out;
+}
+
+/* A covered face must be revealed immediately while its geometry animates. */
+.stackbar-perspective-face .vue-data-ui-bar-transition {
+    transition-property: d, fill, stroke, stroke-width, opacity;
 }
 
 .vue-data-ui-loading {

@@ -111,6 +111,11 @@
                     "borderColor": "#3A3A3A"
                 },
                 "bars": {
+                    "perspective": {
+                        "floor": {
+                            "color": "#CCCCCC"
+                        }
+                    },
                     "gradient": {
                         "show": false
                     },
@@ -218,6 +223,11 @@
                     "borderColor": "#5A5A5A"
                 },
                 "bars": {
+                    "perspective": {
+                        "floor": {
+                            "color": "#CCCCCC"
+                        }
+                    },
                     "totalValues": {
                         "color": "#CCCCCC"
                     }
@@ -322,6 +332,11 @@
                     "borderColor": "#FF8A65"
                 },
                 "bars": {
+                    "perspective": {
+                        "floor": {
+                            "color": "#424242"
+                        }
+                    },
                     "totalValues": {
                         "color": "#424242"
                     }
@@ -421,6 +436,11 @@
                     "borderColor": "#FF8A65"
                 },
                 "bars": {
+                    "perspective": {
+                        "floor": {
+                            "color": "#FFF8E1"
+                        }
+                    },
                     "totalValues": {
                         "color": "#BDBDBD"
                     }
@@ -517,6 +537,11 @@
                     "borderColor": "#66CC66"
                 },
                 "bars": {
+                    "perspective": {
+                        "floor": {
+                            "color": "#66CC66"
+                        }
+                    },
                     "totalValues": {
                         "color": "#99AA99"
                     }
@@ -613,6 +638,11 @@
                     "color": "#8A9892"
                 },
                 "bars": {
+                    "perspective": {
+                        "floor": {
+                            "color": "#8F837A"
+                        }
+                    },
                     "borderRadius": 4,
                     "totalValues": {
                         "show": false
@@ -713,6 +743,11 @@
                     "color": "#50606C"
                 },
                 "bars": {
+                    "perspective": {
+                        "floor": {
+                            "color": "#7DA9B5"
+                        }
+                    },
                     "totalValues": {
                         "color": "#50606C"
                     }

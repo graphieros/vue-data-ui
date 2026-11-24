@@ -14276,6 +14276,18 @@ declare module 'vue-data-ui' {
                     opacity?: number;
                 };
                 bars?: {
+                    perspective?: {
+                        show?: boolean;
+                        direction?: 'left' | 'right';
+                        /** Horizontal and upward offset in SVG units, limited to half the smaller plot dimension. */
+                        depth?: number;
+                        floor?: {
+                            show?: boolean;
+                            color?: string;
+                            /** Opacity from 0 to 1. Defaults to 0.15. */
+                            opacity?: number;
+                        };
+                    };
                     gapRatio?: number;
                     distributed?: boolean;
                     showDistributedPercentage?: boolean;

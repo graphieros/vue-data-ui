@@ -116,7 +116,7 @@ const selectedItem = ref(null);
                     type="color"
                     v-if="knob.type === 'color'"
                     v-model="knob.def"
-                    @change="$emit('change')"
+                    @change="$emit('change', knob.key)"
                     :list="`preset_${i}`"
                 />
                 <datalist :id="`preset_${i}`">
@@ -134,21 +134,36 @@ const selectedItem = ref(null);
                 </datalist>
 
                 <input
+                    v-if="knob.type === 'range'"
                     :id="`${knob.key}_${i}`"
-                    v-if="!['none', 'select', 'color'].includes(knob.type)"
+                    type="range"
+                    :step="knob.step"
+                    :min="knob.min ?? 0"
+                    :max="knob.max ?? 0"
+                    v-model.number="knob.def"
+                    @change="$emit('change', knob.key)"
+                />
+
+                <input
+                    :id="`${knob.key}_${i}`"
+                    v-if="
+                        !['none', 'select', 'color', 'range'].includes(
+                            knob.type,
+                        )
+                    "
                     :step="knob.step"
                     :type="knob.type"
                     :min="knob.min ?? 0"
                     :max="knob.max ?? 0"
                     v-model="knob.def"
-                    @change="$emit('change')"
+                    @change="$emit('change', knob.key)"
                 />
 
                 <select
                     :id="`${knob.key}_${i}`"
                     v-if="knob.type === 'select'"
                     v-model="knob.def"
-                    @change="$emit('change')"
+                    @change="$emit('change', knob.key)"
                 >
                     <option v-for="opt in knob.options">{{ opt }}</option>
                 </select>
