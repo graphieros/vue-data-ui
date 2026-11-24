@@ -42,60 +42,61 @@ function generateDayTimestamps(length) {
     return result;
 }
 
-function makeDs(n) {
+function makeDs(n, offset = 0) {
     const arr = [];
     for (let i = 0; i < n; i += 1) {
         if (i === 0) {
             arr.push(0);
         }
-        arr.push(Math.random() * 5 * (Math.random() > 0.3 ? 1 : 1));
+        const sign = (i + offset) % 8 < 4 ? 1 : -1;
+        arr.push(Math.random() * 5 * sign);
     }
     return arr;
 }
 
-// const dataset = ref([
-//     {
-//         name: 'Revenue breakdown',
-//         type: 'waterfall',
-//         series: [
-//             {
-//                 name: 'Initial revenue',
-//                 type: 'total',
-//                 series: [
-//                     { name: 'Product A', value: 250, color: '#FF8000' },
-//                     { name: 'Product B', value: 150, color: '#A3D22D' },
-//                     { name: 'Product C', value: 100, color: '#327F9C' },
-//                 ],
-//             },
-//             {
-//                 name: 'Growth',
-//                 type: 'change',
-//                 series: [
-//                     { name: 'Product A', value: 80 },
-//                     { name: 'Product B', value: 40 },
-//                     { name: 'Product C', value: 30 },
-//                 ],
-//             },
-//             {
-//                 name: 'Expenses',
-//                 type: 'change',
-//                 series: [
-//                     { name: 'Product A', value: -60 },
-//                     { name: 'Product B', value: -40 },
-//                 ],
-//             },
-//             {
-//                 name: 'Final revenue',
-//                 type: 'total',
-//                 series: [
-//                     { name: 'Product A', value: 270 },
-//                     { name: 'Product B', value: 150 },
-//                     { name: 'Product C', value: 130 },
-//                 ],
-//             },
-//         ],
-//     },
-// ]);
+const waterfallDataset = [
+    {
+        name: 'Revenue breakdown',
+        type: 'waterfall',
+        series: [
+            {
+                name: 'Initial revenue',
+                type: 'total',
+                series: [
+                    { name: 'Product A', value: 250, color: '#FF8000' },
+                    { name: 'Product B', value: 150, color: '#A3D22D' },
+                    { name: 'Product C', value: 100, color: '#327F9C' },
+                ],
+            },
+            {
+                name: 'Growth',
+                type: 'change',
+                series: [
+                    { name: 'Product A', value: 80 },
+                    { name: 'Product B', value: 40 },
+                    { name: 'Product C', value: 30 },
+                ],
+            },
+            {
+                name: 'Expenses',
+                type: 'change',
+                series: [
+                    { name: 'Product A', value: -60 },
+                    { name: 'Product B', value: -40 },
+                ],
+            },
+            {
+                name: 'Final revenue',
+                type: 'total',
+                series: [
+                    { name: 'Product A', value: 270 },
+                    { name: 'Product B', value: 150 },
+                    { name: 'Product C', value: 130 },
+                ],
+            },
+        ],
+    },
+];
 
 // const dataset = ref([
 //     {
@@ -191,12 +192,12 @@ const dataset = ref([
     },
     {
         name: 'Series 2',
-        series: makeDs(24),
+        series: makeDs(24, 1),
         marked: true,
     },
     {
         name: 'Series 3',
-        series: makeDs(24),
+        series: makeDs(24, 2),
     },
 ]);
 
@@ -399,6 +400,20 @@ const model = createModel([
 
     COLOR('style.chart.highlighter.color', { def: '#1A1A1A' }),
     RANGE('style.chart.highlighter.opacity', { def: 5, min: 0, max: 30 }),
+
+    CHECKBOX('style.chart.bars.perspective.show', { def: false }),
+    SELECT('style.chart.bars.perspective.direction', ['left', 'right'], {
+        def: 'right',
+    }),
+    RANGE('style.chart.bars.perspective.depth', { def: 12, min: 0, max: 100 }),
+    CHECKBOX('style.chart.bars.perspective.floor.show', { def: false }),
+    COLOR('style.chart.bars.perspective.floor.color', { def: '#1A1A1A' }),
+    RANGE('style.chart.bars.perspective.floor.opacity', {
+        def: 0.15,
+        min: 0,
+        max: 1,
+        step: 0.01,
+    }),
 
     RANGE('style.chart.bars.gapRatio', {
         def: 0.5,
@@ -715,6 +730,12 @@ const config = computed(() => {
 
 const step = ref(0);
 
+function onKnobChange(key) {
+    if (!key.startsWith('style.chart.bars.perspective.')) {
+        step.value += 1;
+    }
+}
+
 function selectTimeLabel(data) {
     console.log(data);
 }
@@ -783,6 +804,7 @@ const resp = ref(null);
 // })
 
 const zoomState = ref(null);
+const playgroundDataset = ref('regular');
 </script>
 
 <template>
@@ -1159,9 +1181,26 @@ const zoomState = ref(null);
         <template #knobs="{ summaryOpen }">
             <ConfigKnobs
                 :model="model"
-                @change="step += 1"
+                @change="onKnobChange"
                 :open="summaryOpen"
             />
         </template>
     </Box>
+
+    <section style="margin-top: 24px; color: white">
+        <h2>Stackbar playground</h2>
+        <label>
+            Dataset
+            <select v-model="playgroundDataset">
+                <option value="regular">Regular</option>
+                <option value="waterfall">Waterfall</option>
+            </select>
+        </label>
+        <LocalVueUiStackbar
+            :dataset="
+                playgroundDataset === 'waterfall' ? waterfallDataset : dataset
+            "
+            :config="config"
+        />
+    </section>
 </template>

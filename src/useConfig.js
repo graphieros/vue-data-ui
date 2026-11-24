@@ -997,6 +997,16 @@ export function useConfig(options = {}) {
                     opacity: 5,
                 },
                 bars: {
+                    perspective: {
+                        show: false,
+                        direction: 'right',
+                        depth: 12,
+                        floor: {
+                            show: true,
+                            color: COLOR_TEXT_PRIMARY,
+                            opacity: 0.15,
+                        },
+                    },
                     gapRatio: 0.5,
                     distributed: false,
                     showDistributedPercentage: true,
