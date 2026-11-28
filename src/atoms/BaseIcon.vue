@@ -1,6 +1,6 @@
 <script setup>
 import { computed, useSlots } from 'vue';
-import { XMLNS } from '../lib';
+import { XMLNS, safeAttr } from '../lib';
 
 const props = defineProps({
     name: String,
@@ -279,7 +279,9 @@ const rcPaths = {
     chartHistoryPlot: `M4 4a1 1 0 0 0 2 0 1 1 0 0 0-2 0m8-2a1 1 0 0 0 0 2 1 1 0 0 0 0-2m5 5a1 1 0 0 0 0 2 1 1 0 0 0 0-2m-5 7a1 1 0 0 0 0 2 1 1 0 0 0 0-2m-7-2a1 1 0 0 0 0 2 1 1 0 0 0 0-2m1-8 5-1m1.84.582 3.427 3.683m.358 1.688-3.862 5.344m-1.764.435-5.012-1.406M1 1v18h18`,
 };
 
-function getIconPath(name, { stroke: _s, strokeWidth: _sw }) {
+function getIconPath(name, { stroke: rawStroke, strokeWidth: rawWidth }) {
+    const _s = safeAttr(rawStroke);
+    const _sw = safeAttr(rawWidth);
     const sw = `stroke="${_s}" stroke-width="${_sw}"`;
     const fill = `fill="${_s}"`;
     const stroke = `stroke="${_s}"`;
@@ -475,7 +477,7 @@ const subProps = computed(() => {
 });
 
 function spinAnimate(cx, cy, duration = '0.5s') {
-    return `<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="${duration}" repeatCount="indefinite"/>`;
+    return `<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="${safeAttr(duration)}" repeatCount="indefinite"/>`;
 }
 
 const nominalCenter = computed(() => {
@@ -573,7 +575,7 @@ const polyIconHtml = computed(() => {
 
         const { cx, cy } = nominalCenter.value;
 
-        expBlock = `<g transform="${expTransform.value}"><g stroke="${expProps.value.stroke}" stroke-width="${expProps.value.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" fill="none">${expProps.value.isSpin ? spinAnimate(cx, cy, expProps.value.spinDuration) : ''}${expClean}</g></g>`;
+        expBlock = `<g transform="${expTransform.value}"><g stroke="${safeAttr(expProps.value.stroke)}" stroke-width="${safeAttr(expProps.value.strokeWidth)}" stroke-linecap="round" stroke-linejoin="round" fill="none">${expProps.value.isSpin ? spinAnimate(cx, cy, expProps.value.spinDuration) : ''}${expClean}</g></g>`;
     }
 
     let subBlock = '';
@@ -586,7 +588,7 @@ const polyIconHtml = computed(() => {
 
         const { cx, cy } = nominalCenter.value;
 
-        subBlock = `<g transform="${subTransform.value}"><g stroke="${subProps.value.stroke}" stroke-width="${subProps.value.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" fill="none">${subProps.value.isSpin ? spinAnimate(cx, cy, subProps.value.spinDuration) : ''}${subClean}</g></g>`;
+        subBlock = `<g transform="${subTransform.value}"><g stroke="${safeAttr(subProps.value.stroke)}" stroke-width="${safeAttr(subProps.value.strokeWidth)}" stroke-linecap="round" stroke-linejoin="round" fill="none">${subProps.value.isSpin ? spinAnimate(cx, cy, subProps.value.spinDuration) : ''}${subClean}</g></g>`;
     }
 
     return `${base}${expBlock}${subBlock}`;
