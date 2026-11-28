@@ -52,6 +52,15 @@ const PUNCTUATION = new Set(':;,{}()[]<>|&=?');
 // indentation stay intact.
 function tightenSpacing(source) {
     let out = '';
+    // Last character written. Reading out[out.length - 1] would force V8 to
+    // flatten the concatenated string on every whitespace run (quadratic).
+    let last;
+    const write = (text) => {
+        if (text) {
+            out += text;
+            last = text[text.length - 1];
+        }
+    };
     let i = 0;
     let braceDepth = 0;
     const templateDepths = [];
@@ -62,7 +71,7 @@ function tightenSpacing(source) {
             if (source[j] === '\\') j++;
             j++;
         }
-        out += source.slice(i, j + 1);
+        write(source.slice(i, j + 1));
         i = j + 1;
     };
 
@@ -75,19 +84,19 @@ function tightenSpacing(source) {
                 continue;
             }
             if (source[j] === '`') {
-                out += source.slice(i, j + 1);
+                write(source.slice(i, j + 1));
                 i = j + 1;
                 return;
             }
             if (source[j] === '$' && source[j + 1] === '{') {
-                out += source.slice(i, j + 2);
+                write(source.slice(i, j + 2));
                 i = j + 2;
                 templateDepths.push(braceDepth);
                 return;
             }
             j++;
         }
-        out += source.slice(i);
+        write(source.slice(i));
         i = source.length;
     };
 
@@ -96,25 +105,25 @@ function tightenSpacing(source) {
         if (c === '"' || c === "'") {
             copyQuoted(c);
         } else if (c === '`') {
-            out += c;
+            write(c);
             i++;
             copyTemplateText();
         } else if (c === '/' && source[i + 1] === '/') {
             let j = source.indexOf('\n', i);
             if (j === -1) j = source.length;
-            out += source.slice(i, j);
+            write(source.slice(i, j));
             i = j;
         } else if (c === '/' && source[i + 1] === '*') {
             let j = source.indexOf('*/', i + 2);
             j = j === -1 ? source.length : j + 2;
-            out += source.slice(i, j);
+            write(source.slice(i, j));
             i = j;
         } else if (c === '{') {
             braceDepth++;
-            out += c;
+            write(c);
             i++;
         } else if (c === '}') {
-            out += c;
+            write(c);
             i++;
             if (
                 templateDepths.length &&
@@ -128,7 +137,7 @@ function tightenSpacing(source) {
         } else if (c === ' ' || c === '\t') {
             let j = i;
             while (source[j] === ' ' || source[j] === '\t') j++;
-            const previous = out[out.length - 1];
+            const previous = last;
             const next = source[j];
             const atLineStart = previous === undefined || previous === '\n';
             const atLineEnd =
@@ -138,10 +147,10 @@ function tightenSpacing(source) {
                 (atLineEnd ||
                     PUNCTUATION.has(previous) ||
                     PUNCTUATION.has(next));
-            if (!optional) out += source.slice(i, j);
+            if (!optional) write(source.slice(i, j));
             i = j;
         } else {
-            out += c;
+            write(c);
             i++;
         }
     }
