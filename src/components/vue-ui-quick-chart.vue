@@ -43,6 +43,7 @@ import {
     XMLNS,
     treeShake,
     deepClone,
+    emitCopyAlt,
 } from '../lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
@@ -2225,22 +2226,10 @@ const { generateSvg, onGenerateImage } = useChartExport({
 });
 
 async function copyAlt() {
-    emit('copyAlt', {
-        config: FINAL_CONFIG.value,
-        dataset: {
-            line: line.value,
-            bar: bar.value,
-            donut: donut.value,
-        },
-    });
-    if (!FINAL_CONFIG.value.userOptionsCallbacks.altCopy) {
-        console.warn(
-            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
-        );
-        return;
-    }
-    await Promise.resolve(
-        FINAL_CONFIG.value.userOptionsCallbacks.altCopy({
+    await emitCopyAlt(
+        emit,
+        () => FINAL_CONFIG.value.userOptionsCallbacks.altCopy,
+        () => ({
             config: FINAL_CONFIG.value,
             dataset: {
                 line: line.value,

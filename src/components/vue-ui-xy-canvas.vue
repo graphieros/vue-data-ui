@@ -43,6 +43,7 @@ import {
     themePalettes,
     treeShake,
     getImageDimensions,
+    emitCopyAlt,
 } from '../lib';
 import { throttle } from '../canvas-lib';
 import { circle, cloneCanvas, line, polygon, rect, text } from '../canvas-lib';
@@ -3804,18 +3805,10 @@ const { isCallbackImaging, onGenerateImage } =
     useImageExportAction(generateImage);
 
 async function copyAlt() {
-    emit('copyAlt', {
-        config: FINAL_CONFIG.value,
-        dataset: formattedDataset.value,
-    });
-    if (!cfgUserOptions.value.callbacks.altCopy) {
-        console.warn(
-            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
-        );
-        return;
-    }
-    await Promise.resolve(
-        cfgUserOptions.value.callbacks.altCopy({
+    await emitCopyAlt(
+        emit,
+        () => cfgUserOptions.value.callbacks.altCopy,
+        () => ({
             config: FINAL_CONFIG.value,
             dataset: formattedDataset.value,
         }),

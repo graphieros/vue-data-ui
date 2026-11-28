@@ -32,6 +32,7 @@ import {
     treeShake,
     svgToClientCoords,
     XMLNS,
+    emitCopyAlt,
 } from '../lib';
 import usePanZoom from '../usePanZoom';
 import { useDag } from '../useDag';
@@ -1407,18 +1408,10 @@ function getData() {
 }
 
 async function copyAlt() {
-    emit('copyAlt', {
-        config: FINAL_CONFIG.value,
-        dataset: FINAL_DATASET.value,
-    });
-    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn(
-            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
-        );
-        return;
-    }
-    await Promise.resolve(
-        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+    await emitCopyAlt(
+        emit,
+        () => FINAL_CONFIG.value.userOptions.callbacks.altCopy,
+        () => ({
             config: FINAL_CONFIG.value,
             dataset: FINAL_DATASET.value,
         }),
