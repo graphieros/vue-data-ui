@@ -1333,6 +1333,7 @@ import {
     convertConfigColors,
     convertColorToHex,
     createUid,
+    safeAttr,
 } from '../lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
@@ -1827,16 +1828,16 @@ function includeResizeHandles(shape) {
     const circleHandle = ({ handle, x, y, cursor = 'nwse-resize' }) => `
         <circle
             data-dom-to-png-ignore
-            id="${shape.id}"
-            data-resize-handle="${handle}"
-            cx="${x}"
-            cy="${y}"
-            r="${handleRadius}"
-            fill="${background}"
-            stroke="${stroke}"
+            id="${safeAttr(shape.id)}"
+            data-resize-handle="${safeAttr(handle)}"
+            cx="${safeAttr(x)}"
+            cy="${safeAttr(y)}"
+            r="${safeAttr(handleRadius)}"
+            fill="${safeAttr(background)}"
+            stroke="${safeAttr(stroke)}"
             stroke-width="2"
             pointer-events="all"
-            style="cursor:${cursor}"
+            style="cursor:${safeAttr(cursor)}"
         />
     `;
 
@@ -1947,11 +1948,11 @@ function includeSelectionIndicator(shape) {
             return `
                 <rect
                     data-dom-to-png-ignore
-                    style="stroke-dasharray: 10; display:${display}"
-                    x="${shape.x - padding}"
-                    y="${shape.y - padding}"
-                    height="${shape.rectHeight + padding * 2}"
-                    width="${shape.rectWidth + padding * 2}"
+                    style="stroke-dasharray: 10; display:${safeAttr(display)}"
+                    x="${safeAttr(shape.x - padding)}"
+                    y="${safeAttr(shape.y - padding)}"
+                    height="${safeAttr(shape.rectHeight + padding * 2)}"
+                    width="${safeAttr(shape.rectWidth + padding * 2)}"
                     fill="transparent"
                     stroke="grey"
                     pointer-events="none"
@@ -1962,11 +1963,11 @@ function includeSelectionIndicator(shape) {
             return `
                 <rect
                     data-dom-to-png-ignore
-                    style="stroke-dasharray: 10; display:${display}"
-                    x="${shape.x - shape.circleRadius - padding}"
-                    y="${shape.y - shape.circleRadius - padding}"
-                    height="${shape.circleRadius * 2 + padding * 2}"
-                    width="${shape.circleRadius * 2 + padding * 2}"
+                    style="stroke-dasharray: 10; display:${safeAttr(display)}"
+                    x="${safeAttr(shape.x - shape.circleRadius - padding)}"
+                    y="${safeAttr(shape.y - shape.circleRadius - padding)}"
+                    height="${safeAttr(shape.circleRadius * 2 + padding * 2)}"
+                    width="${safeAttr(shape.circleRadius * 2 + padding * 2)}"
                     fill="transparent"
                     stroke="grey"
                     pointer-events="none"
@@ -1980,11 +1981,11 @@ function includeSelectionIndicator(shape) {
             const height = Math.max(1, Math.abs(shape.endY - shape.y));
             return `
                 <rect
-                    style="stroke-dasharray: 10; display:${display}"
-                    x="${minX - padding}"
-                    y="${minY - padding}"
-                    height="${height + padding * 2}"
-                    width="${width + padding * 2}"
+                    style="stroke-dasharray: 10; display:${safeAttr(display)}"
+                    x="${safeAttr(minX - padding)}"
+                    y="${safeAttr(minY - padding)}"
+                    height="${safeAttr(height + padding * 2)}"
+                    width="${safeAttr(width + padding * 2)}"
                     fill="transparent"
                     stroke="grey"
                     pointer-events="none"
@@ -1997,11 +1998,11 @@ function includeSelectionIndicator(shape) {
             if (!bounds) return '';
             return `
                 <rect
-                    style="stroke-dasharray: 10; display:${display}"
-                    x="${bounds.minX - padding}"
-                    y="${bounds.minY - padding}"
-                    height="${bounds.height + padding * 2}"
-                    width="${bounds.width + padding * 2}"
+                    style="stroke-dasharray: 10; display:${safeAttr(display)}"
+                    x="${safeAttr(bounds.minX - padding)}"
+                    y="${safeAttr(bounds.minY - padding)}"
+                    height="${safeAttr(bounds.height + padding * 2)}"
+                    width="${safeAttr(bounds.width + padding * 2)}"
                     fill="transparent"
                     stroke="grey"
                     pointer-events="none"
@@ -2021,11 +2022,11 @@ function includeSelectionIndicator(shape) {
             const { x, y, width, height } = selectedText.getBBox();
             return `
                 <rect
-                    style="stroke-dasharray: 10; display:${display}"
-                    x="${x - padding}"
-                    y="${y - padding}"
-                    height="${height + padding * 2}"
-                    width="${width + padding * 2}"
+                    style="stroke-dasharray: 10; display:${safeAttr(display)}"
+                    x="${safeAttr(x - padding)}"
+                    y="${safeAttr(y - padding)}"
+                    height="${safeAttr(height + padding * 2)}"
+                    width="${safeAttr(width + padding * 2)}"
                     fill="transparent"
                     stroke="grey"
                     pointer-events="none"
@@ -2042,18 +2043,18 @@ function includeDeleteButton(shape, isBulletTextMode = false) {
     switch (true) {
         case shape.type === 'circle':
             return `
-                <g id="${shape.id}" style="display:${
-                    isDeleteMode.value ? 'initial' : 'none'
-                };">
-                    <circle id="${shape.id}" cx="${shape.x}" cy="${
-                        shape.y
-                    }" r="12" fill="red"/>
-                    <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
-                        shape.x - 4
-                    }" y1="${shape.y - 4}" x2="${shape.x + 4}" y2="${shape.y + 4}"/>
-                    <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
-                        shape.x + 4
-                    }" y1="${shape.y - 4}" x2="${shape.x - 4}" y2="${shape.y + 4}"/>
+                <g id="${safeAttr(shape.id)}" style="display:${safeAttr(
+                    isDeleteMode.value ? 'initial' : 'none',
+                )};">
+                    <circle id="${safeAttr(shape.id)}" cx="${safeAttr(shape.x)}" cy="${safeAttr(
+                        shape.y,
+                    )}" r="12" fill="red"/>
+                    <line stroke="white" stroke-width="2" id="${safeAttr(shape.id)}" x1="${safeAttr(
+                        shape.x - 4,
+                    )}" y1="${safeAttr(shape.y - 4)}" x2="${safeAttr(shape.x + 4)}" y2="${safeAttr(shape.y + 4)}"/>
+                    <line stroke="white" stroke-width="2" id="${safeAttr(shape.id)}" x1="${safeAttr(
+                        shape.x + 4,
+                    )}" y1="${safeAttr(shape.y - 4)}" x2="${safeAttr(shape.x - 4)}" y2="${safeAttr(shape.y + 4)}"/>
                 </g>
             `;
 
@@ -2085,39 +2086,39 @@ function includeDeleteButton(shape, isBulletTextMode = false) {
             }
 
             return `
-                <g id="${shape.id}" style="display:${
-                    isDeleteMode.value ? 'initial' : 'none'
-                };">
-                    <circle id="${shape.id}" cx="${shape.x + offsetX[0]}" cy="${
-                        shape.y + offsetY[0]
-                    }" r="12" fill="red"/>
-                    <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
-                        shape.x + offsetX[1]
-                    }" y1="${shape.y + offsetY[1]}" x2="${shape.x + offsetX[2]}" y2="${
-                        shape.y + offsetY[2]
-                    }"/>
-                    <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
-                        shape.x + offsetX[3]
-                    }" y1="${shape.y + offsetY[3]}" x2="${shape.x + offsetX[4]}" y2="${
-                        shape.y + offsetY[4]
-                    }"/>
+                <g id="${safeAttr(shape.id)}" style="display:${safeAttr(
+                    isDeleteMode.value ? 'initial' : 'none',
+                )};">
+                    <circle id="${safeAttr(shape.id)}" cx="${safeAttr(shape.x + offsetX[0])}" cy="${safeAttr(
+                        shape.y + offsetY[0],
+                    )}" r="12" fill="red"/>
+                    <line stroke="white" stroke-width="2" id="${safeAttr(shape.id)}" x1="${safeAttr(
+                        shape.x + offsetX[1],
+                    )}" y1="${safeAttr(shape.y + offsetY[1])}" x2="${safeAttr(shape.x + offsetX[2])}" y2="${safeAttr(
+                        shape.y + offsetY[2],
+                    )}"/>
+                    <line stroke="white" stroke-width="2" id="${safeAttr(shape.id)}" x1="${safeAttr(
+                        shape.x + offsetX[3],
+                    )}" y1="${safeAttr(shape.y + offsetY[3])}" x2="${safeAttr(shape.x + offsetX[4])}" y2="${safeAttr(
+                        shape.y + offsetY[4],
+                    )}"/>
                 </g>
             `;
 
         default:
             return `
-                <g id="${shape.id}" style="display:${
-                    isDeleteMode.value ? 'initial' : 'none'
-                };">
-                    <circle id="${shape.id}" cx="${shape.x - 4}" cy="${
-                        shape.y - 4
-                    }" r="12" fill="red"/>
-                    <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
-                        shape.x - 8
-                    }" y1="${shape.y - 8}" x2="${shape.x}" y2="${shape.y}"/>
-                    <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
-                        shape.x
-                    }" y1="${shape.y - 8}" x2="${shape.x - 8}" y2="${shape.y}"/>
+                <g id="${safeAttr(shape.id)}" style="display:${safeAttr(
+                    isDeleteMode.value ? 'initial' : 'none',
+                )};">
+                    <circle id="${safeAttr(shape.id)}" cx="${safeAttr(shape.x - 4)}" cy="${safeAttr(
+                        shape.y - 4,
+                    )}" r="12" fill="red"/>
+                    <line stroke="white" stroke-width="2" id="${safeAttr(shape.id)}" x1="${safeAttr(
+                        shape.x - 8,
+                    )}" y1="${safeAttr(shape.y - 8)}" x2="${safeAttr(shape.x)}" y2="${safeAttr(shape.y)}"/>
+                    <line stroke="white" stroke-width="2" id="${safeAttr(shape.id)}" x1="${safeAttr(
+                        shape.x,
+                    )}" y1="${safeAttr(shape.y - 8)}" x2="${safeAttr(shape.x - 8)}" y2="${safeAttr(shape.y)}"/>
                 </g>
             `;
     }
@@ -2176,29 +2177,29 @@ function computeTextElement(
     );
 
     return `
-        <g id="${shape.id}">
+        <g id="${safeAttr(shape.id)}">
             <rect
-                id="${shape.id}"
+                id="${safeAttr(shape.id)}"
                 data-shape-hit-area="true"
-                x="${hitX - 8}"
-                y="${shape.y - shape.fontSize}"
-                height="${hitHeight + 8}"
-                width="${hitWidth + 16}"
+                x="${safeAttr(hitX - 8)}"
+                y="${safeAttr(shape.y - shape.fontSize)}"
+                height="${safeAttr(hitHeight + 8)}"
+                width="${safeAttr(hitWidth + 16)}"
                 fill="transparent"
                 pointer-events="all"
             />
             <text
-                data-shape-id="${shape.id}"
+                data-shape-id="${safeAttr(shape.id)}"
                 style="user-select:none;"
-                id="${shape.id}"
-                x="${shape.x}"
-                y="${shape.y}"
-                text-anchor="${shape.textAlign}"
-                font-size="${shape.fontSize}"
-                fill="${shape.color}"
-                font-weight="${shape.isBold ? 'bold' : 'normal'}"
-                font-style="${shape.isItalic ? 'italic' : 'normal'}"
-                text-decoration="${shape.isUnderline ? 'underline' : 'none'}"
+                id="${safeAttr(shape.id)}"
+                x="${safeAttr(shape.x)}"
+                y="${safeAttr(shape.y)}"
+                text-anchor="${safeAttr(shape.textAlign)}"
+                font-size="${safeAttr(shape.fontSize)}"
+                fill="${safeAttr(shape.color)}"
+                font-weight="${safeAttr(shape.isBold ? 'bold' : 'normal')}"
+                font-style="${safeAttr(shape.isItalic ? 'italic' : 'normal')}"
+                text-decoration="${safeAttr(shape.isUnderline ? 'underline' : 'none')}"
                 pointer-events="bounding-box"
             >
                 ${content.join('')}
@@ -2222,44 +2223,44 @@ function renderShape(shape, decorations = true, markerKey = '') {
                 html: `
           <defs>
           <marker
-              id="${markerId}"
-              markerWidth="${shapeWidthMax}"
-              markerHeight="${shapeWidthMax}"
+              id="${safeAttr(markerId)}"
+              markerWidth="${safeAttr(shapeWidthMax)}"
+              markerHeight="${safeAttr(shapeWidthMax)}"
               refX="0"
-              refY="${shapeWidthMin}"
+              refY="${safeAttr(shapeWidthMin)}"
               orient="auto"
           >
               <polygon
-              points="0 0,${shapeWidthMax} ${shapeWidthMin}, 0 ${shapeWidthMax}"
-              fill="${shape.color}"
+              points="0 0,${safeAttr(shapeWidthMax)} ${safeAttr(shapeWidthMin)}, 0 ${safeAttr(shapeWidthMax)}"
+              fill="${safeAttr(shape.color)}"
               />
           </marker>
           </defs>
-          <g id="${shape.id}">
+          <g id="${safeAttr(shape.id)}">
               ${decorations ? includeSelectionIndicator(shape) : ''}
               <path
-                  id="${shape.id}"
+                  id="${safeAttr(shape.id)}"
                   data-shape-hit-area="true"
-                  d="M${shape.x},${shape.y} ${shape.endX},${shape.endY}"
+                  d="M${safeAttr(shape.x)},${safeAttr(shape.y)} ${safeAttr(shape.endX)},${safeAttr(shape.endY)}"
                   fill="none"
                   stroke="transparent"
-                  stroke-width="${hitStrokeWidth}"
+                  stroke-width="${safeAttr(hitStrokeWidth)}"
                   pointer-events="stroke"
               />
               <path
-                  id="${shape.id}"
+                  id="${safeAttr(shape.id)}"
                   data-shape-visible="true"
                   style="stroke-linecap: round !important; ${
                       shape.isDash
-                          ? `stroke-dasharray: ${shape.strokeWidth * 3}`
+                          ? `stroke-dasharray: ${safeAttr(shape.strokeWidth * 3)}`
                           : ''
                   }"
-                  stroke="${shape.color}"
-                  d="M${shape.x},${shape.y} ${shape.endX},${shape.endY}"
-                  stroke-width="${shape.strokeWidth}"
+                  stroke="${safeAttr(shape.color)}"
+                  d="M${safeAttr(shape.x)},${safeAttr(shape.y)} ${safeAttr(shape.endX)},${safeAttr(shape.endY)}"
+                  stroke-width="${safeAttr(shape.strokeWidth)}"
                   fill="none"
                   pointer-events="stroke"
-                  marker-end="url(#${markerId})"
+                  marker-end="url(#${safeAttr(markerId)})"
               />
               ${decorations ? includeResizeHandles(shape) : ''}
               ${decorations ? includeDeleteButton(shape) : ''}
@@ -2272,23 +2273,23 @@ function renderShape(shape, decorations = true, markerKey = '') {
         case shape && shape.type === 'circle':
             return {
                 html: `
-          <g id="${shape.id}">
+          <g id="${safeAttr(shape.id)}">
               ${decorations ? includeSelectionIndicator(shape) : ''}
               <circle 
-              id="${shape.id}" 
-              cx="${shape.x}" 
-              cy="${shape.y}" 
-              r="${shape.circleRadius ? shape.circleRadius : Number.MIN_VALUE}"
-              fill="${
+              id="${safeAttr(shape.id)}" 
+              cx="${safeAttr(shape.x)}" 
+              cy="${safeAttr(shape.y)}" 
+              r="${safeAttr(shape.circleRadius ? shape.circleRadius : Number.MIN_VALUE)}"
+              fill="${safeAttr(
                   shape.isFilled
                       ? shape.color + shape.alpha
-                      : 'rgba(255,255,255,0.001)'
-              }" 
-              stroke="${shape.color + shape.alpha}" 
-              stroke-width="${shape.strokeWidth}"
+                      : 'rgba(255,255,255,0.001)',
+              )}" 
+              stroke="${safeAttr(shape.color + shape.alpha)}" 
+              stroke-width="${safeAttr(shape.strokeWidth)}"
               style="${
                   shape.isDash
-                      ? `stroke-dasharray: ${shape.strokeWidth * 3}`
+                      ? `stroke-dasharray: ${safeAttr(shape.strokeWidth * 3)}`
                       : ''
               }"
               >
@@ -2302,30 +2303,30 @@ function renderShape(shape, decorations = true, markerKey = '') {
 
         case shape && shape.type === 'group':
             return {
-                html: `<g id="${shape.id}">
+                html: `<g id="${safeAttr(shape.id)}">
             <rect
                 data-dom-to-png-ignore
-                id="${isResizeMode.value ? '' : shape.id}"
-                x="${shape.x}"
-                y="${shape.y}"
+                id="${safeAttr(isResizeMode.value ? '' : shape.id)}"
+                x="${safeAttr(shape.x)}"
+                y="${safeAttr(shape.y)}"
                 fill="transparent"
-                height="${shape.rectHeight}"
-                width="${shape.rectWidth}"
+                height="${safeAttr(shape.rectHeight)}"
+                width="${safeAttr(shape.rectWidth)}"
                 stroke="grey"
                 stroke-width="1"
                 style="rx:1 !important; ry:1 !important; ${
                     shape.isDash
-                        ? `stroke-dasharray: ${shape.strokeWidth * 3}`
+                        ? `stroke-dasharray: ${safeAttr(shape.strokeWidth * 3)}`
                         : ''
-                }; display:${
+                }; display:${safeAttr(
                     isSelectMode.value ||
-                    isDeleteMode.value ||
-                    isShapeHighlighted(shape)
+                        isDeleteMode.value ||
+                        isShapeHighlighted(shape)
                         ? 'initial'
-                        : 'none'
-                };"
+                        : 'none',
+                )};"
                         />
-            <g id="${shape.id}">
+            <g id="${safeAttr(shape.id)}">
             ${getGroupContent(shape)}
             </g>
             ${decorations ? includeResizeHandles(shape) : ''}
@@ -2336,24 +2337,24 @@ function renderShape(shape, decorations = true, markerKey = '') {
 
         case shape && shape.type === 'rect':
             return {
-                html: `<g id="${shape.id}">
+                html: `<g id="${safeAttr(shape.id)}">
             ${decorations ? includeSelectionIndicator(shape) : ''}
             <rect
-                id="${isResizeMode.value ? '' : shape.id}"
-                x="${shape.x}"
-                y="${shape.y}"
-                fill="${
+                id="${safeAttr(isResizeMode.value ? '' : shape.id)}"
+                x="${safeAttr(shape.x)}"
+                y="${safeAttr(shape.y)}"
+                fill="${safeAttr(
                     shape.isFilled
                         ? shape.color + shape.alpha
-                        : 'rgba(255,255,255,0.001)'
-                }"
-                height="${shape.rectHeight}"
-                width="${shape.rectWidth}"
-                stroke="${shape.color + shape.alpha}"
-                stroke-width="${shape.strokeWidth}"
+                        : 'rgba(255,255,255,0.001)',
+                )}"
+                height="${safeAttr(shape.rectHeight)}"
+                width="${safeAttr(shape.rectWidth)}"
+                stroke="${safeAttr(shape.color + shape.alpha)}"
+                stroke-width="${safeAttr(shape.strokeWidth)}"
                 style="rx:1 !important; ry:1 !important; ${
                     shape.isDash
-                        ? `stroke-dasharray: ${shape.strokeWidth * 3}`
+                        ? `stroke-dasharray: ${safeAttr(shape.strokeWidth * 3)}`
                         : ''
                 }"
             />
@@ -2370,30 +2371,30 @@ function renderShape(shape, decorations = true, markerKey = '') {
             );
             return {
                 html: `
-                <g id="${shape.id}">
+                <g id="${safeAttr(shape.id)}">
                     ${decorations ? includeSelectionIndicator(shape) : ''}
                     <path
-                        id="${shape.id}"
+                        id="${safeAttr(shape.id)}"
                         data-shape-hit-area="true"
-                        d="M${shape.path ? shape.path : ''}"
+                        d="M${safeAttr(shape.path ? shape.path : '')}"
                         fill="none"
                         stroke="transparent"
-                        stroke-width="${hitStrokeWidth}"
+                        stroke-width="${safeAttr(hitStrokeWidth)}"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         pointer-events="stroke"
                     />
                     <path
-                        id="${shape.id}"
+                        id="${safeAttr(shape.id)}"
                         data-shape-visible="true"
-                        d="M${shape.path ? shape.path : ''}"
-                        style="stroke:${
-                            shape.color + shape.alpha
-                        } !important; fill:none; stroke-width:${
-                            shape.strokeWidth
-                        } !important; stroke-linecap: round !important; stroke-linejoin: round !important; ${
+                        d="M${safeAttr(shape.path ? shape.path : '')}"
+                        style="stroke:${safeAttr(
+                            shape.color + shape.alpha,
+                        )} !important; fill:none; stroke-width:${safeAttr(
+                            shape.strokeWidth,
+                        )} !important; stroke-linecap: round !important; stroke-linejoin: round !important; ${
                             shape.isDash
-                                ? `stroke-dasharray: ${shape.strokeWidth * 3}`
+                                ? `stroke-dasharray: ${safeAttr(shape.strokeWidth * 3)}`
                                 : ''
                         }"
                         pointer-events="stroke"
@@ -2414,19 +2415,19 @@ function renderShape(shape, decorations = true, markerKey = '') {
         ${
             shape.isBulletTextMode
                 ? `<tspan
-                        data-bullet-line="${i}"
-                        x="${shape.x - shape.fontSize}"
-                        y="${shape.y + shape.fontSize * i}"
-                        id="${shape.id}"
-                        font-size="${shape.fontSize / 2}"
+                        data-bullet-line="${safeAttr(i)}"
+                        x="${safeAttr(shape.x - shape.fontSize)}"
+                        y="${safeAttr(shape.y + shape.fontSize * i)}"
+                        id="${safeAttr(shape.id)}"
+                        font-size="${safeAttr(shape.fontSize / 2)}"
                     >⬤</tspan>`
                 : ''
         }
                 <tspan
-                    data-text-line="${i}"
-                    id="${shape.id}"
-                    x="${shape.x}"
-                    y="${shape.y + shape.fontSize * i}"
+                    data-text-line="${safeAttr(i)}"
+                    id="${safeAttr(shape.id)}"
+                    x="${safeAttr(shape.x)}"
+                    y="${safeAttr(shape.y + shape.fontSize * i)}"
                 >${renderTextLine(parsedText[i])}</tspan>`);
             }
             return {

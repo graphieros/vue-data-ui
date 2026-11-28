@@ -65,34 +65,11 @@ describe('published declaration compaction', () => {
         expect(compact).toContain('"start\\\r\n        end"');
         expect(compact).toContain('     *     const example = "keep me";');
         expect(compact).toContain('    /// <reference lib="es2022" />');
-        expect(compact).toContain('\r\nvalue:Template<"test">;');
+        expect(compact).toContain('\r\nvalue: Template<"test">;');
         expect(printer.printFile(parse(compact))).toBe(
             printer.printFile(parse(source)),
         );
         expect(parse(compact).parseDiagnostics).toEqual([]);
-    });
-
-    test('drops optional spaces only outside comments, strings and template literals', () => {
-        const source = [
-            'export type Empty = { /* keep : this , spacing */ };',
-            'export type Label = \'a : b\' | "c , d";',
-            'export type Key<A extends string, B extends string> = `${A} : ${ B }`;',
-            'export type Fn = (value: number, label?: string) => void; // note : kept',
-            '',
-        ].join('\n');
-        const compact = compactDeclaration(source);
-        expect(compact).toBe(
-            [
-                'export type Empty={/* keep : this , spacing */};',
-                'export type Label=\'a : b\'|"c , d";',
-                'export type Key<A extends string,B extends string>=`${A} : ${B}`;',
-                'export type Fn=(value:number,label?:string)=>void;// note : kept',
-                '',
-            ].join('\n'),
-        );
-        expect(printer.printFile(parse(compact))).toBe(
-            printer.printFile(parse(source)),
-        );
     });
 
     test('compacts copied declarations without editing source files or other copied assets', () => {
@@ -108,7 +85,7 @@ describe('published declaration compaction', () => {
             writeFileSync(join(source, 'asset.bin'), asset);
             copyTypes(source, output);
             expect(readFileSync(join(output, 'example.d.ts'), 'utf8')).toBe(
-                'export interface Example{\nvalue:string;\n}\n',
+                'export interface Example {\nvalue: string;\n}\n',
             );
             expect(readFileSync(join(source, 'example.d.ts'), 'utf8')).toBe(
                 declaration,

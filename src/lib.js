@@ -5324,6 +5324,17 @@ export function escapeXmlAttr(str) {
         .replaceAll('>', '&gt;');
 }
 
+// Escapes a value interpolated into a double-quoted markup attribute.
+// Numbers, booleans, null and undefined are returned unchanged, so arithmetic
+// and rendered output stay identical; anything else is escaped as a string.
+export function safeAttr(value) {
+    return value == null ||
+        typeof value === 'number' ||
+        typeof value === 'boolean'
+        ? value
+        : escapeXmlAttr(value);
+}
+
 export function escapeHtml(val) {
     return String(val)
         .replaceAll('&', '&amp;')
