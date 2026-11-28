@@ -61,6 +61,12 @@
                     "gradient": {
                         "show": false
                     }
+                },
+                "volume": {
+                    "color": "#CCCCCC",
+                    "dataLabels": {
+                        "color": "#CCCCCC"
+                    }
                 }
             },
             "zoom": {
@@ -143,6 +149,12 @@
                 },
                 "candle": {
                     "stroke": "#1A1A1A"
+                },
+                "volume": {
+                    "color": "#CCCCCC",
+                    "dataLabels": {
+                        "color": "#CCCCCC"
+                    }
                 }
             },
             "zoom": {
@@ -223,6 +235,12 @@
                     },
                     "gradient": {
                         "show": false
+                    }
+                },
+                "volume": {
+                    "color": "#424242",
+                    "dataLabels": {
+                        "color": "#424242"
                     }
                 }
             },
@@ -311,6 +329,12 @@
                     "gradient": {
                         "show": false
                     }
+                },
+                "volume": {
+                    "color": "#BDBDBD",
+                    "dataLabels": {
+                        "color": "#BDBDBD"
+                    }
                 }
             },
             "zoom": {
@@ -398,6 +422,12 @@
                     "gradient": {
                         "show": false
                     }
+                },
+                "volume": {
+                    "color": "#99CC99",
+                    "dataLabels": {
+                        "color": "#99CC99"
+                    }
                 }
             },
             "zoom": {
@@ -478,6 +508,12 @@
                     "gradient": {
                         "show": true
                     }
+                },
+                "volume": {
+                    "color": "#8A9892",
+                    "dataLabels": {
+                        "color": "#8A9892"
+                    }
                 }
             },
             "zoom": {
@@ -555,6 +591,12 @@
                     },
                     "gradient": {
                         "show": false
+                    }
+                },
+                "volume": {
+                    "color": "#61747E",
+                    "dataLabels": {
+                        "color": "#61747E"
                     }
                 }
             },

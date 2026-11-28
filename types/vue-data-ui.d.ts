@@ -5405,6 +5405,27 @@ declare module 'vue-data-ui' {
                     };
                     widthRatio?: number;
                 };
+                volume?: {
+                    show?: boolean;
+                    heightRatio?: number;
+                    gap?: number;
+                    widthRatio?: number | null;
+                    borderRadius?: number;
+                    useCandleColors?: boolean;
+                    color?: string;
+                    opacity?: number;
+                    dataLabels?: {
+                        show?: boolean;
+                        fontSize?: number;
+                        color?: string;
+                        bold?: boolean;
+                        offsetX?: number;
+                        roundingValue?: number;
+                        prefix?: string;
+                        suffix?: string;
+                        formatter?: Formatter | null;
+                    };
+                };
             };
             zoom?: ChartZoom & {
                 preview?: {

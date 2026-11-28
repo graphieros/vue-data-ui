@@ -23,7 +23,7 @@ import {
 import { useNestedProp } from '../useNestedProp';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
-import { createUid } from '../lib';
+import { createUid, emitCopyAlt } from '../lib';
 import { usePrinter } from '../usePrinter';
 import UserOptions from '../atoms/UserOptions.vue';
 import PenAndPaper from '../atoms/PenAndPaper.vue';
@@ -571,18 +571,10 @@ watch(
 );
 
 async function copyAlt() {
-    emit('copyAlt', {
-        config: FINAL_CONFIG.value,
-        dataset: resolvedItems.value,
-    });
-    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn(
-            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
-        );
-        return;
-    }
-    await Promise.resolve(
-        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+    await emitCopyAlt(
+        emit,
+        () => FINAL_CONFIG.value.userOptions.callbacks.altCopy,
+        () => ({
             config: FINAL_CONFIG.value,
             dataset: resolvedItems.value,
         }),

@@ -5512,6 +5512,26 @@ export function mapSampledSeriesToSourceIndices(sourceSeries, sampledSeries) {
     return indices;
 }
 
+/**
+ * Shared `copyAlt` handler: emits the payload, then forwards a fresh payload to
+ * the user callback, or warns when no callback is configured.
+ * Internal helper; not part of the public API.
+ * @param {Function} emit - Component emit function.
+ * @param {() => Function | null | undefined} getCallback - Reads the configured altCopy callback.
+ * @param {() => object} getPayload - Builds the payload; called once for the emit and once for the callback.
+ */
+export async function emitCopyAlt(emit, getCallback, getPayload) {
+    emit('copyAlt', getPayload());
+    const callback = getCallback();
+    if (!callback) {
+        console.warn(
+            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
+        );
+        return;
+    }
+    await Promise.resolve(callback(getPayload()));
+}
+
 const lib = {
     XMLNS,
     abbreviate,

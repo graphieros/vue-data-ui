@@ -41,6 +41,7 @@ import {
     shiftHue,
     treeShake,
     XMLNS,
+    emitCopyAlt,
 } from '../lib';
 import { useHints } from '../useHints';
 import { useConfig } from '../useConfig';
@@ -1230,18 +1231,10 @@ const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     });
 
 async function copyAlt() {
-    emit('copyAlt', {
-        config: FINAL_CONFIG.value,
-        dataset: radar.value,
-    });
-    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn(
-            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
-        );
-        return;
-    }
-    await Promise.resolve(
-        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+    await emitCopyAlt(
+        emit,
+        () => FINAL_CONFIG.value.userOptions.callbacks.altCopy,
+        () => ({
             config: FINAL_CONFIG.value,
             dataset: radar.value,
         }),

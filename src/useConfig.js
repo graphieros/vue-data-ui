@@ -48,6 +48,29 @@ export function useConfig(options = {}) {
         },
     };
 
+    // Factories for blocks repeated across components. Each call returns a
+    // fresh object, exactly like the inline literals they replace.
+    const A11Y_DATAPOINT_NAVIGATION = () => ({
+        ...A11Y,
+        translations: {
+            ...A11Y.translations,
+            keyboardNavigation:
+                'Use the left and right, or up and down arrow keys to move between datapoints',
+        },
+    });
+
+    const DATAPOINT_EVENTS = () => ({
+        datapointEnter: null,
+        datapointLeave: null,
+        datapointClick: null,
+    });
+
+    const SERIES_VALUE_PERCENTAGE_COLUMNS = () => ({
+        series: 'Series',
+        value: 'Value',
+        percentage: 'Percentage',
+    });
+
     const FONT = {
         _6: 6,
         _8: 8,
@@ -281,6 +304,17 @@ export function useConfig(options = {}) {
         };
     };
 
+    // Unlisted buttons default to false in USER_OPTIONS.
+    const USER_OPTIONS_ENABLED = (names) =>
+        USER_OPTIONS(
+            Object.fromEntries(
+                names
+                    .split(' ')
+                    .filter(Boolean)
+                    .map((name) => [name, true]),
+            ),
+        );
+
     /**
      * @param {Number[]} p - [T,R,B,L]
      */
@@ -304,6 +338,12 @@ export function useConfig(options = {}) {
         color: COLOR_TEXT_PRIMARY,
         outline: 'none',
     };
+
+    const TABLE_TD_ROUNDED = () => ({
+        ...TABLE_TD,
+        roundingValue: 0,
+        roundingPercentage: 0,
+    });
 
     const TABLE = {
         show: false,
@@ -371,17 +411,9 @@ export function useConfig(options = {}) {
         theme: '',
         customPalette: [],
         transitions: TRANSITIONS,
-        userOptions: USER_OPTIONS({
-            tooltip: false,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: false,
-            labels: false,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'pdf csv img fullscreen annotator svg',
+        ),
         a11y: {
             ...A11Y,
             translations: {
@@ -591,11 +623,7 @@ export function useConfig(options = {}) {
         responsive: false,
         a11y: A11Y,
         transitions: TRANSITIONS,
-        events: {
-            datapointEnter: null,
-            datapointLeave: null,
-            datapointClick: null,
-        },
+        events: DATAPOINT_EVENTS(),
         customPalette: [],
         useCssAnimation: false,
         table: {
@@ -611,17 +639,9 @@ export function useConfig(options = {}) {
                 roundingValue: 0,
             },
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table labels fullscreen annotator svg',
+        ),
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -818,21 +838,9 @@ export function useConfig(options = {}) {
         debug: false, // v3
         theme: '',
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
         transitions: TRANSITIONS,
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
         orientation: 'vertical', // or 'horizontal'
@@ -849,17 +857,9 @@ export function useConfig(options = {}) {
                 roundingValue: 0,
             },
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table labels fullscreen annotator svg',
+        ),
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -1195,12 +1195,7 @@ export function useConfig(options = {}) {
         responsive: false,
         loading: false, // v3
         a11y: A11Y,
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         responsiveProportionalSizing: true,
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
@@ -1441,18 +1436,9 @@ export function useConfig(options = {}) {
                 useDefaultTimeFormat: true,
                 timeFormat: 'yyyy-MM-dd HH:mm:ss', // When datetimeFormatter is used
             },
-            userOptions: USER_OPTIONS({
-                tooltip: true,
-                pdf: true,
-                csv: true,
-                img: true,
-                table: true,
-                labels: true,
-                fullscreen: true,
-                stack: true,
-                annotator: true,
-                svg: true,
-            }),
+            userOptions: USER_OPTIONS_ENABLED(
+                'tooltip pdf csv img table labels fullscreen stack annotator svg',
+            ),
         },
         bar: {
             showTransition: true,
@@ -1589,20 +1575,8 @@ export function useConfig(options = {}) {
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         serieToggleAnimation: {
             show: true,
             durationMs: 500,
@@ -1613,17 +1587,9 @@ export function useConfig(options = {}) {
             staggerMs: 50,
         },
         useBlurOnHover: true,
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table labels fullscreen annotator svg',
+        ),
         translations: {
             total: 'Total',
             average: 'Average',
@@ -1632,16 +1598,8 @@ export function useConfig(options = {}) {
             ...TABLE,
             useDialog: false,
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
-            columnNames: {
-                series: 'Series',
-                value: 'Value',
-                percentage: 'Percentage',
-            },
+            td: TABLE_TD_ROUNDED(),
+            columnNames: SERIES_VALUE_PERCENTAGE_COLUMNS(),
         },
         style: {
             fontFamily: 'inherit',
@@ -1776,34 +1734,14 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
         transitions: TRANSITIONS,
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-            zoom: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg zoom',
+        ),
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -1880,17 +1818,9 @@ export function useConfig(options = {}) {
         table: {
             ...TABLE,
             useDialog: false,
-            columnNames: {
-                series: 'Series',
-                value: 'Value',
-                percentage: 'Percentage',
-            },
+            columnNames: SERIES_VALUE_PERCENTAGE_COLUMNS(),
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
         },
     };
 
@@ -1902,20 +1832,8 @@ export function useConfig(options = {}) {
         loading: false, // v3
         responsive: false,
         transitions: TRANSITIONS,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         useBlurOnHover: true,
@@ -1992,30 +1910,15 @@ export function useConfig(options = {}) {
                 },
             },
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
-            columnNames: {
-                series: 'Series',
-                value: 'Value',
-                percentage: 'Percentage',
-            },
+            columnNames: SERIES_VALUE_PERCENTAGE_COLUMNS(),
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
         },
     };
 
@@ -2026,20 +1929,8 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v2 = true
@@ -2111,22 +2002,11 @@ export function useConfig(options = {}) {
             ...TABLE,
             useDialog: false,
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg',
+        ),
         translations: {
             target: 'Target',
             value: 'Value',
@@ -2141,20 +2021,8 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v2 = true
@@ -2281,17 +2149,9 @@ export function useConfig(options = {}) {
                 roundingValue: 0,
             },
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table labels fullscreen annotator svg',
+        ),
         translations: {
             category: 'Category',
             item: 'Item',
@@ -2388,13 +2248,7 @@ export function useConfig(options = {}) {
                 title: TITLE,
             },
         },
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            img: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED('pdf img fullscreen annotator svg'),
         translations: {
             base: 'Base',
         },
@@ -2462,13 +2316,7 @@ export function useConfig(options = {}) {
                 title: TITLE,
             },
         },
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            img: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED('pdf img fullscreen annotator svg'),
     };
 
     const vue_ui_tiremarks = {
@@ -2520,13 +2368,7 @@ export function useConfig(options = {}) {
                 title: TITLE,
             },
         },
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            img: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED('pdf img fullscreen annotator svg'),
     };
 
     const vue_ui_chestnut = {
@@ -2535,14 +2377,7 @@ export function useConfig(options = {}) {
         loading: false, // v3
         theme: '',
         customPalette: [],
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -2692,21 +2527,11 @@ export function useConfig(options = {}) {
                     nutToTotal: '%/total',
                 },
             },
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
         },
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'pdf csv img table fullscreen annotator svg',
+        ),
         translations: {
             total: 'Total',
             proportionToTree: 'of grand total',
@@ -2721,21 +2546,9 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
         transitions: TRANSITIONS,
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v2 = true
@@ -2797,25 +2610,14 @@ export function useConfig(options = {}) {
                 },
             },
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
             translations: {
                 value: 'Value',
                 percentage: 'Percentage',
@@ -2837,19 +2639,8 @@ export function useConfig(options = {}) {
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
         transitions: TRANSITIONS,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            datapointEnter: null,
-            datapointLeave: null,
-            datapointClick: null,
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(),
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -2938,17 +2729,9 @@ export function useConfig(options = {}) {
                 },
             },
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            sort: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table sort fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
@@ -2979,20 +2762,8 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false, // v3
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         style: {
             fontFamily: 'inherit',
@@ -3101,16 +2872,9 @@ export function useConfig(options = {}) {
                 roundingValue: 0,
             },
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
@@ -3132,20 +2896,9 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
         transitions: TRANSITIONS,
-        events: {
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v2 = true
@@ -3332,16 +3085,9 @@ export function useConfig(options = {}) {
                 suffix: '',
             },
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
@@ -3371,12 +3117,7 @@ export function useConfig(options = {}) {
         responsiveProportionalSizing: true,
         a11y: A11Y,
         transitions: TRANSITIONS,
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         useCssAnimation: false, // v3 (v2 = true)
         style: {
@@ -3472,6 +3213,27 @@ export function useConfig(options = {}) {
                     },
                     widthRatio: 0.5,
                 },
+                volume: {
+                    show: false,
+                    heightRatio: 0.1, // share of the plot height (price + volume), clamped to [0.05, 0.8]
+                    gap: 12, // px between the price x axis and the volume pane
+                    widthRatio: null, // null => follows candle.widthRatio
+                    borderRadius: 1,
+                    useCandleColors: true,
+                    color: COLOR_GREY, // used when useCandleColors is false
+                    opacity: 50,
+                    dataLabels: {
+                        show: true,
+                        fontSize: FONT._8,
+                        color: COLOR_TEXT_PRIMARY,
+                        bold: false,
+                        offsetX: 0,
+                        roundingValue: 0,
+                        prefix: '',
+                        suffix: '',
+                        formatter: null,
+                    },
+                },
             },
             zoom: {
                 ...ZOOM,
@@ -3506,16 +3268,9 @@ export function useConfig(options = {}) {
             last: 'Close',
             volume: 'Volume',
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             th: TABLE_TH,
@@ -3563,12 +3318,7 @@ export function useConfig(options = {}) {
             show: false,
             colors: ['#34eb96', '#eb4034'],
         },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         style: {
             chartWidth: 290,
             animation: {
@@ -3691,12 +3441,7 @@ export function useConfig(options = {}) {
         skeletonConfig: null,
         debug: false, // v3
         loading: false, // v3
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         style: {
@@ -3772,12 +3517,7 @@ export function useConfig(options = {}) {
                 value: 'Value',
             },
         },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         style: {
@@ -3853,11 +3593,7 @@ export function useConfig(options = {}) {
                 label: 'Label',
             },
         },
-        events: {
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         style: {
             fontFamily: 'inherit',
@@ -4058,12 +3794,7 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         a11y: A11Y,
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         transitions: TRANSITIONS,
         responsive: false,
         theme: '',
@@ -4239,20 +3970,8 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         style: {
             fontFamily: 'inherit',
@@ -4347,16 +4066,9 @@ export function useConfig(options = {}) {
             total: 'total',
             year: 'year',
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
@@ -4372,20 +4084,8 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         responsiveProportionalSizing: true,
         theme: '',
         customPalette: [],
@@ -4429,13 +4129,7 @@ export function useConfig(options = {}) {
             },
             title: TITLE,
         },
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            img: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED('pdf img fullscreen annotator svg'),
     };
 
     const vue_ui_thermometer = {
@@ -4492,13 +4186,7 @@ export function useConfig(options = {}) {
             },
             title: TITLE,
         },
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            img: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED('pdf img fullscreen annotator svg'),
     };
 
     const vue_ui_rings = {
@@ -4508,20 +4196,9 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
         transitions: TRANSITIONS,
-        events: {
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v2 = true
@@ -4586,31 +4263,15 @@ export function useConfig(options = {}) {
                 },
             },
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-            labels: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg labels',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
-            columnNames: {
-                series: 'Series',
-                value: 'Value',
-                percentage: 'Percentage',
-            },
+            columnNames: SERIES_VALUE_PERCENTAGE_COLUMNS(),
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
         },
     };
 
@@ -4623,12 +4284,7 @@ export function useConfig(options = {}) {
         responsive: false, // v3
         theme: '',
         a11y: A11Y,
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         transitions: TRANSITIONS,
         customPalette: [],
         style: {
@@ -4782,15 +4438,9 @@ export function useConfig(options = {}) {
                 },
             },
         },
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
@@ -4799,11 +4449,7 @@ export function useConfig(options = {}) {
                 total: 'Total',
             },
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
         },
     };
 
@@ -4814,19 +4460,8 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false, // v3
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         style: {
             fontFamily: 'inherit',
@@ -4882,29 +4517,15 @@ export function useConfig(options = {}) {
                 },
             },
         },
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
-            columnNames: {
-                series: 'Series',
-                value: 'Value',
-                percentage: 'Percentage',
-            },
+            columnNames: SERIES_VALUE_PERCENTAGE_COLUMNS(),
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
         },
     };
 
@@ -4914,12 +4535,7 @@ export function useConfig(options = {}) {
         skeletonConfig: null,
         debug: false, // v3
         loading: false, // v3
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         style: {
@@ -4944,18 +4560,9 @@ export function useConfig(options = {}) {
                 },
             },
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-            zoom: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table labels fullscreen annotator svg zoom',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
@@ -4980,20 +4587,8 @@ export function useConfig(options = {}) {
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
         useBlurOnHover: true,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         serieToggleAnimation: {
             show: true,
             durationMs: 500,
@@ -5003,17 +4598,9 @@ export function useConfig(options = {}) {
             durationMs: 1000,
             staggerMs: 50,
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table labels fullscreen annotator svg',
+        ),
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -5088,17 +4675,9 @@ export function useConfig(options = {}) {
         table: {
             ...TABLE,
             useDialog: false,
-            columnNames: {
-                series: 'Series',
-                value: 'Value',
-                percentage: 'Percentage',
-            },
+            columnNames: SERIES_VALUE_PERCENTAGE_COLUMNS(),
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
         },
     };
 
@@ -5109,21 +4688,9 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false, // v3
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
         transitions: TRANSITIONS,
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         useAnimation: true,
@@ -5190,31 +4757,15 @@ export function useConfig(options = {}) {
                 },
             },
         },
-        userOptions: USER_OPTIONS({
-            labels: false,
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
-            columnNames: {
-                series: 'Series',
-                value: 'Value',
-                percentage: 'Percentage',
-            },
+            columnNames: SERIES_VALUE_PERCENTAGE_COLUMNS(),
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
         },
     };
 
@@ -5226,36 +4777,16 @@ export function useConfig(options = {}) {
         loading: false, // v3
         responsive: false,
         type: 'classic' | 'scatter' | 'violin',
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
         transitions: TRANSITIONS,
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         responsiveProportionalSizing: true,
         theme: '',
         customPalette: [],
         useCssAnimation: true,
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table labels fullscreen annotator svg',
+        ),
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -5391,32 +4922,14 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         useAnimation: false, // v2 = true
         animationSpeed: 2,
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'pdf csv img table fullscreen annotator svg',
+        ),
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -5560,11 +5073,7 @@ export function useConfig(options = {}) {
                 progression: 'Progression',
             },
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
         },
     };
 
@@ -5575,20 +5084,8 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false, // v3
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v3
@@ -5645,29 +5142,15 @@ export function useConfig(options = {}) {
                 },
             },
         },
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
-            columnNames: {
-                series: 'Series',
-                value: 'Value',
-                percentage: 'Percentage',
-            },
+            columnNames: SERIES_VALUE_PERCENTAGE_COLUMNS(),
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
         },
     };
 
@@ -5754,12 +5237,7 @@ export function useConfig(options = {}) {
                 fallback: COLOR_GRID,
             },
         },
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            csv: true,
-            img: true,
-            fullscreen: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED('pdf csv img fullscreen'),
     };
 
     const vue_ui_table_heatmap = {
@@ -5789,12 +5267,7 @@ export function useConfig(options = {}) {
                 values: [],
             },
         },
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            csv: true,
-            img: true,
-            fullscreen: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED('pdf csv img fullscreen'),
     };
 
     const vue_ui_word_cloud = {
@@ -5804,37 +5277,17 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v2 = true
         animationDelayMs: 20,
         quality: 'fast', // Legacy compatibility setting; glyph packing uses one placement strategy.
         strictPixelPadding: true, // Add one extra pixel of padding to each glyph sprite.
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-            zoom: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg zoom',
+        ),
         nodeCategories: {},
         nodeCategoryColors: {},
         style: {
@@ -5910,22 +5363,10 @@ export function useConfig(options = {}) {
         downsample: {
             threshold: 10000,
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: true,
-            fullscreen: true,
-            stack: true,
-            annotator: true,
-        }),
-        events: {
-            datapointEnter: null,
-            datapointLeave: null,
-            datapointClick: null,
-        },
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table labels fullscreen stack annotator',
+        ),
+        events: DATAPOINT_EVENTS(),
         style: {
             fontFamily: 'Arial', // A defined font must be provided as 'inherit' fails with canvas
             chart: {
@@ -6076,32 +5517,13 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false, // v3
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
-        userOptions: USER_OPTIONS({
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            fullscreen: true,
-            annotator: true,
-            tooltip: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'pdf csv img table fullscreen annotator tooltip svg',
+        ),
         nodeCategories: {},
         nodeCategoryColors: {},
         style: {
@@ -6177,36 +5599,16 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
         transitions: TRANSITIONS,
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         responsiveProportionalSizing: true,
         theme: '',
         useCssAnimation: false, // v3
         customPalette: [],
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table labels fullscreen annotator svg',
+        ),
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -7161,17 +6563,7 @@ export function useConfig(options = {}) {
         debug: false,
         devHints: DEV_HINTS,
         responsiveBreakpoint: 400,
-        userOptions: USER_OPTIONS({
-            tooltip: false,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: false,
-            labels: false,
-            fullscreen: true,
-            stack: false,
-            animation: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED('pdf csv img fullscreen animation'),
         animation: {
             type: 'scroll', // 'scroll' | 'marquee'
             use: true,
@@ -7292,18 +6684,7 @@ export function useConfig(options = {}) {
         loading: false, // v3
         responsive: false, // v3
         theme: '',
-        userOptions: USER_OPTIONS({
-            tooltip: false,
-            pdf: true,
-            csv: false,
-            img: true,
-            table: false,
-            labels: false,
-            fullscreen: true,
-            stack: false,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED('pdf img fullscreen annotator svg'),
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -7383,29 +6764,16 @@ export function useConfig(options = {}) {
             ...TABLE,
             useDialog: false,
             th: TABLE_TH,
-            td: {
-                ...TABLE_TD,
-                roundingValue: 0,
-                roundingPercentage: 0,
-            },
+            td: TABLE_TD_ROUNDED(),
             columnNames: {
                 series: 'Step',
                 value: 'Value',
                 percentage: 'Percentage',
             },
         },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: false,
-            fullscreen: true,
-            stack: false,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg',
+        ),
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -7476,37 +6844,16 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
         transitions: TRANSITIONS,
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         responsiveProportionalSizing: true,
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v2 = true
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: false,
-            fullscreen: true,
-            stack: false,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
@@ -7657,36 +7004,14 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
         transitions: TRANSITIONS,
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: false,
-            fullscreen: true,
-            stack: false,
-            annotator: true,
-            svg: true,
-            zoom: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg zoom',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
@@ -7772,25 +7097,10 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         theme: '',
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: false,
-            fullscreen: true,
-            stack: false,
-            annotator: true,
-            svg: true,
-            zoom: true,
-        }),
+        events: DATAPOINT_EVENTS(), // v3
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf csv img table fullscreen annotator svg zoom',
+        ),
         customPalette: [],
         projection: 'globe',
         normalizeCountryCodes: false,
@@ -7908,35 +7218,14 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            // v3
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v2 = true
-        userOptions: USER_OPTIONS({
-            tooltip: false,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: false,
-            fullscreen: true,
-            stack: false,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
@@ -8088,36 +7377,16 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            datapointEnter: null, // v3
-            datapointLeave: null, // v3
-            datapointClick: null, // v3
-        },
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(), // v3
         theme: '',
         customPalette: [],
         enableRotation: true,
         initialRotation: 0,
         useCssAnimation: false, // v2 = true
-        userOptions: USER_OPTIONS({
-            tooltip: false,
-            pdf: true,
-            csv: true,
-            img: true,
-            table: true,
-            labels: false,
-            fullscreen: true,
-            stack: false,
-            annotator: true,
-            svg: true,
-        }),
+        userOptions: USER_OPTIONS_ENABLED(
+            'pdf csv img table fullscreen annotator svg',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
@@ -8192,24 +7461,10 @@ export function useConfig(options = {}) {
         debug: false,
         responsive: false,
         theme: '',
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        userOptions: USER_OPTIONS({
-            tooltip: false,
-            pdf: true,
-            csv: false,
-            img: true,
-            fullscreen: true,
-            annotator: true,
-            svg: true,
-            zoom: true,
-        }),
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        userOptions: USER_OPTIONS_ENABLED(
+            'pdf img fullscreen annotator svg zoom',
+        ),
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -8320,26 +7575,10 @@ export function useConfig(options = {}) {
         responsive: false,
         projection: 'equirectangular',
         theme: '',
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        userOptions: USER_OPTIONS({
-            tooltip: true,
-            pdf: true,
-            csv: false,
-            img: true,
-            svg: true,
-            table: false,
-            labels: false,
-            fullscreen: true,
-            annotator: true,
-            zoom: true,
-        }),
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        userOptions: USER_OPTIONS_ENABLED(
+            'tooltip pdf img svg fullscreen annotator zoom',
+        ),
         map: {
             geoJson: null,
             center: [0, 0],
@@ -8416,34 +7655,11 @@ export function useConfig(options = {}) {
         theme: '',
         customPalette: [],
         useCssAnimation: false,
-        a11y: {
-            ...A11Y,
-            translations: {
-                ...A11Y.translations,
-                keyboardNavigation:
-                    'Use the left and right, or up and down arrow keys to move between datapoints',
-            },
-        },
-        events: {
-            datapointEnter: null,
-            datapointLeave: null,
-            datapointClick: null,
-        },
-        userOptions: USER_OPTIONS({
-            tooltip: false,
-            pdf: true,
-            csv: true,
-            img: true,
-            svg: true,
-            table: true,
-            labels: false,
-            fullscreen: true,
-            sort: false,
-            stack: false,
-            animation: false,
-            annotator: true,
-            zoom: false,
-        }),
+        a11y: A11Y_DATAPOINT_NAVIGATION(),
+        events: DATAPOINT_EVENTS(),
+        userOptions: USER_OPTIONS_ENABLED(
+            'pdf csv img svg table fullscreen annotator',
+        ),
         table: {
             ...TABLE,
             useDialog: false,
@@ -8601,17 +7817,9 @@ export function useConfig(options = {}) {
         ...graphConfig,
         tooltip: { ...TOOLTIP, ...graphConfig.tooltip },
         userOptions: {
-            ...USER_OPTIONS({
-                pdf: true,
-                csv: true,
-                img: true,
-                svg: true,
-                table: true,
-                fullscreen: true,
-                zoom: true,
-                tooltip: true,
-                annotator: true,
-            }),
+            ...USER_OPTIONS_ENABLED(
+                'pdf csv img svg table fullscreen zoom tooltip annotator',
+            ),
             useCursorPointer: graphConfig.userOptions.useCursorPointer,
         },
         table: {

@@ -99,6 +99,7 @@ import {
     themePalettes,
     translateSize,
     treeShake,
+    emitCopyAlt,
 } from '../lib';
 import {
     canShowValue,
@@ -7983,25 +7984,10 @@ const { isCallbackImaging, isCallbackSvg, generateSvg, onGenerateImage } =
     });
 
 async function copyAlt() {
-    emit('copyAlt', {
-        config: {
-            ...FINAL_CONFIG.value,
-            formattedDates: timeLabels.value,
-        },
-        dataset: {
-            lines: lineSet.value,
-            bars: barSet.value,
-            plots: plotSet.value,
-        },
-    });
-    if (!cfgChart.value.userOptions.callbacks.altCopy) {
-        console.warn(
-            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
-        );
-        return;
-    }
-    await Promise.resolve(
-        cfgChart.value.userOptions.callbacks.altCopy({
+    await emitCopyAlt(
+        emit,
+        () => cfgChart.value.userOptions.callbacks.altCopy,
+        () => ({
             config: {
                 ...FINAL_CONFIG.value,
                 formattedDates: timeLabels.value,

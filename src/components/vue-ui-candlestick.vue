@@ -26,6 +26,7 @@ import {
 } from 'vue';
 import {
     stringifyStyleConfig as stringifyStructuralConfig,
+    applyDataLabel,
     buildDisplayedTimeLabels,
     calculateNiceScale,
     checkNaN,
@@ -44,6 +45,7 @@ import {
     translateSize,
     treeShake,
     XMLNS,
+    emitCopyAlt,
 } from '../lib';
 import { COMMON_RULES, useHints } from '../useHints';
 import { useConfig } from '../useConfig';
@@ -160,6 +162,8 @@ const FINAL_CONFIG = ref(prepareConfig());
 const candleCfg = computed(() => FINAL_CONFIG.value.style.layout.candle);
 const gridCfg = computed(() => FINAL_CONFIG.value.style.layout.grid);
 const layoutCfg = computed(() => FINAL_CONFIG.value.style.layout);
+const volumeCfg = computed(() => FINAL_CONFIG.value.style.layout.volume);
+const isVolume = computed(() => volumeCfg.value.show);
 const styleCfg = computed(() => FINAL_CONFIG.value.style);
 const cfgUserOptions = computed(() => FINAL_CONFIG.value.userOptions);
 
@@ -554,21 +558,50 @@ const drawingArea = computed(() => {
 
     const scaleLabelX = getScaleLabelX();
     const topOffset = 12;
+    const top = pt + topOffset;
+
+    // Bottom of the whole plot (price pane + optional volume pane)
+    const plotBottom = svg.value.height - pb - timeLabelsY.value;
+    const plotHeight = plotBottom - top;
+
+    let volumeHeight = 0;
+    let volumeGap = 0;
+
+    if (isVolume.value) {
+        const ratio = Math.min(
+            0.8,
+            Math.max(0.05, volumeCfg.value.heightRatio),
+        );
+        volumeHeight = Math.max(0, plotHeight * ratio);
+        volumeGap = Math.max(0, volumeCfg.value.gap);
+    }
+
+    // The drawing area remains the price pane; the volume pane sits below it.
+    const bottom = plotBottom - volumeHeight - volumeGap;
 
     return {
-        top: pt + topOffset,
+        top,
         right: svg.value.width - pr - scaleLabelX.right,
         left: pl + scaleLabelX.left,
-        bottom: svg.value.height - pb - timeLabelsY.value,
+        bottom,
         width: svg.value.width - pl - pr - scaleLabelX.left - scaleLabelX.right,
-        height: svg.value.height - pt - pb - timeLabelsY.value - topOffset,
+        height: bottom - top,
         scaleLabelsWidth: scaleLabelX.scaleLabelsWidth,
         crosshair: scaleLabelX.crosshair,
+        plotBottom,
+        plotHeight,
+        volumeTop: plotBottom - volumeHeight,
+        volumeHeight,
     };
 });
 
 const precogRect = computed(() => {
-    const { left, top, width: totalWidth, height } = drawingArea.value;
+    const {
+        left,
+        top,
+        width: totalWidth,
+        plotHeight: height,
+    } = drawingArea.value;
     const windowStart = slicer.value.start;
     const windowEnd = slicer.value.end;
     const windowLen = windowEnd - windowStart;
@@ -948,6 +981,54 @@ const candleBodies = computed(() =>
                 : slot.value * candleCfg.value.widthRatio,
     })),
 );
+
+const volumeBars = computed(() => {
+    if (!isVolume.value) return [];
+
+    const max = visibleExtrema.value.volumeMax;
+    const { plotBottom, volumeHeight } = drawingArea.value;
+    const { widthRatio, useCandleColors, color, opacity } = volumeCfg.value;
+    const width = Math.max(
+        0.0001,
+        slot.value * (widthRatio ?? candleCfg.value.widthRatio),
+    );
+    const { bearish, bullish } = candleCfg.value.colors;
+    // [bearish, bullish]
+    const fills = (useCandleColors ? [bearish, bullish] : [color, color]).map(
+        (c) => setOpacity(c, opacity),
+    );
+
+    return drawableDataset.value.map(({ open, volume, isBullish }) => {
+        // NaN comparisons are false, so invalid volumes fall back to 0
+        const h = max > 0 && volume > 0 ? (volume / max) * volumeHeight : 0;
+        return {
+            x: open.x - width / 2,
+            y: plotBottom - h,
+            width,
+            height: Math.max(0.0001, h),
+            fill: fills[+isBullish],
+        };
+    });
+});
+
+// Shared x anchor for y-axis labels and the volume max label, so they stay aligned.
+const yLabelX = computed(() => {
+    const offsetX = gridCfg.value.yAxis.dataLabels.offsetX;
+    return yAxisLabelsAreRight.value
+        ? drawingArea.value.right + 8 + offsetX
+        : drawingArea.value.left - 8 + offsetX;
+});
+
+const volumeMaxLabel = computed(() => {
+    const max = visibleExtrema.value.volumeMax;
+    const dl = volumeCfg.value.dataLabels;
+    return applyDataLabel(
+        dl.formatter,
+        max,
+        dataLabel({ p: dl.prefix, v: max, s: dl.suffix, r: dl.roundingValue }),
+        { datapoint: max },
+    );
+});
 
 const wickExtremityWidth = computed(() =>
     layoutCfg.value.wick.extremity.size === 'auto'
@@ -1923,7 +2004,7 @@ const chartZoomSelectionRect = computed(() => {
         x: Math.min(chartZoomStartX.value, chartZoomCurrentX.value),
         y: drawingArea.value.top,
         width: Math.abs(chartZoomCurrentX.value - chartZoomStartX.value),
-        height: drawingArea.value.height,
+        height: drawingArea.value.plotHeight,
     };
 });
 
@@ -2092,13 +2173,13 @@ function onChartZoomPointerDown(event) {
     const point = clientToSvgCoords(event);
     if (!point) return;
 
-    const { left, right, top, bottom } = drawingArea.value;
+    const { left, right, top, plotBottom } = drawingArea.value;
 
     if (
         point.x < left ||
         point.x > right ||
         point.y < top ||
-        point.y > bottom
+        point.y > plotBottom
     ) {
         return;
     }
@@ -2217,18 +2298,10 @@ function selectX({ seriesIndex, datapoint }) {
 }
 
 async function copyAlt() {
-    emit('copyAlt', {
-        config: FINAL_CONFIG.value,
-        dataset: drawableDataset.value,
-    });
-    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
-        console.warn(
-            'Vue Data UI - A callback must be set for `altCopy` in userOptions.',
-        );
-        return;
-    }
-    await Promise.resolve(
-        FINAL_CONFIG.value.userOptions.callbacks.altCopy({
+    await emitCopyAlt(
+        emit,
+        () => FINAL_CONFIG.value.userOptions.callbacks.altCopy,
+        () => ({
             config: FINAL_CONFIG.value,
             dataset: drawableDataset.value,
         }),
@@ -2393,6 +2466,7 @@ watch(
     () => [
         svg.value,
         gridCfg.value,
+        volumeCfg.value,
         FINAL_CONFIG.value.style.fontFamily,
         props.dataset,
         slicer.value.start,
@@ -2720,7 +2794,7 @@ const annotationViewport = computed(() => {
                                     :x1="drawingArea.left + slot * i + slot / 2"
                                     :x2="drawingArea.left + slot * i + slot / 2"
                                     :y1="drawingArea.top"
-                                    :y2="drawingArea.bottom"
+                                    :y2="drawingArea.plotBottom"
                                     :stroke="gridCfg.verticalLines.stroke"
                                     :stroke-width="
                                         gridCfg.verticalLines.strokeWidth
@@ -2740,8 +2814,8 @@ const annotationViewport = computed(() => {
                                     v-if="v.text"
                                     :x1="drawingArea.left + slot * i + slot / 2"
                                     :x2="drawingArea.left + slot * i + slot / 2"
-                                    :y1="drawingArea.bottom"
-                                    :y2="drawingArea.bottom + 3"
+                                    :y1="drawingArea.plotBottom"
+                                    :y2="drawingArea.plotBottom + 3"
                                     :stroke="gridCfg.stroke"
                                     :stroke-width="gridCfg.strokeWidth"
                                     stroke-linecap="round"
@@ -2751,15 +2825,19 @@ const annotationViewport = computed(() => {
                     </g>
 
                     <!-- LABELS -->
-                    <!-- Y LABELS -->
-                    <g v-if="gridCfg.yAxis.dataLabels.show" ref="scaleLabels">
-                        <g v-for="(yLabel, i) in yLabels" :key="`sl_${i}`">
+                    <!-- Y LABELS (+ VOLUME MAX LABEL, measured together) -->
+                    <g
+                        v-if="
+                            gridCfg.yAxis.dataLabels.show ||
+                            (isVolume && volumeCfg.dataLabels.show)
+                        "
+                        ref="scaleLabels"
+                    >
+                        <g
+                            v-if="isVolume && volumeCfg.dataLabels.show"
+                            data-cy="candlestick-volume-label"
+                        >
                             <line
-                                data-cy="y-scale-tick"
-                                v-if="
-                                    yLabel.value >= niceScale.min &&
-                                    yLabel.value <= niceScale.max
-                                "
                                 :x1="
                                     yAxisLabelsAreRight
                                         ? drawingArea.right
@@ -2770,46 +2848,87 @@ const annotationViewport = computed(() => {
                                         ? drawingArea.right + 5
                                         : drawingArea.left - 5
                                 "
-                                :y1="yLabel.y"
-                                :y2="yLabel.y"
+                                :y1="drawingArea.volumeTop"
+                                :y2="drawingArea.volumeTop"
                                 :stroke="gridCfg.stroke"
                                 :stroke-width="gridCfg.strokeWidth"
                                 stroke-linecap="round"
                             />
                             <text
-                                data-cy="y-scale-label"
-                                :class="{
-                                    'vue-data-ui-transition':
-                                        transitionEnabled &&
-                                        !labelLayoutSettling,
-                                }"
-                                v-if="
-                                    yLabel.value >= niceScale.min &&
-                                    yLabel.value <= niceScale.max
-                                "
-                                :transform="`translate(${yAxisLabelsAreRight ? drawingArea.right + 8 + gridCfg.yAxis.dataLabels.offsetX : drawingArea.left - 8 + gridCfg.yAxis.dataLabels.offsetX}, ${yLabel.y + svg.yAxisFontSize / 3})`"
+                                :transform="`translate(${yLabelX + volumeCfg.dataLabels.offsetX}, ${drawingArea.volumeTop + volumeCfg.dataLabels.fontSize / 3})`"
                                 :text-anchor="
                                     yAxisLabelsAreRight ? 'start' : 'end'
                                 "
-                                :font-size="svg.yAxisFontSize"
-                                :fill="gridCfg.yAxis.dataLabels.color"
+                                :font-size="volumeCfg.dataLabels.fontSize"
+                                :fill="volumeCfg.dataLabels.color"
                                 :font-weight="
-                                    gridCfg.yAxis.dataLabels.bold
+                                    volumeCfg.dataLabels.bold
                                         ? 'bold'
                                         : 'normal'
                                 "
                             >
-                                {{
-                                    dataLabel({
-                                        p: gridCfg.yAxis.dataLabels.prefix,
-                                        v: yLabel.value,
-                                        s: gridCfg.yAxis.dataLabels.suffix,
-                                        r: gridCfg.yAxis.dataLabels
-                                            .roundingValue,
-                                    })
-                                }}
+                                {{ volumeMaxLabel }}
                             </text>
                         </g>
+                        <template v-if="gridCfg.yAxis.dataLabels.show">
+                            <g v-for="(yLabel, i) in yLabels" :key="`sl_${i}`">
+                                <line
+                                    data-cy="y-scale-tick"
+                                    v-if="
+                                        yLabel.value >= niceScale.min &&
+                                        yLabel.value <= niceScale.max
+                                    "
+                                    :x1="
+                                        yAxisLabelsAreRight
+                                            ? drawingArea.right
+                                            : drawingArea.left
+                                    "
+                                    :x2="
+                                        yAxisLabelsAreRight
+                                            ? drawingArea.right + 5
+                                            : drawingArea.left - 5
+                                    "
+                                    :y1="yLabel.y"
+                                    :y2="yLabel.y"
+                                    :stroke="gridCfg.stroke"
+                                    :stroke-width="gridCfg.strokeWidth"
+                                    stroke-linecap="round"
+                                />
+                                <text
+                                    data-cy="y-scale-label"
+                                    :class="{
+                                        'vue-data-ui-transition':
+                                            transitionEnabled &&
+                                            !labelLayoutSettling,
+                                    }"
+                                    v-if="
+                                        yLabel.value >= niceScale.min &&
+                                        yLabel.value <= niceScale.max
+                                    "
+                                    :transform="`translate(${yLabelX}, ${yLabel.y + svg.yAxisFontSize / 3})`"
+                                    :text-anchor="
+                                        yAxisLabelsAreRight ? 'start' : 'end'
+                                    "
+                                    :font-size="svg.yAxisFontSize"
+                                    :fill="gridCfg.yAxis.dataLabels.color"
+                                    :font-weight="
+                                        gridCfg.yAxis.dataLabels.bold
+                                            ? 'bold'
+                                            : 'normal'
+                                    "
+                                >
+                                    {{
+                                        dataLabel({
+                                            p: gridCfg.yAxis.dataLabels.prefix,
+                                            v: yLabel.value,
+                                            s: gridCfg.yAxis.dataLabels.suffix,
+                                            r: gridCfg.yAxis.dataLabels
+                                                .roundingValue,
+                                        })
+                                    }}
+                                </text>
+                            </g>
+                        </template>
                     </g>
                     <!-- X LABELS -->
                     <g
@@ -2823,7 +2942,7 @@ const annotationViewport = computed(() => {
                             <text
                                 class="vue-data-ui-time-label"
                                 data-cy="x-label"
-                                :transform="`translate(${drawingArea.left + slot * i + slot / 2}, ${drawingArea.bottom + svg.xAxisFontSize * 1.5}), rotate(${gridCfg.xAxis.dataLabels.rotation})`"
+                                :transform="`translate(${drawingArea.left + slot * i + slot / 2}, ${drawingArea.plotBottom + svg.xAxisFontSize * 1.5}), rotate(${gridCfg.xAxis.dataLabels.rotation})`"
                                 :text-anchor="
                                     gridCfg.xAxis.dataLabels.rotation > 0
                                         ? 'start'
@@ -2854,7 +2973,7 @@ const annotationViewport = computed(() => {
                             <text
                                 class="vue-data-ui-time-label"
                                 data-cy="x-label"
-                                :transform="`translate(${drawingArea.left + slot * i + slot / 2}, ${drawingArea.bottom + svg.xAxisFontSize * 1.5}), rotate(${gridCfg.xAxis.dataLabels.rotation})`"
+                                :transform="`translate(${drawingArea.left + slot * i + slot / 2}, ${drawingArea.plotBottom + svg.xAxisFontSize * 1.5}), rotate(${gridCfg.xAxis.dataLabels.rotation})`"
                                 :text-anchor="
                                     gridCfg.xAxis.dataLabels.rotation > 0
                                         ? 'start'
@@ -3065,6 +3184,34 @@ const annotationViewport = computed(() => {
                         </g>
                     </template>
 
+                    <!-- VOLUME BARS -->
+                    <g v-if="isVolume" data-cy="candlestick-volume">
+                        <line
+                            v-if="gridCfg.show"
+                            data-cy="candlestick-volume-baseline"
+                            :x1="drawingArea.left"
+                            :x2="drawingArea.right"
+                            :y1="drawingArea.plotBottom"
+                            :y2="drawingArea.plotBottom"
+                            :stroke="gridCfg.stroke"
+                            :stroke-width="gridCfg.strokeWidth"
+                            stroke-linecap="round"
+                        />
+                        <rect
+                            v-for="(bar, i) in volumeBars"
+                            :data-cy="`candlestick-volume-bar-${i}`"
+                            v-bind="bar"
+                            :rx="volumeCfg.borderRadius"
+                            stroke="none"
+                            :class="{
+                                'vue-data-ui-transition':
+                                    isLoaded &&
+                                    !loading &&
+                                    !labelLayoutSettling,
+                            }"
+                        />
+                    </g>
+
                     <!-- TOOLTIP TRAPS -->
                     <g>
                         <rect
@@ -3073,9 +3220,9 @@ const annotationViewport = computed(() => {
                             :x="drawingArea.left + i * slot"
                             :y="drawingArea.top"
                             :height="
-                                drawingArea.height <= 0
+                                drawingArea.plotHeight <= 0
                                     ? 0.0001
-                                    : drawingArea.height
+                                    : drawingArea.plotHeight
                             "
                             :width="slot <= 0 ? 0.0001 : slot"
                             :fill="
